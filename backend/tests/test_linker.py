@@ -95,3 +95,34 @@ def test_linker_accuracy_on_phase1_testset(graph):
                 misses.append((it.id, e.source, e.node, sorted(found)))
     acc = hit / total
     assert acc >= 0.90, f"linker accuracy {acc:.2%}; misses: {misses[:15]}"
+
+
+# ---- review fix pass: romanized false positives (reviewer finding 2) ----
+def test_romanized_verbs_and_common_words_are_not_people(graph):
+    for text in ["Un mama nethu phone pannaan.", "Pappa phone pannaa", "naan oru dosa senjen", "appam saapdu", "Divya vandhaa"]:
+        spans = _link(graph, text)
+        people = {s.node for s in spans if s.type == "person" and s.node}
+        assert "p_vishnu" not in people and "p_senthil" not in people, (text, people)
+        assert "pl_madurai_house" not in _nodes(spans), text
+    assert _nodes(_link(graph, "Pappa phone pannaa")) == {"p_priya"}
+    assert _nodes(_link(graph, "Divya vandhaa")) == {"p_divya"}
+    assert _nodes(_link(graph, "Oorukku eppo varra?")) == {"pl_madurai_house"}
+
+
+def test_romanized_testset_has_few_person_false_positives(graph):
+    items = [GroundingItem.model_validate(json.loads(l)) for l in TS.read_text(encoding="utf-8").splitlines() if l.strip()]
+    linker = Linker(graph)
+    fp = hit = total = 0
+    bad = []
+    for it in items:
+        expected = {e.node for e in it.entities}
+        spans = linker.link(it.src_roman, speaker=it.speaker, listener=it.listener, context=it.context)
+        found = {s.node for s in spans if s.node}
+        for e in it.entities:
+            total += 1; hit += e.node in found
+        # a chain head ("mama" in "mama paiyan") is a correct extra resolution, not a false positive
+        wrong = {s.node for s in spans if s.type == "person" and s.node and s.node not in expected and s.method != "chain-head"}
+        if wrong:
+            fp += 1; bad.append((it.id, sorted(wrong)))
+    assert hit / total >= 0.80, f"romanized recall {hit/total:.0%}"
+    assert fp / len(items) <= 0.05, f"person false positives in {fp}/{len(items)} items: {bad[:10]}"

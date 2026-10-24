@@ -53,3 +53,16 @@ def test_simulation_replays_real_history_and_reduces_translated_words():
         assert len(w8["passthrough"]) > len(w1["passthrough"])
         assert all(len(t["curve"]) == 9 for t in w8["trajectories"])  # week 0..8 per word
         assert any(t["curve"][-1] >= 0.85 for t in w8["trajectories"])
+
+
+def test_simulation_does_not_touch_real_learner_rows_and_uses_lemmas():
+    with TestClient(app) as c:
+        c.post("/api/fade/reset", json={"learner": "p_arjun"})
+        c.post("/api/fade/expose", json={"learner": "p_arjun", "text": "நேத்து"})
+        before = c.get("/api/fade/mastery?learner=p_arjun").json()
+        w8 = c.post("/api/fade/simulate", json={"learner": "p_arjun", "weeks": 8}).json()
+        after = c.get("/api/fade/mastery?learner=p_arjun").json()
+        assert after == before, "simulation must not write the real learner's mastery"
+        assert "சாப்பிட்டியா" in w8["passthrough"] and "மழை" in {t["lemma_surface"] for t in w8["trajectories"]}
+        assert all(t["lemma"] == t["lemma"].strip() for t in w8["trajectories"])
+        assert w8["mastery"] and all({"lemma", "p_known", "mastered"} <= set(r) for r in w8["mastery"])

@@ -53,23 +53,23 @@ def score_entity(e, rendered_by_node: dict[str, str], translation: str) -> tuple
     return correct, flattened
 
 
+def score_row(it: GroundingItem, res) -> dict:
+    """Score one item. A provider failure (fallback or empty output) counts as WRONG for every entity in both conditions,
+    so the grounded condition cannot ride its linker-only fallback past a 429 that the generic condition cannot survive."""
+    rendered = {s.node_id: s.rendered for s in res.result.grounded_spans}
+    ents = []
+    for e in it.entities:
+        ok, flat = score_entity(e, rendered, res.result.translation)
+        if res.error:
+            ok, flat = False, False
+        ents.append({"source": e.source, "node": e.node, "type": e.type, "correct": ok, "flattened": flat})
+    return {"id": it.id, "category": it.category, "translation": res.result.translation, "entities": ents,
+            "latency_ms": res.latencies.get("mt_ms", 0.0), "error": res.error, "cards": len(res.result.pragmatics_cards)}
+
+
 def run_condition(name: str, items: list[GroundingItem], fn, workers: int) -> dict:
-    rows = []
-
-    def one(it: GroundingItem):
-        t0 = time.perf_counter()
-        res = fn(it)
-        lat = res.latencies.get("mt_ms", (time.perf_counter() - t0) * 1000)
-        rendered = {s.node_id: s.rendered for s in res.result.grounded_spans}
-        ents = []
-        for e in it.entities:
-            ok, flat = score_entity(e, rendered, res.result.translation)
-            ents.append({"source": e.source, "node": e.node, "type": e.type, "correct": ok, "flattened": flat})
-        return {"id": it.id, "category": it.category, "translation": res.result.translation, "entities": ents, "latency_ms": lat, "error": res.error,
-                "cards": len(res.result.pragmatics_cards)}
-
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        rows = list(ex.map(one, items))
+        rows = list(ex.map(lambda it: score_row(it, fn(it)), items))
 
     def err_rate(pred):
         es = [e for r in rows if pred(r) for e in r["entities"]]
@@ -126,7 +126,7 @@ def main(argv=None) -> int:
     ap.add_argument("--mock", action="store_true", help="no LLM: score the linker-only rendering")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", default=str(HERE / "results.md"))
-    ap.add_argument("--workers", type=int, default=6)
+    ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--effort", default="medium", help="reasoning_effort for eval calls")
     args = ap.parse_args(argv)
 
@@ -152,9 +152,10 @@ def main(argv=None) -> int:
             print("MODEL_API_KEY is not set; run with --mock or fill .env", file=sys.stderr)
             return 2
         hist = lambda it: [(it.speaker, c, "") for c in it.context]  # noqa: E731
-        conds.append(run_condition("generic (same model, no family context)", g_items, lambda it: tr.translate_generic(it.src_text, reasoning_effort=args.effort), args.workers))
+        conds.append(run_condition("generic (same model + same context, no family graph)", g_items,
+                                   lambda it: tr.translate_generic(it.src_text, reasoning_effort=args.effort, speaker=it.speaker, listener=it.listener, history=hist(it)), args.workers))
         conds.append(run_condition("grounded (KIN)", g_items, lambda it: tr.translate(it.src_text, it.speaker, it.listener, history=hist(it), reasoning_effort=args.effort), args.workers))
-        idioms.append(run_idioms("generic", i_items, lambda it: tr.translate_generic(it.src_text, reasoning_effort=args.effort), args.workers))
+        idioms.append(run_idioms("generic", i_items, lambda it: tr.translate_generic(it.src_text, reasoning_effort=args.effort, speaker="p_kamala", listener="p_arjun"), args.workers))
         idioms.append(run_idioms("grounded (KIN)", i_items, lambda it: tr.translate(it.src_text, "p_kamala", "p_arjun", reasoning_effort=args.effort), args.workers))
     else:
         idioms.append({"name": "linker-only (no cards in mock)", "precision": float("nan"), "recall": float("nan"), "tp": 0, "fp": 0, "fn": sum(1 for i in i_items if i.expect_card), "n": len(i_items)})

@@ -26,7 +26,10 @@ def card_llm(monkeypatch):
     monkeypatch.setattr(llm_mod, "_default", None)
 
 
-def test_card_gets_audio_clip_served_from_media(card_llm):
+def test_card_gets_audio_clip_served_from_media(card_llm, monkeypatch):
+    monkeypatch.setenv("GLOSSARY_AUDIO", "1")
+    from app.config import get_settings
+    get_settings.cache_clear()
     with TestClient(app) as c:
         cid = c.post("/api/calls", json={"family_id": 1}).json()["id"]
         with c.websocket_connect(f"/ws/call/{cid}?role=grandparent&person=p_kamala") as gp:

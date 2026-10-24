@@ -12,7 +12,7 @@ SUMMARY = "Paatti said her knee is better; Ravi mama is visiting Madurai; she wa
 EXTRACTION = {"people": [{"name": "Saroja", "how_referred": "chinna paatti", "inferred_relation": "Paatti's younger sister", "sensitive": False}],
               "dishes": [{"name": "adai", "note": "lentil crepe Paatti made on Friday", "sensitive": False}],
               "places": [], "events": [{"name": "Pongal", "when": "January", "sensitive": False}],
-              "topics": [{"topic": "knee", "kind": "health", "sensitive": True, "detail": "knee pain improving, new tablets"}]}
+              "topics": [{"topic": "knee", "kind": "health", "sensitive": True, "detail": "knee pain improving, new tablets", "lines": [1]}]}
 
 
 @pytest.fixture
@@ -84,3 +84,29 @@ def test_connector_endpoints_require_key_and_brief_is_public():
         assert c.get("/api/v1/glossary", headers={"X-KIN-Key": "change-me"}).status_code == 200
         brief = c.get("/connectors/muse.md")
         assert brief.status_code == 200 and "read-only" in brief.text.lower() and "/api/v1/memory/search" in brief.text
+
+
+def test_sensitive_utterances_are_withheld_until_remembered(mock_llm):
+    with TestClient(app) as c:
+        cid = _call_with_utterances(c)
+        c.post(f"/api/calls/{cid}/end")
+        hdr = {"X-KIN-Key": "change-me"}
+        hits = c.get("/api/v1/memory/search?q=முழங்கால்", headers=hdr).json()["results"]
+        assert all("முழங்கால்" not in h["text"] for h in hits if h["kind"] == "utterance"), hits
+        utts = c.get(f"/api/calls/{cid}/utterances").json()
+        assert utts[0]["sensitive_topic"] == "knee" and "withheld" in utts[0]["src_text"]
+        c.post(f"/api/calls/{cid}/approve", json={"remember_topics": ["knee"]})
+        hits = c.get("/api/v1/memory/search?q=முழங்கால்", headers=hdr).json()["results"]
+        assert any("முழங்கால்" in h["text"] for h in hits)
+
+
+def test_summary_prompt_carries_the_sensitivity_rule(mock_llm, monkeypatch):
+    seen = []
+    orig = mock_llm.text
+    def spy(system, user, **kw):
+        seen.append(system); return orig(system, user, **kw)
+    monkeypatch.setattr(mock_llm, "text", spy)
+    with TestClient(app) as c:
+        cid = _call_with_utterances(c)
+        c.post(f"/api/calls/{cid}/end")
+    assert seen and "health" in seen[0].lower() and "topic word" in seen[0].lower()

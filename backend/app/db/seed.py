@@ -90,15 +90,15 @@ THINGS = [
 
 
 CUES = {
-    "p_ravi_mama": ["bank", "பேங்க்", "Adyar", "அடையாறு", "Chennai", "சென்னை", "Madras", "மெட்ராஸ்", "cricket", "கிரிக்கெட்", "laptop", "லேப்டாப்"],
-    "p_ravi_periyappa": ["shop", "kadai", "கடை", "textile", "துணி", "துணிக்கடை", "ஜவுளி", "Coimbatore", "Kovai", "கோவை", "கோயம்புத்தூர்", "hall", "ஹால்", "vetti", "வேட்டி"],
+    "p_ravi_mama": ["bank", "பேங்க்", "Adyar", "அடையாறு", "Chennai", "சென்னை", "Madras", "மெட்ராஸ்", "cricket", "கிரிக்கெட்"],
+    "p_ravi_periyappa": ["shop", "kadai", "கடை", "textile", "thuni", "thunikkadai", "துணி", "துணிக்கடை", "ஜவுளி", "Coimbatore", "Kovai", "கோவை", "கோயம்புத்தூர்", "vetti", "வேட்டி"],
     "p_lakshmi": ["Bharatanatyam", "பரதநாட்டியம்", "arangetram", "அரங்கேற்றம்", "dance", "class", "கிளாஸ்", "க்ளாஸ்"],
-    "p_meena": ["Singapore", "சிங்கப்பூர்", "visa", "விசா"],
+    "p_meena": ["Singapore", "சிங்கப்பூர்"],
     "p_divya": ["hospital", "ஹாஸ்பிடல்", "doctor", "டாக்டர்", "night shift", "Houston"],
     "p_karthik": ["cricket", "கிரிக்கெட்", "school", "ஸ்கூல்"],
     "p_vishnu": ["kalyanam", "கல்யாணம்", "wedding"],
-    "p_saroja": ["knee", "முழங்கால்", "sweater", "ஸ்வெட்டர்", "pakkathu theru", "பக்கத்து தெரு"],
-    "p_raghavan": ["radio", "ரேடியோ", "thithi", "திதி", "teacher"],
+    "p_saroja": ["knee", "முழங்கால்", "pakkathu theru", "பக்கத்து தெரு"],
+    "p_raghavan": ["thithi", "திதி", "teacher"],
 }
 
 

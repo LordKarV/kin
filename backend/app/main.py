@@ -20,6 +20,9 @@ async def lifespan(app: FastAPI):
     from .db.seed import seed_demo_family
     from .db.session import init_db, session_scope
 
+    from .security import check_startup
+
+    check_startup()
     init_db()
     with session_scope() as s:  # demo family is always present (plan Phase 1); idempotent
         if s.scalar(select(m.Family)) is None:
@@ -29,6 +32,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="KIN", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+@app.middleware("http")
+async def api_key_gate(request, call_next):
+    from fastapi.responses import JSONResponse
+
+    from .security import ALWAYS_LOCKED, PUBLIC_PREFIXES, key_ok, locked
+
+    path = request.url.path
+    needs = path in ALWAYS_LOCKED or (locked() and (path.startswith("/api/") or path.startswith("/ws/")) and not path.startswith(PUBLIC_PREFIXES))
+    if needs:
+        given = request.headers.get("x-kin-key") or request.query_params.get("key")
+        auth = request.headers.get("authorization", "")
+        if not given and auth.lower().startswith("bearer "):
+            given = auth.split(" ", 1)[1]
+        if not key_ok(given):
+            return JSONResponse({"detail": "KIN API key required (X-KIN-Key header, Authorization: Bearer, or ?key=)"}, status_code=401)
+    return await call_next(request)
 
 
 from fastapi.staticfiles import StaticFiles  # noqa: E402

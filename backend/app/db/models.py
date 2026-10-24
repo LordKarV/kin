@@ -121,6 +121,7 @@ class Utterance(Base):
     passthrough: Mapped[list] = mapped_column(JSON, default=list)
     audio_url: Mapped[str] = mapped_column(String(300), default="")
     latencies: Mapped[dict] = mapped_column(JSON, default=dict)  # ms per stage
+    sensitive_topic: Mapped[str] = mapped_column(String(80), default="")  # health|money|conflict topic word; text withheld unless remembered
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 

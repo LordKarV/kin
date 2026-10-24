@@ -44,6 +44,7 @@ class XTopic(BaseModel):
     kind: Literal["health", "money", "conflict", "other"]
     sensitive: bool
     detail: str
+    lines: list[int]   # 1-based transcript line numbers where this topic was discussed
 
 
 class ExtractionOut(BaseModel):
@@ -54,15 +55,18 @@ class ExtractionOut(BaseModel):
     topics: list[XTopic]
 
 
-SUMMARY_SYS = "Summarize this family call in 2-4 plain sentences for the grandchild's memory: what the grandparent said, plans, requests. Name people as the family does. No advice."
-EXTRACT_SYS = ("From this transcript, extract new people (with how the speaker refers to them and inferred relation), dishes, places, events. "
-               "Return JSON. Mark anything about health, money, or conflict as sensitive: true and do not include details beyond the topic word.")
+SUMMARY_SYS = ("Summarize this family call in 2-4 plain sentences for the grandchild's memory: what the grandparent said, plans, requests. "
+               "Name people as the family does. No advice. Privacy rule: for health, money or conflict, mention only the topic word "
+               "(e.g. 'talked about her knee'), never the details.")
+EXTRACT_SYS = ("From this numbered transcript, extract new people (with how the speaker refers to them and inferred relation), dishes, places, events, "
+               "and topics. Return JSON. Mark anything about health, money, or conflict as sensitive: true, do not include details beyond the topic word, "
+               "and list the transcript line numbers (`lines`) where each topic was discussed.")
 
 
 def _transcript_text(s, call_id: int) -> tuple[str, list[m.Utterance]]:
     utts = s.scalars(select(m.Utterance).where(m.Utterance.call_id == call_id).order_by(m.Utterance.id)).all()
     people = {p.id: p.display_name for p in s.scalars(select(m.Person))}
-    lines = [f"{people.get(u.speaker_id, '?')}: {u.src_text}" + (f"  → {u.translation}" if u.translation else "") for u in utts]
+    lines = [f"{i}. {people.get(u.speaker_id, '?')}: {u.src_text}" + (f"  → {u.translation}" if u.translation else "") for i, u in enumerate(utts, 1)]
     return "\n".join(lines), utts
 
 
@@ -72,6 +76,8 @@ def _reduce_sensitive(x: ExtractionOut) -> dict:
         if t["sensitive"] or t["kind"] in SENSITIVE_KINDS:
             t["sensitive"] = True
             t.pop("detail", None)  # topic word only (plan §9)
+        else:
+            t.pop("lines", None)
     for key in ("people", "dishes", "places"):
         d[key] = [i for i in d[key] if not i["sensitive"]]
     d["events"] = [i for i in d["events"] if not i["sensitive"]]
@@ -93,7 +99,13 @@ def end_call(call_id: int) -> dict:
             except Exception as e:  # noqa: BLE001
                 err = f"summary: {e}"
             try:
-                extracted = _reduce_sensitive(llm.structured(ExtractionOut, EXTRACT_SYS, text, reasoning_effort="medium", max_completion_tokens=900))
+                extracted = _reduce_sensitive(llm.structured(ExtractionOut, EXTRACT_SYS, text, reasoning_effort="medium", max_completion_tokens=1200))
+                # tag the utterances that carried a sensitive topic: their text is withheld from memory until remembered
+                for t in extracted.get("topics", []):
+                    if t.get("sensitive"):
+                        for ln in t.get("lines", []):
+                            if 1 <= ln <= len(utts) and not utts[ln - 1].sensitive_topic:
+                                utts[ln - 1].sensitive_topic = t["topic"]
             except Exception as e:  # noqa: BLE001
                 err = (err + "; " if err else "") + f"extraction: {e}"
         cs = s.scalar(select(m.CallSummary).where(m.CallSummary.call_id == call_id))
@@ -153,6 +165,17 @@ def approve_call(call_id: int, remember_topics: list[str]) -> dict:
     return {"call_id": call_id, "approved": True, "added_things": added_things, "added_people": added_people, "remembered_topics": remembered}
 
 
+def remembered_by_call(s, call_ids: list[int]) -> dict[int, set[str]]:
+    out: dict[int, set[str]] = {}
+    for cs in s.scalars(select(m.CallSummary).where(m.CallSummary.call_id.in_(call_ids))) if call_ids else []:
+        out[cs.call_id] = set((cs.extracted or {}).get("remembered", []))
+    return out
+
+
+def withheld(u: m.Utterance, remembered: dict[int, set[str]]) -> bool:
+    return bool(u.sensitive_topic) and u.sensitive_topic not in remembered.get(u.call_id, set())
+
+
 def search(q: str, family_id: int, limit: int = 8) -> list[dict]:
     ql = q.lower().strip()
     if not ql:
@@ -161,7 +184,10 @@ def search(q: str, family_id: int, limit: int = 8) -> list[dict]:
     with session_scope() as s:
         people = {p.id: p.display_name for p in s.scalars(select(m.Person).where(m.Person.family_id == family_id))}
         calls = {c.id: c for c in s.scalars(select(m.Call).where(m.Call.family_id == family_id))}
+        rem = remembered_by_call(s, list(calls))
         for u in s.scalars(select(m.Utterance).where(m.Utterance.call_id.in_(list(calls)))) if calls else []:
+            if withheld(u, rem):
+                continue  # plan §9: sensitive detail stays out of memory unless the grandchild chose to remember it
             text = f"{u.src_text} {u.translation}".strip()
             sc = max(fuzz.partial_ratio(ql, text.lower()), 100 if ql in text.lower() else 0)
             if sc >= 70:

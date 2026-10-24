@@ -18,15 +18,18 @@ def test_relay_twiml_has_verified_attributes():
     cr = root.find("Connect/ConversationRelay")
     assert cr is not None and cr.get("url") == "wss://abc.ngrok.app/twilio/relay"
     assert cr.get("welcomeGreeting") == "Vanakkam" and cr.get("interruptible") == "any" and cr.get("dtmfDetection") == "true"
-    assert cr.get("ttsProvider") == "ElevenLabs" and cr.get("transcriptionProvider") == "Deepgram"
-    langs = {l.get("code") for l in cr.findall("Language")}
-    assert {"ta-IN", "en-US"} <= langs
+    assert cr.get("ttsProvider") == "ElevenLabs" and cr.get("transcriptionProvider") is None  # per-language below
+    langs = {l.get("code"): l for l in cr.findall("Language")}
+    assert {"ta-IN", "en-US"} <= set(langs)
+    # VERIFIED: Twilio lists ta-IN with Google transcription + ElevenLabs TTS; Deepgram nova-3 only on the English leg
+    assert langs["ta-IN"].get("transcriptionProvider") is None and langs["ta-IN"].get("ttsProvider") == "ElevenLabs"
+    assert langs["en-US"].get("transcriptionProvider") == "Deepgram" and langs["en-US"].get("speechModel") == "nova-3-general"
     params = {p.get("name"): p.get("value") for p in cr.findall("Parameter")}
     assert params["role"] == "grandparent"
 
 
 def test_voice_webhook_returns_twiml_and_creates_call(monkeypatch):
-    monkeypatch.setenv("PUBLIC_WSS_HOST", "abc.ngrok.app")
+    monkeypatch.setenv("PUBLIC_WSS_HOST", "abc.ngrok.app"); monkeypatch.setenv("KIN_API_KEY", "real-key")
     from app.config import get_settings
     get_settings.cache_clear()
     with TestClient(app) as c:
@@ -56,3 +59,17 @@ def test_phone_leg_bridges_to_laptop_peer_both_directions(mock_llm):
             # partial prompts are ignored (no transcript)
             phone.send_json({"type": "prompt", "voicePrompt": "ரவி", "lang": "ta-IN", "last": False})
             phone.send_json({"type": "interrupt", "utteranceUntilInterrupt": "x", "durationUntilInterruptMs": 100})
+
+
+def test_voice_webhook_rejects_bad_twilio_signature(monkeypatch):
+    monkeypatch.setenv("PUBLIC_WSS_HOST", "abc.ngrok.app"); monkeypatch.setenv("TWILIO_AUTH_TOKEN", "tok"); monkeypatch.setenv("KIN_API_KEY", "real-key")
+    from app.config import get_settings
+    get_settings.cache_clear()
+    with TestClient(app) as c:
+        bad = c.post("/twilio/voice", data={"From": "+1", "CallSid": "CA1"}, headers={"X-Twilio-Signature": "nope"})
+        assert bad.status_code == 403
+        from twilio.request_validator import RequestValidator
+        url = "https://abc.ngrok.app/twilio/voice"
+        sig = RequestValidator("tok").compute_signature(url, {"From": "+1", "CallSid": "CA1"})
+        ok = c.post("/twilio/voice", data={"From": "+1", "CallSid": "CA1"}, headers={"X-Twilio-Signature": sig, "X-Forwarded-Proto": "https", "Host": "abc.ngrok.app"})
+        assert ok.status_code == 200

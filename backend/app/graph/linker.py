@@ -24,7 +24,10 @@ INFORMAL = re.compile(r"(ான்|ாள்|ானா|ாளா|aan|aal|aanaa)\
 GENERIC_HEADS = {"கடை", "கடைக்காரர்", "கடைக்காரி", "டிரைவர்", "ஆட்டோ", "பக்கத்து", "வீட்டு", "பூக்காரி", "பால்காரன்", "ஸ்கூல்", "ஆபீஸ்",
                  "kadai", "driver", "auto", "pakkathu", "veettu", "shop", "school", "office"}
 SIBLING_TERMS = {"anna", "akka", "thambi", "thangai", "mama", "mami"}
-COMPOSITIONAL_ONLY = {"paiyan"}
+COMPOSITIONAL_ONLY = {"paiyan", "ponnu"}
+# romanized case/clitic suffixes that may follow an alias ("ravikku", "madurai-la"); anything else is a different word ("appam" is not appa)
+ROMAN_SUFFIXES = {"kku", "ukku", "kkum", "la", "le", "ila", "yila", "lerndhu", "lirundhu", "oda", "voda", "yoda", "um", "yum", "vum", "ai", "yai", "vai",
+                  "kitta", "kkitta", "kkaaga", "nnu", "a", "aa", "va", "vaa", "ya", "yaa", "ku", "ukkum", "laam"}
 
 
 @dataclass
@@ -51,7 +54,8 @@ class _Tok:
     start: int
     end: int
     core: str           # punctuation-trimmed
-    norm: str           # normalized for matching
+    norm: str           # alias matching: lowercase, dots removed, hyphen suffix dropped (NO vowel collapsing: ooru is not oru)
+    knorm: str = ""     # kin-term matching: ontology normalization (maamaa -> mama)
 
 
 @dataclass
@@ -64,13 +68,18 @@ class _Match:
     term: KinTermDef | None = None
     exact: bool = False
     method: str = ""
+    bound: bool = False   # kin term bound to a possessive head that has no such relative ("amma-voda akka"): never resolve from the listener
 
 
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFC", s).lower().replace(".", "")
     s = s.strip("\"'“”‘’()[]{},;:!?।-–—")
     s = re.sub(r"-.*$", "", s) if TAMIL.search(s) is None and "-" in s else s  # Adyar-lerndhu → adyar
-    return normalize_term(s) if not TAMIL.search(s) else s
+    return s
+
+
+def _knorm(s: str) -> str:
+    return normalize_term(_norm(s))
 
 
 def _stem(alias_norm: str) -> str:
@@ -82,16 +91,19 @@ def _stem(alias_norm: str) -> str:
     return alias_norm
 
 
-def _prefix_match(tok_norm: str, alias_norm: str) -> bool:
+def _prefix_match(tok_norm: str, alias_norm: str, exact_only: bool = False) -> bool:
     if not tok_norm or not alias_norm:
+        return False
+    if tok_norm == alias_norm:
+        return True
+    if exact_only:
         return False
     if TAMIL.search(alias_norm):
         return tok_norm.startswith(_stem(alias_norm))
-    if tok_norm == alias_norm:
+    if tok_norm.startswith(alias_norm) and tok_norm[len(alias_norm):] in ROMAN_SUFFIXES:
         return True
-    if tok_norm.startswith(alias_norm) and len(tok_norm) - len(alias_norm) <= 6:
-        return True
-    return len(alias_norm) >= 4 and fuzz.ratio(tok_norm, alias_norm) >= 88
+    # fuzzy only for long aliases, same initial, strict ratio (spelling variants like lakshmi/lakshmy), never short words
+    return len(alias_norm) >= 6 and tok_norm[0] == alias_norm[0] and fuzz.ratio(tok_norm, alias_norm) >= 90
 
 
 class Linker:
@@ -110,9 +122,7 @@ class Linker:
             for alias in [t.name, t.lang_name, *t.aliases]:
                 if alias:
                     self.thing_alias.setdefault(_norm(alias), []).append(t)
-        self.kin_forms: dict[str, KinTermDef] = {}
-        for surf, d in all_surface_forms().items():
-            self.kin_forms[surf] = d
+        self.kin_forms: dict[str, KinTermDef] = dict(all_surface_forms())  # keys are normalize_term()-ed
         self.max_n = 3
 
     # ---- public --------------------------------------------------------------
@@ -147,7 +157,7 @@ class Linker:
             raw = mt.group(0)
             core = raw.strip("\"'“”‘’()[]{},;:!?।")
             off = raw.find(core) if core else 0
-            toks.append(_Tok(raw, mt.start() + off, mt.start() + off + len(core), core, _norm(core)))
+            toks.append(_Tok(raw, mt.start() + off, mt.start() + off + len(core), core, _norm(core), _knorm(core)))
         return toks
 
     def _scan(self, toks: list[_Tok]) -> list[_Match]:
@@ -169,34 +179,38 @@ class Linker:
     def _match_window(self, window: list[_Tok], i: int) -> _Match | None:
         j = i + len(window) - 1
         norms = [t.norm for t in window]
-        head, last = norms[:-1], norms[-1]
+        knorms = [t.knorm for t in window]
 
-        def hit(alias: str) -> bool:
+        def hit(alias: str, toks_norm: list[str], exact_only: bool = False) -> bool:
             parts = alias.split(" ")
-            if len(parts) != len(norms):
+            if len(parts) != len(toks_norm):
                 return False
-            return all(a == b for a, b in zip(parts[:-1], head)) and _prefix_match(last, parts[-1])
+            return all(a == b for a, b in zip(parts[:-1], toks_norm[:-1])) and _prefix_match(toks_norm[-1], parts[-1], exact_only)
 
-        # 1) person aliases (exact multiword like "ரவி மாமா" wins over kin+name)
+        # 1) person aliases
         persons: set[int] = set()
         exact = False
         for alias, ids in self.person_alias.items():
-            if hit(alias):
+            if hit(alias, norms):
                 persons |= ids
                 exact = exact or (" ".join(norms) == alias)
-        # 2) kin terms
+        # 2) kin terms (endearments/honorifics and very short terms must match exactly: "di" is not "Divya")
         term = None
+        term_exact = False
         for surf, d in self.kin_forms.items():
-            if hit(surf):
-                term = d if term is None or len(surf) > len(term.term) else term
+            strict = d.kind != "kin" or len(surf) < 4
+            if hit(surf, knorms, exact_only=strict):
+                if term is None or len(surf) > len(term.term):
+                    term, term_exact = d, (" ".join(knorms) == surf)
         # 3) things
         things = []
         for alias, ts in self.thing_alias.items():
-            if hit(alias):
+            if hit(alias, norms):
                 for t in ts:
                     if t not in things:
                         things.append(t)
-        if persons and (len(window) > 1 or not term):
+        # an exact person alias beats a kin term; an exact kin term beats a fuzzy/prefix person match
+        if persons and (exact or len(window) > 1 or not term or not term_exact):
             return _Match(i, j, "person", persons=persons, exact=exact)
         if term:
             return _Match(i, j, "kin", term=term, persons=persons)
@@ -220,6 +234,11 @@ class Linker:
                 heads = self._head_candidates(a, toks, sp, li)
                 referents = {h: self.g.resolve_kin_term(b.term, h) for h in heads}
                 referents = {h: r for h, r in referents.items() if r}
+                if heads and not referents and self._is_possessive_chain(a, b, toks):
+                    out.append(a if a.kind == "person" else _Match(a.i, a.j, "person", persons=heads, exact=True, method="chain-head"))
+                    out.append(_Match(b.i, b.j, "kin", term=b.term, bound=True))
+                    k += 2
+                    continue
                 if referents:
                     nxt = matches[k + 2] if k + 2 < len(matches) else None
                     head, chosen = None, set()
@@ -241,6 +260,12 @@ class Linker:
             out.append(a)
             k += 1
         return out
+
+    @staticmethod
+    def _is_possessive_chain(a: _Match, b: _Match, toks: list[_Tok]) -> bool:
+        """'X-oda/X-vukku KIN' or 'X KIN' where X is a resolved person: the kin term belongs to X."""
+        head_tok = toks[a.j].norm
+        return head_tok.endswith(("oda", "voda", "yoda", "ஓட", "வோட", "யோட", "kku", "க்கு", "ukku")) or b.i == a.j + 1
 
     def _head_candidates(self, a: _Match, toks: list[_Tok], sp: int | None, li: int | None) -> set[int]:
         if a.kind == "person":
@@ -287,6 +312,8 @@ class Linker:
                 spans.append(Span(start, end, source, t.slug, t.kind, 0.9, "alias", display=t.name, note=t.note))
                 continue
             if mm.kind == "kin":
+                if mm.bound:
+                    continue  # bound to a head with no such relative; leave to the translator
                 if self._generic_use(mm, matches, toks):
                     spans.append(Span(start, end, source, None, "kin", 0.3, "generic-address", display=mm.term.gloss if mm.term else ""))
                     continue
@@ -330,7 +357,8 @@ class Linker:
         prev = toks[mm.i - 1].norm if mm.i > 0 else ""
         if prev in POSSESSIVE_SPEAKER | POSSESSIVE_LISTENER:
             return False
-        if any(prev.endswith(_stem(h)) or h in prev for h in GENERIC_HEADS):
+        prevk = toks[mm.i - 1].knorm if mm.i > 0 else ""
+        if any(prev.endswith(_stem(h)) or h in prev or h in prevk for h in GENERIC_HEADS):
             return True
         # two bare sibling terms in a row ("annan thambi") is a generic phrase, not two relatives
         for other in matches:
@@ -359,13 +387,13 @@ class Linker:
                     scores[c] += 2
             for cue in node.cues:
                 cn = _norm(cue)
-                if any(_prefix_match(t.norm, cn) for t in toks) or (" " in cn and cn in sent):
+                if any(_prefix_match(t.norm, cn) or (len(cn) >= 5 and cn in t.norm) for t in toks) or (" " in cn and cn in sent):
                     scores[c] += 1
             w = salience.get(c, 0.0)
             scores[c] += 1.5 * w
             for other, ow in salience.items():
                 if other != c and self.g.distance(c, other) == 1:
-                    scores[c] += 1.0 * ow
+                    scores[c] += 1.5 * ow
             if sp is not None:
                 d = self.g.distance(sp, c)
                 scores[c] += 0.5 * max(0, 3 - d)

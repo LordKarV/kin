@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
+import { api, kinKey } from '../lib/api'
 
 type Summary = { n: number; stages: Record<string, { p50: number; p95: number }>; budget: Record<string, number> }
 
@@ -37,7 +37,7 @@ export function MemoryPanel({ callId }: { callId: string }) {
   const [busy, setBusy] = useState(false)
   const [q, setQ] = useState('knee')
   const [hits, setHits] = useState<any[] | null>(null)
-  const key = localStorage.getItem('kin.key') || 'change-me'
+  const key = kinKey() || 'change-me'  // dev default; set localStorage kin.key when KIN_API_KEY is real
 
   async function end() { setBusy(true); try { setRes(await api<Ended>(`/api/calls/${callId}/end`, { method: 'POST' })); setApproved(null) } finally { setBusy(false) } }
   async function approve() { setBusy(true); try { setApproved(await api(`/api/calls/${callId}/approve`, { method: 'POST', body: JSON.stringify({ remember_topics: remember }) })) } finally { setBusy(false) } }

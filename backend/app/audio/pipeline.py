@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+import uuid
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable
 
@@ -36,6 +37,7 @@ class Side:
     voice_id: str = ""
     speech_end_at: float = 0.0   # perf_counter when the last final was received
     wants_audio: bool = True     # False for a Twilio leg (Relay speaks the text itself)
+    token: str = field(default_factory=lambda: uuid.uuid4().hex)  # identifies this connection (reconnects reuse the role)
 
 
 @dataclass
@@ -56,22 +58,33 @@ class CallSession:
         side = Side(role, person, lang, send_json, send_bytes, wants_audio=wants_audio)
         node = self.translator.g.by_slug.get(person)
         side.voice_id = getattr(node, "voice_id", "") or ""
+        old = self.sides.get(role)
+        if old is not None:  # reconnect (Wi-Fi blip, second tab): retire the previous connection's ASR quietly
+            await self._stop_asr(old)
         self.sides[role] = side
         await self._start_asr(side)
-        await send_json({"type": "joined", "role": role, "person": person, "call_id": self.call_id, "peer_present": self.peer(role) is not None})
+        await self._safe_send(side, {"type": "joined", "role": role, "person": person, "call_id": self.call_id, "peer_present": self.peer(role) is not None})
         peer = self.peer(role)
         if peer:
-            await peer.send_json({"type": "peer", "present": True, "person": person})
+            await self._safe_send(peer, {"type": "peer", "present": True, "person": person})
         return side
 
-    async def leave(self, role: str) -> None:
-        side = self.sides.pop(role, None)
-        if not side:
-            return
-        if side.asr:
-            await side.asr.finish()
+    async def _stop_asr(self, side: Side) -> None:
         if side.asr_task:
             side.asr_task.cancel()
+        if side.asr:
+            try:
+                await side.asr.finish()
+            except Exception:  # noqa: BLE001
+                pass
+        side.asr = None
+
+    async def leave(self, role: str, token: str | None = None) -> None:
+        side = self.sides.get(role)
+        if not side or (token is not None and side.token != token):
+            return  # a stale connection must not evict the live one
+        self.sides.pop(role, None)
+        await self._stop_asr(side)
         peer = self.peer(role)
         if peer:
             try:
@@ -93,17 +106,41 @@ class CallSession:
             await side.send_json({"type": "status", "asr": "unavailable", "detail": str(e)[:200]})
 
     async def _asr_loop(self, side: Side) -> None:
-        async for ev in side.asr.events():
-            if not ev.final:
-                await self._broadcast({"type": "partial", "role": side.role, "text": ev.text})
-                continue
-            side.speech_end_at = time.perf_counter()
-            await self.process_utterance(side, ev.text, lang_tags=ev.lang_tags, t_start=ev.t_start, t_end=ev.t_end)
+        try:
+            async for ev in side.asr.events():
+                if not ev.final:
+                    await self._broadcast({"type": "partial", "role": side.role, "text": ev.text})
+                    continue
+                side.speech_end_at = time.perf_counter()
+                try:
+                    await self.process_utterance(side, ev.text, lang_tags=ev.lang_tags, t_start=ev.t_start, t_end=ev.t_end)
+                except Exception as e:  # noqa: BLE001
+                    log.exception("utterance failed: %s", e)
+                    await self._safe_send(side, {"type": "error", "stage": "pipeline", "message": str(e)[:200]})
+        finally:
+            side.asr = None
+            await self._safe_send(side, {"type": "status", "asr": "ended", "detail": "ASR stream closed; restart the mic to reconnect. Typed input still works."})
 
     async def on_audio(self, role: str, pcm16: bytes) -> None:
         side = self.sides.get(role)
-        if side and side.asr:
+        if not side:
+            return
+        if side.asr is None:  # (re)open lazily: first frame after a drop restarts the provider stream
+            await self._start_asr(side)
+            if side.asr is None:
+                return
+        try:
             await side.asr.send_audio(pcm16)
+        except Exception as e:  # noqa: BLE001  (provider socket closed; never take the user's call down)
+            log.warning("ASR send failed (%s); stream will be reopened on the next frame", e)
+            await self._stop_asr(side)
+            await self._safe_send(side, {"type": "status", "asr": "ended", "detail": str(e)[:200]})
+
+    async def _safe_send(self, side: Side, msg: dict) -> None:
+        try:
+            await side.send_json(msg)
+        except Exception:  # noqa: BLE001
+            pass
 
     async def on_text(self, role: str, text: str) -> None:
         side = self.sides.get(role)
@@ -138,9 +175,9 @@ class CallSession:
                         first = time.perf_counter()
                     await peer.send_bytes(chunk)
                 await peer.send_json({"type": "audio_end", "utterance_id": payload["utterance_id"]})
-            except Exception as e:  # noqa: BLE001
-                log.warning("TTS failed: %s", e)
-                await peer.send_json({"type": "error", "stage": "tts", "message": str(e)[:200]})
+            except Exception as e:  # noqa: BLE001  (TTS 4xx, or the peer dropped mid-stream: the speaker's call goes on)
+                log.warning("TTS/peer failed: %s", e)
+                await self._safe_send(peer, {"type": "error", "stage": "tts", "message": str(e)[:200]})
             lat["tts_first_byte_ms"] = round(((first or time.perf_counter()) - t_tts) * 1000, 1)
         else:
             lat["tts_first_byte_ms"] = 0.0
@@ -184,7 +221,7 @@ class CallSession:
             for c in res.result.pragmatics_cards:
                 e = m.GlossaryEntry(family_id=self.family_id, card=c.model_dump(), utterance_id=u.id, speaker_id=u.speaker_id)
                 s.add(e); s.flush(); entries.append((e.id, c.source))
-            if entries:
+            if entries and get_settings().glossary_audio:
                 from .glossary_audio import schedule_card_audio
                 schedule_card_audio(entries, side.lang, side.voice_id)
             return u.id

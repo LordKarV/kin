@@ -8,13 +8,24 @@ import logging
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 from ..audio.pipeline import registry
+from ..db import models as m
+from ..db.session import session_scope
+from ..security import key_ok, locked
 
 log = logging.getLogger("kin.ws")
 router = APIRouter()
 
 
 @router.websocket("/ws/call/{call_id}")
-async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: str = Query(...)):
+async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: str = Query(...), key: str | None = Query(default=None)):
+    if locked() and not key_ok(key or ws.headers.get("x-kin-key")):
+        await ws.close(code=4401, reason="KIN API key required (?key=)")
+        return
+    with session_scope() as s:
+        exists = s.get(m.Call, call_id) is not None
+    if not exists:
+        await ws.close(code=4404, reason="unknown call id; create one with POST /api/calls")
+        return
     await ws.accept()
     session = registry.get_or_create(call_id)
 
@@ -24,7 +35,7 @@ async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: s
     async def send_bytes(b: bytes) -> None:
         await ws.send_bytes(b)
 
-    await session.join(role, person, send_json, send_bytes)
+    side = await session.join(role, person, send_json, send_bytes)
     try:
         while True:
             msg = await ws.receive()
@@ -50,5 +61,5 @@ async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: s
     except Exception as e:  # noqa: BLE001
         log.warning("ws error (%s/%s): %s", call_id, role, e)
     finally:
-        await session.leave(role)
+        await session.leave(role, token=side.token)
         registry.drop_if_empty(call_id)

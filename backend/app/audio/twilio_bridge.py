@@ -16,15 +16,22 @@ from .pipeline import CallSession, Side
 
 
 def relay_twiml(ws_url: str, role: str, language: str = "ta-IN", welcome: str = "", other_language: str = "en-US", voice: str = "") -> str:
+    """Per-language providers (VERIFIED 2026-10-24, Relay voice-configuration page): ta-IN is listed with Google
+    transcription + ElevenLabs TTS, so the Tamil element keeps Twilio's default transcriber; the English element uses
+    Deepgram nova-3. No transcription provider is forced at the root."""
     v = f" voice={quoteattr(voice)}" if voice else ""
     greet = f" welcomeGreeting={quoteattr(welcome)}" if welcome else ""
+
+    def lang_el(code: str) -> str:
+        if code.startswith("en"):
+            return f'      <Language code={quoteattr(code)} ttsProvider="ElevenLabs" transcriptionProvider="Deepgram" speechModel="nova-3-general"/>\n'
+        return f'      <Language code={quoteattr(code)} ttsProvider="ElevenLabs"{v}/>\n'
+
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n  <Connect>\n'
-        f'    <ConversationRelay url={quoteattr(ws_url)}{greet} language={quoteattr(language)} interruptible="any" dtmfDetection="true" '
-        f'ttsProvider="ElevenLabs" transcriptionProvider="Deepgram" speechModel="nova-3-general">\n'
-        f'      <Language code={quoteattr(language)} ttsProvider="ElevenLabs" transcriptionProvider="Deepgram"{v}/>\n'
-        f'      <Language code={quoteattr(other_language)} ttsProvider="ElevenLabs" transcriptionProvider="Deepgram"/>\n'
-        f'      <Parameter name="role" value={quoteattr(role)}/>\n'
+        f'    <ConversationRelay url={quoteattr(ws_url)}{greet} language={quoteattr(language)} interruptible="any" dtmfDetection="true" ttsProvider="ElevenLabs">\n'
+        + lang_el(language) + lang_el(other_language)
+        + f'      <Parameter name="role" value={quoteattr(role)}/>\n'
         "    </ConversationRelay>\n  </Connect>\n</Response>\n"
     )
 

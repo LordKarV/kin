@@ -1,8 +1,12 @@
 # KIN demo script (90 seconds + Q&A)
 
-Pre-flight (10 min before): `.env` has two teammates' `MODEL_API_KEY`s, Deepgram and ElevenLabs keys; backend on :8000, frontend on :5173 on BOTH laptops (or one laptop + phone on the same LAN); run `python -m eval.run_eval` once so `eval/results.md` is fresh; open the Fade tab once and run Week 1 then Reset; backup video ready.
+Pre-flight (10 min before):
+- ONE backend and ONE Vite dev server, both on laptop A: `uvicorn app.main:app --port 8000` and `npm run dev` (Vite listens on the LAN over HTTPS with a self-signed cert).
+- Laptop A opens `https://localhost:5173`. Laptop B (same Wi-Fi) opens `https://<laptop-A-LAN-IP>:5173`, clicks through the certificate warning once (needed for the mic: getUserMedia only works in a secure context). Both tabs use the same call id. If a venue network blocks LAN traffic, run `ngrok http 5173` and open the https URL on B instead.
+- `.env` on laptop A has two teammates' `MODEL_API_KEY`s (primary + backup), the ElevenLabs key and a stock `ELEVENLABS_DEFAULT_VOICE_ID`; `GLOSSARY_AUDIO=1` only if you want card clips (costs characters). Use Chrome on both laptops (Firefox rejects a 16 kHz mic context).
+- Run `python -m eval.run_eval` once so `eval/results.md` is fresh. Open the Fade tab once and press Week 1 (the simulation runs in memory; real mastery is untouched). Backup video ready.
 
-Laptop A = grandparent (Tamil speaker). Laptop B = grandchild (Arjun). Same call id on both. Phone = optional Twilio dial-in.
+Laptop A = grandparent (Tamil speaker). Laptop B = grandchild (Arjun). Phone = optional Twilio dial-in.
 
 1. **(10 s) Problem.** "Three of us have grandparents we can't fully talk to."
 2. **(25 s) Live call.** A clicks New call, joins as grandparent; B joins as grandchild with the same id. A speaks (or types):

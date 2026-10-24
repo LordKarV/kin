@@ -123,7 +123,7 @@ class Translator:
         t1 = time.perf_counter()
         error = None
         try:
-            out = self.llm.structured(TranslationOut, system=system, user=user, reasoning_effort=reasoning_effort, max_completion_tokens=700)
+            out = self.llm.structured(TranslationOut, system=system, user=user, reasoning_effort=reasoning_effort, max_completion_tokens=1200)
             out.pragmatics_cards = filter_cards(out.pragmatics_cards, text)
             out.grounded_spans = self._reconcile(out.grounded_spans, spans, listener)
         except Exception as e:  # StructuredOutputError, API errors, timeouts → linker-only fallback keeps the call alive
@@ -133,12 +133,28 @@ class Translator:
         t_mt = (time.perf_counter() - t1) * 1000
         return TranslateResult(out, spans, safe_pt, {"link_ms": round(t_link, 1), "mt_ms": round(t_mt, 1), "total_ms": round((time.perf_counter() - t0) * 1000, 1)}, error)
 
-    def translate_generic(self, text: str, reasoning_effort: str | None = None) -> TranslateResult:
+    @staticmethod
+    def generic_user_prompt(text: str, speaker_name: str | None = None, listener_name: str | None = None, context: list[str] = ()) -> str:
+        """Fair baseline: the same speaker/listener/context the grounded prompt gets, minus the family graph."""
+        lines = []
+        if speaker_name or listener_name:
+            lines.append(f"Speaker: {speaker_name or 'unknown'}. Listener: {listener_name or 'unknown'}.")
+        if context:
+            lines.append("Recent context (oldest first):")
+            lines += [f"  {c}" for c in list(context)[-6:]]
+        lines.append(f"Utterance: {text}")
+        return "\n".join(lines)
+
+    def translate_generic(self, text: str, reasoning_effort: str | None = None, speaker: str | None = None, listener: str | None = None, history=()) -> TranslateResult:
         t0 = time.perf_counter()
         error = None
+        name = lambda slug: self.g.by_slug[slug].name if slug in self.g.by_slug else slug  # noqa: E731
+        ctx = [src for _who, src, _tr in history]
         try:
-            out = self.llm.structured(TranslationOut, system=GENERIC_RULES.format(lang=self.lang), user=f"Utterance: {text}",
-                                      reasoning_effort=reasoning_effort, max_completion_tokens=500)
+            out = self.llm.structured(TranslationOut, system=GENERIC_RULES.format(lang=self.lang),
+                                      user=self.generic_user_prompt(text, name(speaker) if speaker else None, name(listener) if listener else None, ctx),
+                                      reasoning_effort=reasoning_effort, max_completion_tokens=1200)
+            out.pragmatics_cards = filter_cards(out.pragmatics_cards, text)
         except Exception as e:
             error = f"{type(e).__name__}: {e}"
             out = TranslationOut(translation="", grounded_spans=[], pragmatics_cards=[], passthrough_kept=[], confidence=0.0)

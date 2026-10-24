@@ -10,13 +10,17 @@ export type Person = { id: string; name: string; lang_name: string; render: stri
 export type Edge = { src: string; dst: string; relation: string; lang_term: string }
 export type Thing = { id: string; kind: string; name: string; lang_name: string; aliases: string[]; note: string }
 
+export function kinKey(): string { try { return localStorage.getItem('kin.key') || '' } catch { return '' } }
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(path, { headers: { 'content-type': 'application/json' }, ...init })
+  const key = kinKey()
+  const r = await fetch(path, { ...init, headers: { 'content-type': 'application/json', ...(key ? { 'X-KIN-Key': key } : {}), ...(init?.headers || {}) } })
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`)
   return r.json() as Promise<T>
 }
 
 export function wsUrl(path: string): string {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${proto}://${location.host}${path}`
+  const key = kinKey()
+  return `${proto}://${location.host}${path}${key ? (path.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(key) : ''}`
 }

@@ -76,11 +76,13 @@ def reset(learner: str) -> int:
         return len(rows)
 
 
-def passthrough_tokens(learner: str, text: str, family_id: int | None = None) -> list[str]:
-    """Tokens of `text` whose lemma is mastered, excluding anything inside a grounded entity span (hard guardrail)."""
-    with session_scope() as s:
-        lid = _learner_id(s, learner)
-        known = {r.lemma for r in s.scalars(select(m.Mastery).where(m.Mastery.learner_id == lid, m.Mastery.p_known >= MASTERY_THRESHOLD))}
+def passthrough_tokens(learner: str, text: str, family_id: int | None = None, known: set[str] | None = None) -> list[str]:
+    """Tokens of `text` whose lemma is mastered, excluding anything inside a grounded entity span (hard guardrail).
+    `known` overrides the DB (used by the simulation so it never touches the learner's real rows)."""
+    if known is None:
+        with session_scope() as s:
+            lid = _learner_id(s, learner)
+            known = {r.lemma for r in s.scalars(select(m.Mastery).where(m.Mastery.learner_id == lid, m.Mastery.p_known >= MASTERY_THRESHOLD))}
     if not known:
         return []
     tr = get_translator(family_id) if family_id else None
@@ -109,26 +111,26 @@ DEMO_SENTENCE = "இன்னைக்கு ரொம்ப வெயில்,
 
 
 def simulate(learner: str, weeks: int, per_week: int = 3, family_id: int | None = None) -> dict:
-    """Replay `weeks` of recorded-style exposures/verifications through the REAL BKT, from a clean slate.
-    Returns the per-word trajectory (week 0..weeks) and what the fixed demo sentence would pass through."""
+    """Replay `weeks` of recorded-style exposures/verifications through the REAL BKT, in memory, from a clean slate.
+    Never writes the learner's real mastery rows. Returns per-word trajectories (week 0..weeks), the resulting
+    mastery table, and what the fixed demo sentence would pass through."""
     weeks = max(0, min(12, int(weeks)))
-    reset(learner)
-    traj: dict[str, list[float]] = {w: [DEFAULT.p_init] for w in DEMO_VOCAB}
-    # word-specific pacing so the curve is not uniform: early words (greetings) learn first
-    pace = {w: 1.0 - 0.06 * i for i, w in enumerate(DEMO_VOCAB)}
-    with session_scope() as s:
-        lid = _learner_id(s, learner)
-        for wk in range(1, weeks + 1):
-            for w in DEMO_VOCAB:
-                r = _row(s, lid, w)
-                n_exp = max(1, round(per_week * pace[w]))
-                for _ in range(n_exp):
-                    r.p_known = bkt.expose(r.p_known); r.n_exposures += 1
-                if wk >= 2 and (wk * pace[w]) >= 1.5:
-                    r.p_known = bkt.update(r.p_known, correct=True); r.n_verified += 1
-                traj[w].append(round(r.p_known, 4))
-    pt = passthrough_tokens(learner, DEMO_SENTENCE, family_id)
+    vocab = [(w, lemma(w)) for w in DEMO_VOCAB]
+    state = {lm: {"p": DEFAULT.p_init, "exp": 0, "ver": 0} for _w, lm in vocab}
+    traj: dict[str, list[float]] = {lm: [DEFAULT.p_init] for _w, lm in vocab}
+    pace = {lm: 1.0 - 0.06 * i for i, (_w, lm) in enumerate(vocab)}  # greetings first, so curves are staggered
+    for wk in range(1, weeks + 1):
+        for _w, lm in vocab:
+            st = state[lm]
+            for _ in range(max(1, round(per_week * pace[lm]))):
+                st["p"] = bkt.expose(st["p"]); st["exp"] += 1
+            if wk >= 2 and (wk * pace[lm]) >= 1.5:
+                st["p"] = bkt.update(st["p"], correct=True); st["ver"] += 1
+            traj[lm].append(round(st["p"], 4))
+    known = {lm for lm, st in state.items() if st["p"] >= MASTERY_THRESHOLD}
+    pt = passthrough_tokens(learner, DEMO_SENTENCE, family_id, known=known)
     return {"learner": learner, "weeks": weeks, "simulated": True, "sentence": DEMO_SENTENCE, "passthrough": pt,
-            "trajectories": [{"lemma": w, "curve": traj[w], "mastered": traj[w][-1] >= MASTERY_THRESHOLD} for w in DEMO_VOCAB],
-            "note": "Simulation of accumulated history: the same recorded exposure pattern replayed through the real BKT, not a shortcut.",
+            "trajectories": [{"lemma": lm, "lemma_surface": w, "curve": traj[lm], "mastered": lm in known} for w, lm in vocab],
+            "mastery": [{"lemma": lm, "surface": w, "p_known": round(state[lm]["p"], 4), "n_exposures": state[lm]["exp"], "n_verified": state[lm]["ver"], "mastered": lm in known} for w, lm in vocab],
+            "note": "Simulation of accumulated history: a documented exposure pattern replayed through the real BKT in memory. Your real mastery is untouched.",
             "at": datetime.now(timezone.utc).isoformat()}

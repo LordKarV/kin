@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 
 type Row = { lemma: string; p_known: number; n_exposures: number; n_verified: number; mastered: boolean }
-type Sim = { weeks: number; sentence: string; passthrough: string[]; trajectories: { lemma: string; curve: number[]; mastered: boolean }[]; note: string }
+type Sim = { weeks: number; sentence: string; passthrough: string[]; trajectories: { lemma: string; lemma_surface: string; curve: number[]; mastered: boolean }[]; mastery: Row[]; note: string }
 type Rendered = { translation: string; passthrough: string[]; error: string | null }
 
 export default function FadeTab() {
@@ -19,7 +19,7 @@ export default function FadeTab() {
     setBusy(true); setWeeks(w)
     try {
       const s = await api<Sim>('/api/fade/simulate', { method: 'POST', body: JSON.stringify({ learner, weeks: w }) })
-      setSim(s); await load()
+      setSim(s)
       const r = await api<Rendered>('/api/translate/grounded', { method: 'POST', body: JSON.stringify({ text: s.sentence, speaker: 'p_kamala', listener: learner }) })
       setRendered(r)
     } finally { setBusy(false) }
@@ -60,10 +60,10 @@ export default function FadeTab() {
       )}
 
       <div className="panel">
-        <h2>Current mastery · {rows.length} words tracked</h2>
-        {rows.length === 0 && <div className="muted">Nothing tracked yet. Join a call as the grandchild, or run the simulation.</div>}
+        <h2>{sim ? `Simulated mastery at week ${sim.weeks} (your real mastery below is untouched)` : `Current mastery · ${rows.length} words tracked`}</h2>
+        {!sim && rows.length === 0 && <div className="muted">Nothing tracked yet. Join a call as the grandchild, or run the simulation.</div>}
         <div className="mastery">
-          {rows.map(r => (
+          {(sim ? sim.mastery : rows).map(r => (
             <div className="w" key={r.lemma} title={`${r.n_exposures} exposures · ${r.n_verified} verified`}>
               <div className="row" style={{ justifyContent: 'space-between' }}><span>{r.lemma}</span><span className={`small ${r.mastered ? 'ok' : 'muted'}`}>{(100 * r.p_known).toFixed(0)}%{r.mastered ? ' ✓' : ''}</span></div>
               <div className="bar"><i style={{ width: `${100 * r.p_known}%`, background: r.mastered ? 'var(--accent2)' : 'var(--accent)' }} /></div>
@@ -71,6 +71,11 @@ export default function FadeTab() {
           ))}
         </div>
       </div>
+      {sim && rows.length > 0 && (
+        <div className="panel"><h2>Real mastery · {rows.length} words from actual calls</h2>
+          <div className="mastery">{rows.map(r => <div className="w" key={r.lemma}><div className="row" style={{ justifyContent: 'space-between' }}><span>{r.lemma}</span><span className="small muted">{(100 * r.p_known).toFixed(0)}%</span></div><div className="bar"><i style={{ width: `${100 * r.p_known}%` }} /></div></div>)}</div>
+        </div>
+      )}
     </>
   )
 }
@@ -93,7 +98,7 @@ function Curves({ sim }: { sim: Sim }) {
       {[0, 0.5, 1].map(v => <text key={v} x={4} y={y(v) + 4} fill="#9aa3b2" fontSize="10">{v}</text>)}
       {sim.trajectories.map((t, k) => (
         <polyline key={t.lemma} fill="none" stroke={t.mastered ? '#5ad1b3' : `hsl(${(k * 37) % 360} 60% 65%)`} strokeWidth={t.mastered ? 2 : 1}
-          points={t.curve.map((p, i) => `${x(i)},${y(p)}`).join(' ')}><title>{t.lemma}</title></polyline>
+          points={t.curve.map((p, i) => `${x(i)},${y(p)}`).join(' ')}><title>{t.lemma_surface}</title></polyline>
       ))}
       {Array.from({ length: n }).map((_, i) => <text key={i} x={x(i)} y={H - 8} fill="#9aa3b2" fontSize="10" textAnchor="middle">w{i}</text>)}
     </svg>

@@ -30,10 +30,25 @@ def _new_call() -> int:
         return c.id
 
 
+def _verify_twilio(request: Request, form: dict) -> None:
+    """Reject webhooks not signed by our Twilio account (enforced whenever an auth token is configured)."""
+    token = get_settings().twilio_auth_token
+    if not token:
+        return
+    from twilio.request_validator import RequestValidator
+
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc))
+    url = f"{proto}://{host}{request.url.path}" + (f"?{request.url.query}" if request.url.query else "")
+    if not RequestValidator(token).validate(url, form, request.headers.get("x-twilio-signature", "")):
+        raise HTTPException(403, "invalid Twilio signature")
+
+
 @router.post("/twilio/voice")
 async def voice(request: Request, role: str = "grandparent", call_id: int | None = None):
     """Inbound call webhook: the grandparent dials the Twilio number; nothing to install."""
     form = await request.form()
+    _verify_twilio(request, {k: v for k, v in form.items()})
     cid = call_id or _new_call()
     s = get_settings()
     log.info("inbound call %s from %s → call %s", form.get("CallSid"), form.get("From"), cid)

@@ -36,11 +36,20 @@ def list_calls(limit: int = 20, s: Session = Depends(get_session)) -> list[dict]
 
 @router.get("/{call_id}/utterances")
 def utterances(call_id: int, s: Session = Depends(get_session)) -> list[dict]:
+    from ..memory.service import remembered_by_call, withheld
+
     rows = s.scalars(select(m.Utterance).where(m.Utterance.call_id == call_id).order_by(m.Utterance.id)).all()
     people = {p.id: p.slug for p in s.scalars(select(m.Person))}
-    return [{"id": u.id, "speaker": people.get(u.speaker_id), "listener": people.get(u.listener_id), "src_text": u.src_text,
-             "translation": u.translation, "grounded_spans": u.grounded_spans, "cards": u.cards, "passthrough": u.passthrough,
-             "latencies": u.latencies, "created_at": u.created_at.isoformat() if u.created_at else None} for u in rows]
+    rem = remembered_by_call(s, [call_id])
+    out = []
+    for u in rows:
+        hide = withheld(u, rem)
+        note = f"[{u.sensitive_topic} topic withheld; tap 'remember this' after the call to keep it]"
+        out.append({"id": u.id, "speaker": people.get(u.speaker_id), "listener": people.get(u.listener_id),
+                    "src_text": note if hide else u.src_text, "translation": "" if hide else u.translation,
+                    "grounded_spans": [] if hide else u.grounded_spans, "cards": u.cards, "passthrough": u.passthrough,
+                    "sensitive_topic": u.sensitive_topic, "latencies": u.latencies, "created_at": u.created_at.isoformat() if u.created_at else None})
+    return out
 
 
 class Approve(BaseModel):
