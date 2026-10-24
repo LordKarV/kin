@@ -32,3 +32,5 @@
 - 2026-10-24 Phone bridge: a Twilio ConversationRelay leg joins the same CallSession as a laptop; Relay does STT/TTS, KIN sends grounded text with `lang` set per direction (`ta-IN` ↔ `en-US`). The phone side sets wants_audio=False so no ElevenLabs bytes are generated for it.
 - 2026-10-24 Memory: post-call summary (text) + structured extraction; health/money/conflict topics stored as a topic word only; `/approve` applies non-sensitive upserts to the graph (then the linker cache resets) and records `remember_topics` chosen by the grandchild. Search is rapidfuzz over utterances + summaries (no embeddings endpoint on Meta Model API).
 - 2026-10-24 Connector auth: `X-KIN-Key` or `Authorization: Bearer`, constant-time compare, read-only routes only; brief at /connectors/muse.md is public and formats the live base URL.
+- 2026-10-24 Glossary audio = the card's source phrase only, re-synthesized by TTS (multilingual model) into backend/media and served at /media; the live call audio itself is never retained (plan §9).
+- 2026-10-24 Tests reset the SQLite engine, translator cache and TTS singleton per test; earlier suites leaked rows across tests.

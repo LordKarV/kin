@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api, wsUrl, type Transcript as T, type Person } from '../lib/api'
 import { Mic, Player } from '../lib/audio'
 import { Utterance } from './Transcript'
+import { LatencyPanel, MemoryPanel } from './Panels'
 
 type Role = 'grandparent' | 'grandchild'
 
@@ -100,6 +101,8 @@ export default function CallTab() {
       </div>
 
       <Compare />
+      <LatencyPanel />
+      <MemoryPanel callId={callId} />
     </>
   )
 }

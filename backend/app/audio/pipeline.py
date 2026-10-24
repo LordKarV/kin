@@ -180,8 +180,13 @@ class CallSession:
                             grounded_spans=[sp.model_dump() for sp in res.result.grounded_spans],
                             cards=[c.model_dump() for c in res.result.pragmatics_cards], passthrough=res.passthrough, latencies=lat)
             s.add(u); s.flush()
+            entries = []
             for c in res.result.pragmatics_cards:
-                s.add(m.GlossaryEntry(family_id=self.family_id, card=c.model_dump(), utterance_id=u.id, speaker_id=u.speaker_id))
+                e = m.GlossaryEntry(family_id=self.family_id, card=c.model_dump(), utterance_id=u.id, speaker_id=u.speaker_id)
+                s.add(e); s.flush(); entries.append((e.id, c.source))
+            if entries:
+                from .glossary_audio import schedule_card_audio
+                schedule_card_audio(entries, side.lang, side.voice_id)
             return u.id
 
     def _update_latencies(self, utterance_id: int, lat: dict) -> None:

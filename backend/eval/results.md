@@ -1,12 +1,12 @@
 # KIN eval results
 
-Generated 2026-10-24 22:58 UTC · model `muse-spark-1.3` · MOCK (no LLM)
+Generated 2026-10-24 23:30 UTC · model `muse-spark-1.3` · MOCK (no LLM)
 
 ## Entity grounding (error rate, lower is better)
 
 | Condition | Overall | Kin terms | Name collisions | Dishes/places | Kin flattening | MT p50 | MT p95 | API errors |
 |---|---|---|---|---|---|---|---|---|
-| linker-only (no LLM) | 2% (n=144) | 4% (n=53) | 3% (n=32) | 0% (n=40) | 0% | 2 ms | 44 ms | 0 |
+| linker-only (no LLM) | 2% (n=144) | 4% (n=53) | 3% (n=32) | 0% (n=40) | 0% | 3 ms | 49 ms | 0 |
 
 ## Idiom cards
 

@@ -12,6 +12,9 @@ def _clean_env(monkeypatch, tmp_path):
     monkeypatch.setenv("TTS_PROVIDER", "mock")
     monkeypatch.setenv("MODEL_API_KEY", "test-key")
     from app import config
-    config.get_settings.cache_clear()
+    from app.db.session import reset_engine
+    from app.mt.translate import reset_translator_cache
+    from app.audio.tts import reset_tts
+    config.get_settings.cache_clear(); reset_engine(); reset_translator_cache(); reset_tts()
     yield
-    config.get_settings.cache_clear()
+    config.get_settings.cache_clear(); reset_engine(); reset_translator_cache(); reset_tts()
