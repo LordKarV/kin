@@ -12,6 +12,8 @@ def stem_in(source: str, text: str) -> bool:
     """True if `source` occurs in `text`, allowing the final pulli to be replaced by a suffix vowel sign."""
     if source in text:
         return True
+    if source.endswith("\u0bae" + VIRAMA):  # -ம் nouns drop the ம் before a suffix (கல்யாணம் → கல்யாணத்துக்கு)
+        return source[:-2] in text
     return source.endswith(VIRAMA) and source[:-1] in text
 
 
