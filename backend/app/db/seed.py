@@ -89,6 +89,19 @@ THINGS = [
 ]
 
 
+CUES = {
+    "p_ravi_mama": ["bank", "பேங்க்", "Adyar", "அடையாறு", "Chennai", "சென்னை", "Madras", "மெட்ராஸ்", "cricket", "கிரிக்கெட்", "laptop", "லேப்டாப்"],
+    "p_ravi_periyappa": ["shop", "kadai", "கடை", "textile", "துணி", "துணிக்கடை", "ஜவுளி", "Coimbatore", "Kovai", "கோவை", "கோயம்புத்தூர்", "hall", "ஹால்", "vetti", "வேட்டி"],
+    "p_lakshmi": ["Bharatanatyam", "பரதநாட்டியம்", "arangetram", "அரங்கேற்றம்", "dance", "class", "கிளாஸ்", "க்ளாஸ்"],
+    "p_meena": ["Singapore", "சிங்கப்பூர்", "visa", "விசா"],
+    "p_divya": ["hospital", "ஹாஸ்பிடல்", "doctor", "டாக்டர்", "night shift", "Houston"],
+    "p_karthik": ["cricket", "கிரிக்கெட்", "school", "ஸ்கூல்"],
+    "p_vishnu": ["kalyanam", "கல்யாணம்", "wedding"],
+    "p_saroja": ["knee", "முழங்கால்", "sweater", "ஸ்வெட்டர்", "pakkathu theru", "பக்கத்து தெரு"],
+    "p_raghavan": ["radio", "ரேடியோ", "thithi", "திதி", "teacher"],
+}
+
+
 def seed_demo_family(session: Session) -> m.Family:
     """Create (or return the existing) demo family. Idempotent by family name."""
     fam = session.scalar(select(m.Family).where(m.Family.name == FAMILY_NAME))
@@ -102,7 +115,7 @@ def seed_demo_family(session: Session) -> m.Family:
         if slug in by_slug:
             continue
         p = m.Person(family_id=fam.id, slug=slug, display_name=name, lang_name=ta, gender=g, birth_year_approx=by,
-                     notes=notes, is_learner=learner, is_deceased=dead)
+                     notes=notes, is_learner=learner, is_deceased=dead, cues=CUES.get(slug, []))
         p.aliases = [m.Alias(alias=a, lang=l, kind=k) for a, l, k in aliases]
         session.add(p)
         by_slug[slug] = p

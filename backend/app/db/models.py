@@ -39,6 +39,7 @@ class Person(Base):
     is_learner: Mapped[bool] = mapped_column(Boolean, default=False)
     is_deceased: Mapped[bool] = mapped_column(Boolean, default=False)
     voice_id: Mapped[str] = mapped_column(String(80), default="")  # TTS voice (clone only with consent)
+    cues: Mapped[list] = mapped_column(JSON, default=list)  # topic/place words that hint at this person (both scripts)
 
     family: Mapped[Family] = relationship(back_populates="people")
     aliases: Mapped[list["Alias"]] = relationship(back_populates="person", cascade="all, delete-orphan")
