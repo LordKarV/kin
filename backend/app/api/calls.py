@@ -41,3 +41,35 @@ def utterances(call_id: int, s: Session = Depends(get_session)) -> list[dict]:
     return [{"id": u.id, "speaker": people.get(u.speaker_id), "listener": people.get(u.listener_id), "src_text": u.src_text,
              "translation": u.translation, "grounded_spans": u.grounded_spans, "cards": u.cards, "passthrough": u.passthrough,
              "latencies": u.latencies, "created_at": u.created_at.isoformat() if u.created_at else None} for u in rows]
+
+
+class Approve(BaseModel):
+    remember_topics: list[str] = []
+
+
+@router.post("/{call_id}/end")
+def end_call(call_id: int) -> dict:
+    """Mark the call ended; summarize and extract (Phase 6). Sensitive topics are reduced to a topic word."""
+    from ..memory.service import end_call as _end
+    try:
+        return _end(call_id)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+
+
+@router.post("/{call_id}/approve")
+def approve_call(call_id: int, body: Approve) -> dict:
+    """Grandchild approves: non-sensitive people/dishes/places/events are added to the graph; listed topics are remembered."""
+    from ..memory.service import approve_call as _approve
+    try:
+        return _approve(call_id, body.remember_topics)
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+
+
+@router.get("/{call_id}/summary")
+def get_summary(call_id: int, s: Session = Depends(get_session)) -> dict:
+    cs = s.scalar(select(m.CallSummary).where(m.CallSummary.call_id == call_id))
+    if cs is None:
+        raise HTTPException(404, "no summary")
+    return {"call_id": call_id, "summary": cs.summary, "extracted": cs.extracted, "approved": cs.approved}

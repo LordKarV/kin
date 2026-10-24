@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_number: str = ""
     public_wss_host: str = ""
+    twilio_heritage_lang: str = "ta-IN"  # VERIFY in ConversationRelay voice configuration
 
     # Data
     database_url: str = f"sqlite:///{_HERE / 'kin.db'}"  # absolute so scripts from any cwd share one DB

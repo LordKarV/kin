@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CallTab from './tabs/CallTab'
 import GraphTab from './tabs/GraphTab'
 import GlossaryTab from './tabs/GlossaryTab'
@@ -10,6 +10,7 @@ type Tab = typeof TABS[number]
 export default function App() {
   const [tab, setTab] = useState<Tab>((location.hash.replace('#', '') as Tab) || 'Call')
   const go = (t: Tab) => { setTab(t); location.hash = t }
+  useEffect(() => { const h = () => { const t = location.hash.replace('#', '') as Tab; if (TABS.includes(t)) setTab(t) }; addEventListener('hashchange', h); return () => removeEventListener('hashchange', h) }, [])
   return (
     <div className="app">
       <header className="top">

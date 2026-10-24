@@ -35,6 +35,7 @@ class Side:
     asr_task: asyncio.Task | None = None
     voice_id: str = ""
     speech_end_at: float = 0.0   # perf_counter when the last final was received
+    wants_audio: bool = True     # False for a Twilio leg (Relay speaks the text itself)
 
 
 @dataclass
@@ -49,10 +50,10 @@ class CallSession:
     on_utterance: Callable | None = None  # Phase 4/6 hook: (utterance dict) -> None
 
     # ---- membership --------------------------------------------------------
-    async def join(self, role: str, person: str, send_json: SendJSON, send_bytes: SendBytes) -> Side:
+    async def join(self, role: str, person: str, send_json: SendJSON, send_bytes: SendBytes, wants_audio: bool = True) -> Side:
         heritage = self.translator.g.heritage_lang
         lang = heritage if role == "grandparent" else "en"
-        side = Side(role, person, lang, send_json, send_bytes)
+        side = Side(role, person, lang, send_json, send_bytes, wants_audio=wants_audio)
         node = self.translator.g.by_slug.get(person)
         side.voice_id = getattr(node, "voice_id", "") or ""
         self.sides[role] = side
@@ -127,7 +128,7 @@ class CallSession:
         self.history.append((side.person, text, res.result.translation)); self.history = self.history[-6:]
         await self._broadcast(payload)
         # TTS to the peer, measuring first byte
-        if peer and res.result.translation:
+        if peer and peer.wants_audio and res.result.translation:
             t_tts = time.perf_counter()
             first = None
             try:

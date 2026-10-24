@@ -31,12 +31,14 @@ app = FastAPI(title="KIN", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
-from .api import calls, fade, glossary, graph, translate, ws  # noqa: E402
+from .api import calls, connector, fade, glossary, graph, translate, twilio, ws  # noqa: E402
 
 app.include_router(calls.router)
 app.include_router(graph.router)
 app.include_router(glossary.router)
 app.include_router(fade.router)
+app.include_router(connector.router)
+app.include_router(twilio.router)
 app.include_router(translate.router)
 app.include_router(ws.router)
 
