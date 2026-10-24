@@ -107,7 +107,8 @@ class Translator:
         return "\n".join(lines)
 
     # ---- translation ---------------------------------------------------------
-    def translate(self, text: str, speaker: str, listener: str, history=(), passthrough=(), reasoning_effort: str | None = None) -> TranslateResult:
+    def translate(self, text: str, speaker: str, listener: str, history=(), passthrough=(), reasoning_effort: str | None = None,
+                  target_lang: str = "en") -> TranslateResult:
         t0 = time.perf_counter()
         ctx = [src for _who, src, _tr in history]
         spans = self.linker.link(text, speaker, listener, context=ctx)
@@ -116,6 +117,9 @@ class Translator:
         safe_pt = [p for p in passthrough if not any(p in s.source or s.source in p for s in spans if s.node)]
         system = self.system_prompt(listener)
         user = self.user_prompt(text, speaker, listener, spans, history, safe_pt)
+        if target_lang != "en":
+            tl = LANG_NAMES.get(target_lang, target_lang)
+            user += f"\nTarget language: {tl}. The listener speaks {tl}; translate INTO {tl} (natural spoken {tl}, Tamil script), keeping names and kin terms the family uses."
         t1 = time.perf_counter()
         error = None
         try:

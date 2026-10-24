@@ -21,3 +21,7 @@
 - 2026-10-24 Linker disambiguation signals for name collisions, in weight order: adjacent kin term / compositional chain > co-mentioned relatives (graph distance 1) > place and topic cue words (Person.cues) > context salience (last 6 utterances, decaying) > speaker proximity (Paatti's bare "Ravi" defaults to her son) > Tamil honorific verb endings (-aaru/-aanga respectful vs -aan informal).
 - 2026-10-24 Eval scoring: an entity is correct when every alternative group in must_include appears in the span's rendered text plus the spoken translation. "linker-only" (no LLM) is reported as the deterministic floor and is the offline CI check; generic vs grounded need the live model.
 - 2026-10-24 Grounded translation keeps spoken output short ("Ravi mama") and puts the full disambiguation in grounded_spans.rendered, so speech stays natural while the UI shows "your uncle Ravi mama (Mom's younger brother)".
+- 2026-10-24 Transcript JSON is broadcast BEFORE the TTS audio (then a `latency` update follows) so the UI shows text while audio streams.
+- 2026-10-24 Typed input ({"type":"text"}) bypasses ASR on both sides: demo insurance when a mic or ASR key fails, and how tests drive the pipeline.
+- 2026-10-24 ElevenLabs via HTTP streaming endpoint (/stream, pcm_16000) rather than the input WebSocket: one short sentence per call, fewer moving parts, same model latency.
+- 2026-10-24 Browser audio: AudioContext at 16 kHz + AudioWorklet → PCM16 100 ms frames over the WebSocket; playback schedules PCM chunks gaplessly.
