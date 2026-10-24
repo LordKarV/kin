@@ -34,7 +34,7 @@ export function Latency({ lat }: { lat: Record<string, number> }) {
   )
 }
 
-export function Utterance({ t, names }: { t: T; names: Record<string, string> }) {
+export function Utterance({ t, names, onVerify, verified }: { t: T; names: Record<string, string>; onVerify?: (id: number, ok: boolean) => void; verified?: boolean | null }) {
   return (
     <div className={`utt ${t.role === 'grandparent' ? 'gp' : 'gc'}`}>
       <div className="who"><span>{names[t.speaker] || t.speaker} → {names[t.listener] || t.listener}</span><span>#{t.utterance_id}{t.error ? <span className="err"> · fallback</span> : null}</span></div>
@@ -45,6 +45,13 @@ export function Utterance({ t, names }: { t: T; names: Record<string, string> })
         <div className="card" key={i}><div className="kind">{c.kind} · “{c.source}”</div><div><b>Literal:</b> {c.literal}</div><div><b>Means:</b> {c.meaning}</div><div className="muted small">{c.why_it_matters}</div></div>
       ))}
       <Latency lat={t.latencies || {}} />
+      {onVerify && t.target_lang === 'en' && (
+        <div className="row small" style={{ marginTop: 6 }}>
+          <span className="muted">Did you get it without the translation?</span>
+          {verified == null ? (<><button onClick={() => onVerify(t.utterance_id, true)}>👍 got it</button><button onClick={() => onVerify(t.utterance_id, false)}>👎 needed it</button></>)
+            : <span className="pill ok">{verified ? 'verified: understood' : 'noted: needed translation'}</span>}
+        </div>
+      )}
     </div>
   )
 }

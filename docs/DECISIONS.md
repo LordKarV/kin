@@ -25,3 +25,6 @@
 - 2026-10-24 Typed input ({"type":"text"}) bypasses ASR on both sides: demo insurance when a mic or ASR key fails, and how tests drive the pipeline.
 - 2026-10-24 ElevenLabs via HTTP streaming endpoint (/stream, pcm_16000) rather than the input WebSocket: one short sentence per call, fewer moving parts, same model latency.
 - 2026-10-24 Browser audio: AudioContext at 16 kHz + AudioWorklet → PCM16 100 ms frames over the WebSocket; playback schedules PCM chunks gaplessly.
+- 2026-10-24 Fade evidence model: exposure = BKT learning transition at a weak rate (0.05) with no observation; "got it" tap = full BKT observation (slip .1, guess .2) + learn .2. Threshold 0.85 → passthrough. Passthrough is computed only for the learner-listener direction and never inside a linked entity or kin span.
+- 2026-10-24 Lemmatizer is a shallow one-layer suffix stripper with a frozen-word list; good enough to merge case forms of one word into one mastery row. Not a morphological analyzer.
+- 2026-10-24 The week-N control replays a documented exposure pattern (15 recurring words, 3 exposures/week, one verification/week from week 2) through the real BKT from a clean slate, and the UI labels it as a simulation of accumulated history.

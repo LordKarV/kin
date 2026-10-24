@@ -16,6 +16,7 @@ export default function CallTab() {
   const [text, setText] = useState('')
   const [micOn, setMicOn] = useState(false)
   const [asrNote, setAsrNote] = useState('')
+  const [verified, setVerified] = useState<Record<number, boolean>>({})
   const ws = useRef<WebSocket | null>(null)
   const mic = useRef(new Mic())
   const player = useRef(new Player())
@@ -59,6 +60,7 @@ export default function CallTab() {
     catch (e) { setAsrNote(`mic: ${String(e)}`) }
   }
   function stopMic() { mic.current.stop(); setMicOn(false) }
+  function verify(id: number, ok: boolean) { ws.current?.send(JSON.stringify({ type: 'verify', utterance_id: id, understood: ok })); setVerified(v => ({ ...v, [id]: ok })) }
   const connected = status === 'connected'
 
   return (
@@ -94,7 +96,7 @@ export default function CallTab() {
       <div className="panel">
         <h2>Transcript</h2>
         {utts.length === 0 && <div className="muted">Nothing yet. Grounded spans glow gold; hover one to see who it is.</div>}
-        {utts.map(t => <Utterance key={t.utterance_id} t={t} names={names} />)}
+        {utts.map(t => <Utterance key={t.utterance_id} t={t} names={names} onVerify={role === 'grandchild' ? verify : undefined} verified={t.utterance_id in verified ? verified[t.utterance_id] : null} />)}
       </div>
 
       <Compare />

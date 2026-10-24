@@ -190,6 +190,14 @@ class CallSession:
                 u.latencies = lat
 
 
+def _record_exposures(payload: dict) -> None:
+    """Fade evidence: the learner heard these heritage words with their translation (weak evidence)."""
+    if payload.get("target_lang") != "en":
+        return
+    from ..fade.service import record_exposures
+    record_exposures(payload["listener"], payload["src_text"])
+
+
 class CallRegistry:
     def __init__(self):
         self._calls: dict[int, CallSession] = {}
@@ -202,6 +210,7 @@ class CallRegistry:
             cs = CallSession(call_id=call_id, family_id=family_id, translator=get_translator(family_id), tts=get_tts())
             from ..fade.policy import make_fade_policy  # Phase 4 (safe no-op until mastery exists)
             cs.fade = make_fade_policy(family_id)
+            cs.on_utterance = _record_exposures
             self._calls[call_id] = cs
         return self._calls[call_id]
 
