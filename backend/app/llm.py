@@ -1,0 +1,152 @@
+"""The only place that talks to the LLM.
+
+OpenAI-compatible client pointed at Meta Model API (or anything else via env).
+Structured outputs use Chat Completions `response_format={"type":"json_schema",...}` with strict=True,
+which requires additionalProperties:false and every key listed in `required` (VERIFIED dev.meta.ai docs).
+"""
+from __future__ import annotations
+
+import json
+import logging
+import time
+from typing import Any, Iterable, Type, TypeVar
+
+import httpx
+import openai
+from openai import OpenAI
+from pydantic import BaseModel, ValidationError
+
+from .config import get_settings
+
+log = logging.getLogger("kin.llm")
+T = TypeVar("T", bound=BaseModel)
+
+# Parameters Meta Model API rejects with HTTP 400 (never send them).
+_REJECTED = {"stop", "logit_bias", "prediction", "web_search_options", "modalities", "audio", "verbosity", "logprobs", "max_output_tokens"}
+
+
+class StructuredOutputError(RuntimeError):
+    """The model returned something that is not valid JSON for the requested schema."""
+
+
+def to_strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Make a Pydantic JSON schema acceptable to strict mode: every object closed, every key required."""
+
+    def walk(node: Any) -> Any:
+        if isinstance(node, dict):
+            if node.get("type") == "object" or "properties" in node:
+                props = node.get("properties", {})
+                node["additionalProperties"] = False
+                node["required"] = list(props.keys())
+            for k, v in list(node.items()):
+                if k == "default":
+                    node.pop(k)  # strict mode rejects defaults on required keys
+                else:
+                    node[k] = walk(v)
+            return node
+        if isinstance(node, list):
+            return [walk(x) for x in node]
+        return node
+
+    return walk(json.loads(json.dumps(schema)))
+
+
+class LLM:
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str,
+        model: str,
+        backup_api_key: str = "",
+        reasoning_effort: str = "low",
+        timeout_s: float = 20.0,
+        transport: httpx.BaseTransport | None = None,
+    ):
+        self.model = model
+        self.reasoning_effort = reasoning_effort
+        self._timeout = timeout_s
+        http = httpx.Client(transport=transport) if transport else None
+        self._clients = [OpenAI(api_key=api_key, base_url=base_url, http_client=http, timeout=timeout_s, max_retries=0)]
+        if backup_api_key:
+            self._clients.append(OpenAI(api_key=backup_api_key, base_url=base_url, http_client=http, timeout=timeout_s, max_retries=0))
+
+    # -- public -------------------------------------------------------------
+
+    def structured(
+        self,
+        schema_model: Type[T],
+        system: str,
+        user: str,
+        history: Iterable[dict[str, str]] = (),
+        reasoning_effort: str | None = None,
+        max_completion_tokens: int = 800,
+    ) -> T:
+        """One structured completion, validated with Pydantic. Raises StructuredOutputError on bad JSON."""
+        messages = [{"role": "developer", "content": system}, *history, {"role": "user", "content": user}]
+        schema = to_strict_schema(schema_model.model_json_schema())
+        kwargs: dict[str, Any] = dict(
+            model=self.model,
+            messages=messages,
+            response_format={"type": "json_schema", "json_schema": {"name": schema_model.__name__, "strict": True, "schema": schema}},
+            reasoning_effort=reasoning_effort or self.reasoning_effort,
+            max_completion_tokens=max_completion_tokens,
+            prompt_cache_key="kin",
+        )
+        assert not (_REJECTED & kwargs.keys())
+        t0 = time.perf_counter()
+        content = self._complete(kwargs)
+        self.last_latency_ms = (time.perf_counter() - t0) * 1000
+        try:
+            return schema_model.model_validate(json.loads(content))
+        except (json.JSONDecodeError, ValidationError) as e:
+            log.error("structured output invalid for %s: %s | raw=%r", schema_model.__name__, e, content[:500])
+            raise StructuredOutputError(str(e)) from e
+
+    def text(self, system: str, user: str, reasoning_effort: str | None = None, max_completion_tokens: int = 600) -> str:
+        kwargs: dict[str, Any] = dict(
+            model=self.model,
+            messages=[{"role": "developer", "content": system}, {"role": "user", "content": user}],
+            reasoning_effort=reasoning_effort or self.reasoning_effort,
+            max_completion_tokens=max_completion_tokens,
+            prompt_cache_key="kin",
+        )
+        return self._complete(kwargs)
+
+    # -- internals ----------------------------------------------------------
+
+    def _complete(self, kwargs: dict[str, Any]) -> str:
+        last: Exception | None = None
+        for i, client in enumerate(self._clients):
+            try:
+                resp = client.chat.completions.create(**kwargs)
+                return resp.choices[0].message.content or ""
+            except (openai.RateLimitError, openai.AuthenticationError, openai.PermissionDeniedError) as e:
+                last = e
+                if i + 1 < len(self._clients):
+                    log.warning("LLM key %d failed (%s); failing over to backup key", i, type(e).__name__)
+                    continue
+                raise
+        raise last  # pragma: no cover
+
+
+_default: LLM | None = None
+
+
+def get_llm() -> LLM:
+    global _default
+    if _default is None:
+        s = get_settings()
+        _default = LLM(
+            api_key=s.model_api_key or "missing",
+            backup_api_key=s.model_api_key_backup,
+            base_url=s.llm_base_url,
+            model=s.llm_model,
+            reasoning_effort=s.llm_reasoning_effort,
+            timeout_s=s.llm_timeout_s,
+        )
+    return _default
+
+
+def reset_llm() -> None:
+    global _default
+    _default = None

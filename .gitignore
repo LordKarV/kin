@@ -1,0 +1,25 @@
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+.venv/
+backend/.venv/
+.pytest_cache/
+*.egg-info/
+backend/kin.db
+backend/*.db
+backend/eval/audio_out/
+
+# node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# tooling
+.superpowers/
+.DS_Store
+*.log
