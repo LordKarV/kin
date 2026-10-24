@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     public_wss_host: str = ""
 
     # Data
-    database_url: str = "sqlite:///./kin.db"
+    database_url: str = f"sqlite:///{_HERE / 'kin.db'}"  # absolute so scripts from any cwd share one DB
     embeddings_provider: str = "none"
     kin_api_key: str = "change-me"
     demo_family_id: int = 1

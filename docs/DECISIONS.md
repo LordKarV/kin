@@ -14,3 +14,7 @@
 - 2026-10-24 Frontend: Vite + React + TypeScript rather than Next.js. Nothing needs SSR; Vite scaffolds and reloads faster.
 - 2026-10-24 Build machine has Python 3.12 and 3.14; venv uses 3.12 for wheel coverage; project targets >=3.11.
 - 2026-10-24 Dependencies: fastapi/uvicorn (API + websockets), sqlalchemy (DB), pydantic-settings (env), openai (OpenAI-compatible client for Meta Model API), httpx + websockets (raw provider clients, fewer SDK pins), rapidfuzz (romanization-tolerant alias matching), twilio (TwiML + outbound call), pytest + pytest-asyncio (tests).
+- 2026-10-24 Phase 1 test sets drafted by Claude (105 grounding items: 42 kin / 32 name-collision / 31 dish-place; 42 idiom/register cards + 41 plain negatives). MUST be reviewed by the team's Tamil speaker before the demo; expected renderings are alternative groups, not single strings, so paraphrases score.
+- 2026-10-24 Tamil agglutination: case suffixes replace the final pulli (பொங்கல் → பொங்கலுக்கு). Eval matching and the linker match on pulli-stripped stems.
+- 2026-10-24 Code-switched audio clips (plan Phase 1) not recorded yet: needs a human voice. Latency eval uses synthetic timing until the team records 20 clips into backend/eval/testset/codeswitch_audio/.
+- 2026-10-24 Kinship resolution is listener-relative: whatever term the speaker uses ("en magan", "un mama", bare "Ravi"), the rendering is the referent's relation to the listener, computed from the graph.
