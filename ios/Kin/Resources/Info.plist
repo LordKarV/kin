@@ -38,6 +38,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>KIN uses the camera so the people you call can see you.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>KIN connects to a KIN server on your local network (development builds).</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>KIN uses the microphone so the people you call can hear you.</string>
 	<key>UIApplicationSceneManifest</key>
