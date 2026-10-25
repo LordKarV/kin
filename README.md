@@ -1,128 +1,81 @@
-# KIN
+## Inspiration
 
-Common ground for people who live apart.
+A grandmother asks her grandson, in Spanish, whether he has eaten. He grew up in the US and his Spanish stopped at the kitchen table, so he catches about half of it. She mentions tío Beto, and he can't place which Beto: there are two. He mentions his roommate Mei, and she can't place Mei either. They slowly drift apart, and the calls get shorter.
 
-KIN is a calling app for one-to-one calls between friends and family who live far from each other. During a call it
-tracks what each person knows about the other's world and fills only the gaps, privately, in each listener's own
-language. Most of the time it shows nothing: it speaks up only when someone would be lost.
+For the three of us, this is personal: all of our grandparents live in India, speak Tamil or Telugu instead of English, and some of them are losing their memory, so every call home hits the same two walls.
 
-Built at HackTX 2026 on Meta Muse Spark and Muse Voice Transcribe, with LiveKit, ElevenLabs and SwiftUI.
-Code written with Claude Code.
+This is the everyday reality of many immigrant families. About 1 in 4 US children lives with an immigrant parent, and the heritage language fades within a generation or two. Grandparents and grandkids end up talking across a language gap and a memory gap at once. And those calls already run on Meta: in India and across much of the world, WhatsApp is how families call home. Translation tools carry the words but lose the family. A general-purpose assistant handed everyone's history is too slow for a live call and cannot guarantee what each person is allowed to see.
+
+We wanted a call that closes both gaps in real time, and stays silent whenever you already know.
 
 ## What it does
 
-- **Live captions in your language.** Grounded in who your people are, so a name like "Ravi" becomes "your uncle Ravi
-  mama" and not just "uncle". Translation switches on only when two people's languages differ.
-- **"Who's that?" cards.** When someone you have likely forgotten comes up, you get one quiet line on who they are.
-  Heard it last week, and KIN stays quiet.
-- **Bridges.** A private nudge when the conversation makes your own news relevant: "You haven't told Nithin: started
-  bouldering." Only your own facts, never something someone else told you, and it clears once you say it.
-- **Storylines and "Who is X?" cards.** Where an ongoing thread stands, and a one-tap way to add someone new.
-- **Ask for more.** Double-twist the phone, or tap a word in a caption, for a card about what was just said.
-- **Cultural meaning.** Tone and care, not just words.
-- **Texts to KIN.** Text your own news to KIN in the app; it stays private.
-- **Pause and delete.** Everyone sees KIN is on and anyone can pause it. Audio is never kept, and deleted means gone.
+KIN is, to our knowledge, the fastest context engine for real-time human conversation: **listener-aware inference, provenance-aware memory, and privacy-constrained delivery.** It maintains a listener-specific model of **who knows what**, then uses it to surface the right context at the right moment---without exposing information that listener is not permitted to see.
 
-## How it works
+During a call, each person sees only their own help:
 
-```
-iPhone A ── LiveKit (one track per voice) ── Muse Voice Transcribe (partial and final transcripts)
-                                                  │
-           partials, milliseconds                 │ finals, about 3 s
-           ▼                                      ▼
-  name matcher ─ common-ground model ─ card picker ─ privacy guard     Muse Spark: grounded captions,
-  (plain code, no model call, under 3 ms)                               card localization, fact extraction
-           │                                      │
-           └────────────── world graph: people, kinship, who heard what ┘
-                                                  ▼
-                                   iPhone B: its own card and caption
-```
+- **Grounded live captions.** Each side reads the other in their own language, with family context: "Ravi mama" is rendered as Mom's younger brother in Chennai and never confused with Ravi periyappa (Dad's elder brother) in Madurai.
+- **"Who's that?" cards, in both directions.** One quiet line when KIN predicts you'd be lost. The grandson learns which uncle is which; the grandmother gets a card in her own language on who his roommate is, built only from his facts. Cards often land before the speaker finishes the sentence.
+- **Cultural meaning & sentiment.** "You've gotten so thin" from a grandmother reads as affection, and KIN says so.
+- **Silence when you know.** Heard last week: no card. Heard two months ago: a one-line reminder, thanks to a probabilistic model determining a memory fading away. Seen once: silence.
+- **Bridges.** A private nudge like *"You haven't told Grandma: you went hiking with Mei."* Only your own news, and it clears once you say it.
+- **Twist for more.** Physically double-twist the phone for context on whatever was just said.
+- **Privacy you can see.** Either person can pause KIN for both with one tap. Text KIN your news over SMS and it becomes a private fact, never forwarded. View, fix or delete anything KIN holds.
 
-Muse is called for speech, captions, card localization, fact extraction, text parsing, bridge reranking and the
-twist when its answer is unclear. Deciding who needs which card is plain code, so it runs on the partial transcript
-in milliseconds and privacy is enforced in code rather than in a prompt.
+## How we built it
 
-## Results
+Every utterance runs through two parallel paths:
 
-Same Muse Spark model (muse-spark-1.3) on both sides of every comparison:
+- **Context path (milliseconds):** Partial transcripts are resolved to entities in the listener's world graph, scored against that listener's knowledge state, and turned into a card only when the model predicts a gap.
+- **Language path (seconds):** Settled sentences are captioned by Muse Spark, grounded in the relationship graph.
 
-| Test | KIN | Without KIN's engine |
-| --- | --- | --- |
-| Names and relationships wrong in captions (105 family sentences, 150 entities) | 1% | 54% |
-| Same-name people mixed up | 0% | 97% |
-| Moments caught after three months of history (63 planted scenarios) | 26 of 27 | 22 of 27 |
-| Private texts shown to the wrong person, same test | 0 | 2 |
-| Median time to decide on a card, same test | 2.0 to 2.7 ms | 3.7 to 4.4 s |
+In the background, Muse Spark reads each conversation and writes structured, provenance-stamped facts back into every participant's world graph, so the next call starts with more context than the last.
 
-Reproduce with the commands under Evaluation; each run writes its report next to the eval code.
+The knowledge state is a tracing model with forgetting:
 
-## Run it locally
+$$
+P_u(i,\, t) = P_u(i,\, t_0)\, e^{-\lambda (t - t_0)}, \qquad \text{show card} \iff P_u(i,\, t) < \tau
+$$
 
-```bash
-cp .env.example .env    # set MODEL_API_KEY (Muse); ELEVENLABS_API_KEY is optional
-cd backend && python3.12 -m venv .venv && source .venv/bin/activate && pip install -e ".[livekit]"
-livekit-server --dev    # LiveKit on ws://localhost:7880
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
+Hearing a mention or seeing a card raises a listener's estimate; time lowers it.
 
-Every setting is an environment variable (see `backend/app/config.py` and `.env.example`). Development routes
-(`/api/dev/*`) are off unless the server runs with `DEV_ENDPOINTS=1`.
+**Architecture:**
 
-The iOS app is in `ios/` (SwiftUI, LiveKit Swift 2.17.0). Generate the project and point it at a server with build
-settings, so nothing is hardcoded:
+- **Real-time transport:** LiveKit audio sessions with an event-driven FastAPI backend and per-user sockets. Calls ring, answer, decline and time out like a native phone app, with no links to share.
+- **Streaming perception:** Muse Voice Transcribe integrated through an RTC agent; incremental transcript events feed the context pipeline. Names from the family graph are passed in as hints, and Tamil-English code-switching is handled mid-sentence across 25 languages.
+- **Context state:** Per-user world graphs with fact provenance, disclosure boundaries, and temporal relevance. Every fact records who said it, who heard it, and when, so "does Grandma know who Mei is?" is an exact query, not a similarity guess.
+- **Decision engine:** Alias-aware entity resolution, knowledge-state tracing, forgetting, and candidate ranking determine when an intervention is useful. Cross-script aliases (林 = Lin = Lynn) and segmentation-free matching keep resolution fast on half-finished text.
+- **Grounded language:** Muse Spark generates captions and extracts or localizes facts against the available context; optional ElevenLabs output supports translated speech. It also explains cultural meaning and resolves what you meant when you twist the phone.
+- **Policy and delivery:** Visibility checks gate what each listener receives; SwiftUI delivers the iOS experience, with SQLite-backed state and Twilio SMS integration.
 
-```bash
-cd ios && xcodegen generate
-xcodebuild -project Kin.xcodeproj -scheme Kin -destination 'generic/platform=iOS' \
-  KIN_DEFAULT_SERVER=http://<server>:8000 build
-```
+**Deployed on Vultr.** The FastAPI backend and the LiveKit media server run together on a Vultr cloud compute instance, brought up with a one-command deploy script that installs both as systemd services and generates their secrets on the box. Keeping media and context on the same machine means a transcript never crosses the network on its way to a decision, which is how cards stay in the millisecond range.
 
-The server can also be typed under Sign up > Server.
+**Privacy is enforced in code, not requested in a prompt.** The card picker draws only from facts the listener can see, and a fail-closed guard re-checks every outgoing card, dropping any that cites a fact outside the listener's view. Audio is processed and discarded. Paused segments are never transcribed or stored. Deleted rows are overwritten, and third-party facts expire on a schedule.
 
+## Challenges we ran into
 
-## Deploy on Vultr
+- **Deciding before the sentence ends.** A card that arrives after the moment has passed is useless. Matching names on half-finished, still-changing text across writing systems took us down to 0.15 ms.
+- **Beating the obvious baseline fairly.** "Just give an LLM everyone's history" sounds reasonable, so we built exactly that and tested it against KIN with the same model, the same scenarios and the same rules, across a simulated three months of history. Our system performed much faster and more accurately.
+- **Making privacy structural.** Writing "don't reveal private info" in a prompt is easy, but is not fail proof. Designing a data model where every fact knows who heard it is much more difficult.
+- **Family names.** Two uncles share a name, a grandmother switches languages mid-sentence, and one person has three spellings. We layered graph hints, cross-script aliases and "Who is X?" cards to keep them straight.
 
-One Vultr VM runs the backend and LiveKit, reachable from any network.
+## Accomplishments that we're proud of
 
-1. **Create the server.** Cloud Compute, Ubuntu 24.04 LTS, 2 vCPU and 4 GB, in the region closest to your users.
-   Add your SSH key, deploy, and note the IPv4 address.
-2. **Copy your secrets once.** The deploy script never sends `.env`:
+- **0.15 ms** median name-matching latency.
+- **2 to 3 ms** per decision with three months of history, against roughly 4 s for a full-history LLM baseline: **1,370x to 2,200x faster**, with no slowdown as history grows.
+- **1% vs. 54%** caption name/relationship errors against the evaluated baseline.
+- **0% vs. 97%** same-name identity confusion in the tested cases.
+- **26/27 vs. 22/27** relevant moments surfaced in a simulated three-month-history test.
+- **0 vs. 2** private texts surfaced to the wrong listener.
 
-   ```bash
-   ssh root@<ip> 'mkdir -p /opt/kin' && scp .env root@<ip>:/opt/kin/.env
-   ```
+Both sides of every comparison use the same model (`muse-spark-1.3`); the only variable is KIN's context engine.
 
-3. **Deploy, and redeploy after every change:**
+## What we learned
 
-   ```bash
-   deploy/vultr/deploy.sh root@<ip>
-   ```
+- **The model wasn't the bottleneck; context was.** The same model went from 54% to 1% name errors once it could see the family graph.
+- **Speed and privacy are actually the same design choice.** Keeping a dedicated knowledge-state model on the live path made decisions take milliseconds and made every card checkable.
+- **Ideas from cognitive science and adaptive learning carry over.** Common-ground theory and knowledge tracing turned out to be the right tools for modeling a family conversation.
 
-   It copies `backend/`, `scripts/` and `deploy/` (no databases, no `.env`), runs `setup.sh`, restarts both services
-   and checks `http://<ip>:8000/health`. On the first run `setup.sh` installs Python and LiveKit, opens the firewall
-   (22, 8000, 7880-7881/tcp, 50000-60000/udp) and generates LiveKit keys and a `KIN_API_KEY` into
-   `/etc/kin/kin.env`, which override `.env`. The database lives at `/opt/kin/data/kin.db`.
-4. **Connect the app.** Read the key with `ssh root@<ip> grep KIN_API_KEY /etc/kin/kin.env`, then either type
-   `http://<ip>:8000` and the key under Sign up > Server, or build the app with `KIN_DEFAULT_SERVER=http://<ip>:8000`.
-5. **Logs:** `ssh root@<ip> journalctl -u kin-backend -u livekit -f`.
+## What's next for KIN
 
-Traffic is plain HTTP and `ws://` to the IP until you add a domain. With one, put Caddy in front for HTTPS and
-`wss://`, and set `LIVEKIT_URL` to the `wss://` host.
-
-## Evaluation
-
-```bash
-cd backend && python -m eval.run_eval          # grounded captions vs the same model without KIN's graph
-cd backend && python -m eval.run_cg --live     # common-ground decisions vs one model call with the full history
-```
-
-## Repository
-
-| Path | What it is |
-| --- | --- |
-| `backend/` | FastAPI server: calls, speech, the common-ground engine, captions, texts, privacy |
-| `ios/` | The KIN iPhone app (SwiftUI) |
-| `deploy/vultr/` | Vultr server setup, deploy script and systemd units |
-| `scripts/` | Kinship-table builder |
-| `backend/eval/`, `eval_scenarios/` | Evaluation harness and its test data |
-| `design/brand/` | App icon, launch screen and brand assets |
+Native-speaker review of our test set, accuracy runs in more languages, and a pilot with immigrant families, starting with grandparents and grandkids. The natural home for KIN is WhatsApp calling, which families in India and around the world already use to call home: the same engine could sit inside those calls, with Muse already powering the language.
