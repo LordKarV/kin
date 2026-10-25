@@ -46,13 +46,23 @@ async def _append(xs, x):
     xs.append(x)
 
 
+def _signed_buddy(monkeypatch, form: dict) -> dict:
+    """A locked server only takes webhooks Twilio signed (api/twilio.py::_verify_twilio)."""
+    monkeypatch.setenv("TWILIO_AUTH_TOKEN", "tok")
+    from twilio.request_validator import RequestValidator
+    sig = RequestValidator("tok").compute_signature("https://kin.example.com/twilio/buddy", form)
+    return {"X-Twilio-Signature": sig, "X-Forwarded-Proto": "https", "Host": "kin.example.com"}
+
+
 def test_twiml_connects_a_bidirectional_stream_without_query_string(monkeypatch):
     monkeypatch.setenv("PUBLIC_WSS_HOST", "kin.example.com")
     monkeypatch.setenv("KIN_API_KEY", "real-key")
+    form = {"CallSid": "CA1", "From": "+15550001111"}
+    hdr = _signed_buddy(monkeypatch, form)
     from app import config
     config.get_settings.cache_clear()
     with TestClient(app) as c:
-        r = c.post("/twilio/buddy", data={"CallSid": "CA1", "From": "+15550001111"})
+        r = c.post("/twilio/buddy", data=form, headers=hdr)
     assert r.status_code == 200
     assert '<Connect><Stream url="wss://kin.example.com/twilio/buddy/stream/' in r.text
     assert "?" not in r.text.split('url="')[1].split('"')[0]  # Twilio rejects query strings on stream urls
@@ -150,7 +160,55 @@ def test_merged_call_before_any_family_exists_is_refused_politely(monkeypatch):
     monkeypatch.setenv("KIN_API_KEY", "real-key")
     from app import config
     from app.db.session import reset_engine
+    hdr = _signed_buddy(monkeypatch, {"CallSid": "CA9"})
     config.get_settings.cache_clear(); reset_engine()
     with TestClient(app) as c:
-        r = c.post("/twilio/buddy", data={"CallSid": "CA9"})
+        r = c.post("/twilio/buddy", data={"CallSid": "CA9"}, headers=hdr)
+    assert r.status_code == 200 and "<Say>" in r.text and "<Stream" not in r.text
+
+
+def _space_calls():
+    """A world call and a legacy-mode row made in the world space before the guards (D2): neither is the phone's."""
+    from app.db import models as m
+    from app.db.session import session_scope
+    from app.world.users import get_space
+    with session_scope() as s:
+        space = get_space(s, "zh").id
+        world = m.Call(family_id=space, transport="livekit", mode="world")
+        old = m.Call(family_id=space, transport="phone-merge")
+        s.add_all([world, old]); s.flush()
+        return world.id, old.id
+
+
+def test_stream_and_watch_sockets_refuse_world_and_space_calls(mock_llm):
+    import pytest
+    from starlette.websockets import WebSocketDisconnect
+    with TestClient(app) as c:
+        wid, lid = _space_calls()
+        for path in ("/twilio/buddy/stream/{}", "/ws/watch/{}"):
+            for cid in (wid, lid, wid + 99):
+                with pytest.raises(WebSocketDisconnect) as e:
+                    with c.websocket_connect(path.format(cid)) as ws:
+                        ws.receive_text()
+                assert e.value.code == 4404, (path, cid)
+
+
+def test_merged_call_never_lands_in_the_world_space(monkeypatch):
+    """Seeding off: family 1 is the world space once someone signs up, so the merge must answer 'not set up yet'."""
+    monkeypatch.setenv("SEED_DEMO_FAMILY", "0")
+    monkeypatch.setenv("PUBLIC_WSS_HOST", "kin.example.com")
+    monkeypatch.setenv("KIN_API_KEY", "real-key")
+    from app import config
+    from app.db import models as m
+    from app.db.session import reset_engine, session_scope
+    from app.world.users import create_user
+    hdr = _signed_buddy(monkeypatch, {"CallSid": "CA7"})
+    config.get_settings.cache_clear(); reset_engine()
+    with TestClient(app) as c:
+        with session_scope() as s:
+            create_user(s, "Arjun", "en")
+            assert s.get(m.Family, config.get_settings().demo_family_id).kind == "space"
+        r = c.post("/twilio/buddy", data={"CallSid": "CA7"}, headers=hdr)
+        with session_scope() as s:
+            assert s.query(m.Call).count() == 0
     assert r.status_code == 200 and "<Say>" in r.text and "<Stream" not in r.text

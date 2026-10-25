@@ -1,13 +1,18 @@
-"""Dev routes (docs/ARCHITECTURE.md 9.2, D22): world clock, direct world updates, SMS without Twilio.
-All 404 when settings.dev_endpoints is false. No X-KIN-User: these drive the demo and eval through the real server."""
+"""Dev routes (docs/ARCHITECTURE.md 9.2, D22): world clock, direct world updates, SMS without Twilio, and sign-in as
+an existing user. All 404 when settings.dev_endpoints is false, and on a locked server (security.locked()) also to any
+caller that is not loopback, because the KIN key travels in every invite link. No X-KIN-User: these drive the demo and
+eval through the real server."""
 from __future__ import annotations
 
 import logging
+import secrets
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import security
 from ..config import get_settings
 from ..db import models as m
 from ..db.session import get_session
@@ -16,11 +21,18 @@ from ..world.apply import ApplyCtx, apply_update
 from ..world.contracts import AppliedEntity, ClockIn, ClockOut, DevApplyIn, DevApplyOut, DevSmsIn, DevSmsOut, FactBrief
 from ..world.extract import ENTITY_TABLE, Candidate, Line, Participant, own_context, validate, validate_ctx
 from ..world.sms import UNKNOWN_REPLY, ingest, refresh_calls, write_evidence
-from ..world.users import get_space, normalize_phone
+from ..world.users import _hash, get_space, normalize_phone
 
 
-def _dev_only() -> None:
-    if not get_settings().dev_endpoints:
+_LOOPBACK = ("127.0.0.1", "::1")
+
+
+def _loopback(request: Request) -> bool:
+    return request.client is not None and request.client.host in _LOOPBACK
+
+
+def _dev_only(request: Request) -> None:
+    if not get_settings().dev_endpoints or (security.locked() and not _loopback(request)):
         raise HTTPException(404, "Not Found")
 
 
@@ -89,3 +101,31 @@ def dev_sms(body: DevSmsIn, s: Session = Depends(get_session)) -> DevSmsOut:
         return DevSmsOut(reply=UNKNOWN_REPLY)
     reply, message_id, facts = ingest(s, user, body.body)
     return DevSmsOut(reply=reply, message_id=message_id, facts=[FactBrief(**f) for f in facts])
+
+
+class DevSigninIn(BaseModel):
+    person: str  # the user's person slug
+
+
+class DevSigninOut(BaseModel):
+    person: str
+    token: str
+
+
+@router.post("/signin", response_model=DevSigninOut)
+def dev_signin(body: DevSigninIn, request: Request, s: Session = Depends(get_session)) -> DevSigninOut:
+    """A fresh X-KIN-User token for an existing user, so a phone can become the demo driver's Arjun when the driver's
+    printed sign-in link is lost. Only the hash is stored, so this rotates it: the previous token stops working.
+    Loopback callers only: the KIN key travels in every invite link, so on a deploy with DEV_ENDPOINTS=1 the key alone
+    would hand anyone a takeover of any account (run the curl on the server host, over ssh)."""
+    if not _loopback(request):  # even unlocked: a LAN dev server is reachable by anyone on the network
+        raise HTTPException(404, "Not Found")
+    person = _person(s, get_space(s).id, body.person)
+    user = s.scalars(select(m.User).where(m.User.person_id == person.id)).first()
+    if user is None:
+        raise HTTPException(404, f"{body.person!r} is not a user")
+    token = secrets.token_urlsafe(32)
+    user.token_hash = _hash(token)
+    s.commit()
+    log.warning("dev/signin rotated the token of %s", person.slug)
+    return DevSigninOut(person=person.slug, token=token)

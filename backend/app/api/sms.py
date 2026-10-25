@@ -3,7 +3,9 @@ is checked whenever TWILIO_AUTH_TOKEN is set. Replies are TwiML."""
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
+import re
 import threading
 import time
 from collections import defaultdict, deque
@@ -15,8 +17,8 @@ from sqlalchemy.exc import IntegrityError
 
 from ..db import models as m
 from ..db.session import session_scope
-from ..world.sms import FALLBACK, MAX_BODY, SLOW_REPLY, UNKNOWN_REPLY, ingest
-from ..world.users import normalize_phone
+from ..world.sms import FALLBACK, LINKED_REPLY, MAX_BODY, SLOW_REPLY, UNKNOWN_REPLY, ingest
+from ..world.users import link_phone, normalize_phone, phone_code
 from .twilio import _verify_twilio
 
 log = logging.getLogger("kin.api.sms")
@@ -24,8 +26,9 @@ router = APIRouter(tags=["sms"])
 
 RATE_LIMIT = 30
 RATE_WINDOW_S = 3600.0
+LINK_RE = re.compile(r"\s*KIN\s+([0-9a-f]{6})\s*", re.IGNORECASE)
 # ponytail: in-memory, per process; resets on restart. Move to the messages table if KIN runs several workers.
-_sent: dict[int, deque[float]] = defaultdict(deque)
+_sent: dict[int | str, deque[float]] = defaultdict(deque)  # user id, or "link:<phone>" for link attempts
 _lock = threading.Lock()
 
 
@@ -33,7 +36,7 @@ def twiml(text: str) -> str:
     return f'<?xml version="1.0" encoding="UTF-8"?><Response><Message>{escape(text)}</Message></Response>'
 
 
-def _allow(user_id: int, now: float | None = None) -> bool:
+def _allow(user_id: int | str, now: float | None = None) -> bool:
     now = time.monotonic() if now is None else now
     with _lock:
         q = _sent[user_id]
@@ -59,14 +62,33 @@ def handle(from_number: str, body: str, sid: str | None) -> str:
     try:
         with session_scope() as s:
             user = s.scalars(select(m.User).where(m.User.phone == phone)).first() if phone else None
-            if user is None:
-                return UNKNOWN_REPLY  # stores nothing
+            if user is None:  # stores nothing, unless this is the "KIN <code>" text that links the number
+                return _link(s, phone, body)
+            if (mt := LINK_RE.fullmatch(body)) and hmac.compare_digest(phone_code(user), mt.group(1).lower()):
+                return LINKED_REPLY  # a Twilio retry of the link text, or the code sent twice: nothing to ingest
             if not _allow(user.id):
                 log.info("sms rate limit hit for user %s", user.id)
                 return SLOW_REPLY
             return ingest(s, user, body[:MAX_BODY], sid)[0]
     except IntegrityError:  # a concurrent retry with the same MessageSid won the insert
         return (_stored_reply(sid) if sid else None) or FALLBACK
+
+
+def _link(s, phone: str | None, body: str) -> str:
+    """A phone links to an account only by texting that account's code from it, so typing someone else's number
+    in the app never redirects their texts."""
+    match = LINK_RE.fullmatch(body) if phone else None
+    if match is None:
+        return UNKNOWN_REPLY
+    if not _allow(f"link:{phone}"):  # 24-bit codes: cap guesses per number
+        log.info("sms link rate limit hit")
+        return SLOW_REPLY
+    user = link_phone(s, phone, match.group(1))
+    if user is None:
+        log.info("sms link code matched no unlinked user")
+        return UNKNOWN_REPLY
+    log.info("sms linked a phone to user %s", user.id)
+    return LINKED_REPLY
 
 
 @router.post("/twilio/sms")

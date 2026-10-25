@@ -122,10 +122,14 @@ class Translator:
             self._system_cache[listener] = s
         return s
 
-    def user_prompt(self, text: str, speaker: str, listener: str | None, spans: list[Span], history, passthrough: list[str]) -> str:
+    def user_prompt(self, text: str, speaker: str, listener: str | None, spans: list[Span], history, passthrough: list[str],
+                    shown: dict[str, str] | None = None) -> str:
+        """shown: slug -> rendering from a world call's roster (_roster_renders); None for legacy calls."""
         sp, li = self.g.by_slug.get(speaker), self.g.by_slug.get(listener) if listener else None
         if sp is not None and li is not None:
-            lines = [f"Speaker: {sp.name} ({self.g.render(li.id, sp.id)}). Listener: {li.name}."]
+            # world calls: the roster's visibility-checked rendering, never the raw kin graph's relation
+            r = self.g.render(li.id, sp.id) if shown is None else (shown.get(speaker) or sp.name)
+            lines = [f"Speaker: {sp.name}{f' ({r})' if r != sp.name else ''}. Listener: {li.name}."]
         else:  # unknown slug or several listeners: neutral naming, never a KeyError
             lines = [f"Speaker: {sp.name if sp else speaker}. Listener: {li.name if li else (listener or 'several listeners')}."]
         if listener is None:
@@ -170,14 +174,15 @@ class Translator:
         t0 = time.perf_counter()
         ctx = [src for _who, src, _tr in history]
         linked = self.linker.link(text, speaker, listener, context=ctx)
-        if roster is not None:  # privacy: graph things are space-wide, not filtered to this listener; world things come in extra_spans
-            linked = [s for s in linked if s.node not in self.g.thing_by_slug]
+        shown = _roster_renders(roster) if roster is not None else None
+        if shown is not None:  # privacy: graph things are space-wide, not filtered to this listener; world things come in extra_spans
+            linked = [_roster_scoped(s, shown) for s in linked if s.node not in self.g.thing_by_slug]
         spans = _merge_spans(linked, extra_spans, text)
         t_link = (time.perf_counter() - t0) * 1000
         # Fade guardrail: never pass through a token inside a grounded span
         safe_pt = [p for p in passthrough if not any(p in s.source or s.source in p for s in spans if s.node)]
         system = self.system_prompt(listener, roster)
-        user = self.user_prompt(text, speaker, listener, spans, history, safe_pt)
+        user = self.user_prompt(text, speaker, listener, spans, history, safe_pt, shown)
         if target_lang != "en":
             tl = MUSE_LANGUAGES.get(target_lang) or LANG_NAMES.get(target_lang, target_lang)
             user += f"\nTarget language: {tl}. The listener speaks {tl}; translate INTO {tl} (natural spoken {tl}, {tl} script), keeping names and kin terms the family uses."
@@ -270,13 +275,42 @@ class Translator:
         return out
 
 
+def _roster_renders(roster: str) -> dict[str, str]:
+    """slug -> rendering from a WorldView.roster block ("slug | name | native | rendering | aliases"): the people every
+    listener may see, rendered over hops they may walk. A row that does not split into 5 columns (a name with " | ")
+    keeps its slug with an empty rendering, so callers fall back to the words said, never to the raw kin graph."""
+    out: dict[str, str] = {}
+    for ln in roster.splitlines():
+        parts = ln.split(" | ")
+        if parts[0].strip():
+            out[parts[0].strip()] = parts[3].strip() if len(parts) == 5 else ""
+    return out
+
+
+def _roster_scoped(s: Span, shown: dict[str, str]) -> Span:
+    """World calls: the linker runs over view.kin, scoped by person but not by what each listener heard. A person span
+    keeps its node only when the roster shows that person, and then takes the roster's rendering; otherwise it is left
+    unresolved, so neither the prompt nor the fallback caption names or relates someone a listener may not see."""
+    if s.node is None:
+        return s
+    if s.node in shown:
+        return replace(s, display=shown[s.node] or s.source, candidates=[c for c in s.candidates if c in shown])
+    return replace(s, node=None, display=s.source, candidates=[])
+
+
 def _merge_spans(spans: list[Span], extra, text: str) -> list[Span]:
-    """Linker spans plus world spans (dicts start/end/source/node_id/type/rendered/confidence) that overlap none of them."""
-    out = list(spans)
+    """Linker spans plus world spans (dicts start/end/source/node_id/type/rendered/confidence) that overlap none of them.
+    A world span replaces a name or kin-word match (alias/disambiguated/kin-term) on the same range: the world span is
+    visibility-checked, including on purpose with no node. Kin-chain spans ("Ravi mama") still win on overlap."""
+    good = []
     for d in extra:
         if not (0 <= d.get("start", -1) < d.get("end", -1) <= len(text)) or not d.get("source"):
             log.warning("dropping malformed world span %r", d)
             continue
+        good.append(d)
+    ex = {(d["start"], d["end"]) for d in good}
+    out = [s for s in spans if not ((s.start, s.end) in ex and s.method in ("alias", "disambiguated", "kin-term"))]
+    for d in good:
         if any(d["start"] < s.end and s.start < d["end"] for s in out):
             continue  # ponytail: first span wins on overlap (linker first: it knows kin chains); no scoring
         out.append(Span(d["start"], d["end"], d["source"], d.get("node_id"), d.get("type", "person"), float(d.get("confidence", 0.9)),

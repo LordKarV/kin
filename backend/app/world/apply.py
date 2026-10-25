@@ -206,7 +206,9 @@ def apply_update(s: Session, update: WorldUpdateOut, ctx: ApplyCtx) -> ApplyResu
             fact_ids.append(fo.same_as)
             evidence += _evidence(fo.same_as, speaker, heard, refs, speaker_via)
             continue
-        third = not is_user
+        # PRODUCT hard rule: third-party information expires. A user's own fact that names a non-user ("Lin is
+        # my friend", "went hiking with Jess") is about that third party too, and its FactRef keeps them alive.
+        third = not is_user or any(k == "person" and not _is_user(s, i) for k, i in refs)
         f = m.Fact(family_id=ctx.space_id, subject_id=subj[1], speaker_id=speaker, predicate=fo.predicate[:16],
                    text=fo.text_en[:400], text_src=fo.text_src[:400], lang=_user_lang(s, speaker), keys=fo.keys,
                    source_kind=ctx.source_kind, call_id=ctx.call_id, utterance_id=ctx.utterance_of_line.get(fo.lines[0]),
@@ -361,9 +363,9 @@ def _find_person(s: Session, space_id: int, name: str) -> m.Person | None:
     return None
 
 
-def _card_fact(s: Session, space_id: int, me: int, subject: int, text: str, at: datetime, call_id: int | None,
+def _card_fact(s: Session, space_id: int, me: int, subject: int, named: int, text: str, at: datetime, call_id: int | None,
                told: Iterable[int], call_audience: Iterable[int]) -> m.Fact:
-    third = not _is_user(s, subject)
+    third = not _is_user(s, subject) or not _is_user(s, named)  # placing a non-user is third-party information
     f = m.Fact(family_id=space_id, subject_id=subject, speaker_id=me, predicate="tie", text=text[:400], lang="en",
                source_kind="card", call_id=call_id, said_at=at, third_party=third,
                expires_at=at + timedelta(days=get_settings().third_party_ttl_days) if third else None)
@@ -378,6 +380,29 @@ def _card_fact(s: Session, space_id: int, me: int, subject: int, text: str, at: 
     return f
 
 
+def _reusable_tie(s: Session, owner: int, person_id: int, me: int, call_audience: Iterable[int], now: datetime
+                  ) -> tuple[m.Tie, bool] | None:
+    """An active owner->person tie this placement can reuse without showing anyone a fact they never heard:
+    (tie, True) for my own card (a retry, so this call joins its audience), (tie, False) for a tie with no fact or
+    one `me` and the whole call audience already heard. An expired fact never counts, the sweep is about to delete
+    its tie. None means write a new tie with my own card: someone else's fact, with its source line and context,
+    never gains audience here."""
+    heard = set(call_audience)
+    for tie in s.scalars(select(m.Tie).where(m.Tie.src_person == owner, m.Tie.dst_person == person_id,
+                                             m.Tie.status == "active").order_by(m.Tie.id)):
+        if tie.fact_id is None:
+            return tie, False
+        tf = s.get(m.Fact, tie.fact_id)
+        if tf is None or (tf.expires_at is not None and not tf.pinned and _aware(tf.expires_at) <= now):
+            continue
+        if tf.speaker_id == me and tf.source_kind == "card":
+            return tie, True
+        aud = set(s.scalars(select(m.FactAudience.person_id).where(m.FactAudience.fact_id == tf.id)))
+        if me in aud and heard <= aud:
+            return tie, False
+    return None
+
+
 def place_person(s: Session, space_id: int, me: int, name: str, owner: int, relation: str, context: str = "",
                  call_audience: Iterable[int] = (), *, person: str | None = None, now: datetime | None = None,
                  call_id: int | None = None) -> tuple[m.Person, list[Evidence]]:
@@ -387,6 +412,7 @@ def place_person(s: Session, space_id: int, me: int, name: str, owner: int, rela
     unknown relation or a missing name."""
     now = now or clock.now()
     name = name.strip()
+    call_audience = tuple(call_audience)  # read twice on the tie path: the reuse check, then the new card's audience
     if person is not None:
         found = s.scalars(select(m.Person).where(m.Person.family_id == space_id, m.Person.slug == person)).first()
         if found is None:
@@ -394,15 +420,24 @@ def place_person(s: Session, space_id: int, me: int, name: str, owner: int, rela
     else:
         found = _find_person(s, space_id, name)
     person = found
+    if person is not None and person.id == owner:
+        raise ValueError("a person cannot be placed relative to themselves")
     if relation in TIE_KINDS:
         if person is None:
             if not name:
                 raise ValueError("a new person needs a name")
             person = _new_person(s, space_id, name)
             person.aliases.append(m.Alias(alias=person.display_name, lang=form_lang(person.display_name, []), kind="name"))
+        reuse = _reusable_tie(s, owner, person.id, me, call_audience, now)
+        if reuse is not None:  # a retry, or a tie everyone here already heard: the first tie stands, as in _tie
+            tie, mine = reuse
+            if mine:
+                _audience(s, tie.fact_id, me, call_audience, now, call_id, "card")
+                s.flush()
+            return person, [(me, "person", person.id, "confirmed")]
         owner_p = s.get(m.Person, owner)
         text = f"{person.display_name} is {owner_p.display_name}'s {relation.replace('_', ' ')}" + (f" {context}" if context else "")
-        f = _card_fact(s, space_id, me, owner, text, now, call_id, (owner, person.id), call_audience)
+        f = _card_fact(s, space_id, me, owner, person.id, text, now, call_id, (owner, person.id), call_audience)
         s.add(m.FactRef(fact_id=f.id, kind="person", ref_id=person.id))
         s.add(m.Tie(family_id=space_id, src_person=owner, dst_person=person.id, kind=relation, context=context[:160],
                     fact_id=f.id, created_at=now))
@@ -410,6 +445,22 @@ def place_person(s: Session, space_id: int, me: int, name: str, owner: int, rela
         return person, [(me, "person", person.id, "confirmed")]
     return link_kin(s, space_id, owner, relation, person.id if person else None, me=me, name=name,
                     call_audience=call_audience, now=now, call_id=call_id)
+
+
+def _share_parents(s: Session, space_id: int, before: set[int]) -> None:
+    """Siblings share parents: each sibling edge placed since `before` makes either sibling the child of the other's
+    parents. FamilyGraph walks only stored edges, so without this Paatti (Arjun's mother's mother) would see Arjun's
+    mother's younger brother Ravi as plain 'Ravi', not her son. The new edges join the placement's card fact."""
+    edges = list(s.scalars(select(m.Edge).where(m.Edge.family_id == space_id)))
+    parents: dict[int, set[int]] = {}
+    for e in edges:
+        if e.relation == "parent":
+            parents.setdefault(e.dst_person, set()).add(e.src_person)
+    add = {(p, kid) for e in edges if e.id not in before and e.relation == "sibling"
+           for kid, other in ((e.src_person, e.dst_person), (e.dst_person, e.src_person))
+           for p in parents.get(other, set()) - parents.get(kid, set())}
+    s.add_all([m.Edge(family_id=space_id, src_person=p, dst_person=kid, relation="parent") for p, kid in sorted(add)])
+    s.flush()
 
 
 def link_kin(s: Session, space_id: int, anchor_id: int, path: str, person_id: int | None, *, me: int, name: str = "",
@@ -434,6 +485,9 @@ def link_kin(s: Session, space_id: int, anchor_id: int, path: str, person_id: in
         steps = path.split(".")
         for i, step in enumerate(steps):
             last = i == len(steps) - 1
+            if last and person.gender not in ("m", "f"):  # "mother.mother" says she is a woman; '?' renders as male
+                person.gender = builder.STEPS[step][0]
+                s.flush()  # before _existing, so a second placement finds her instead of adding a duplicate edge
             found = builder._existing(s, space_id, cur.id, step)
             if last:
                 if found != person.id:  # ponytail: an unnamed placeholder already at the last step stays; merge it if that shows up
@@ -447,10 +501,11 @@ def link_kin(s: Session, space_id: int, anchor_id: int, path: str, person_id: in
                 cur = new
             else:
                 cur = s.get(m.Person, found)
+    _share_parents(s, space_id, before)
     new_edges = [e for e in s.scalars(select(m.Edge).where(m.Edge.family_id == space_id)) if e.id not in before]
     if new_edges:
         text = f"{person.display_name} is {anchor.display_name}'s {builder.path_label(path)[0].lower()}{builder.path_label(path)[1:]}"
-        f = _card_fact(s, space_id, me, anchor.id, text, now, call_id, (anchor.id, person.id), call_audience)
+        f = _card_fact(s, space_id, me, anchor.id, person.id, text, now, call_id, (anchor.id, person.id), call_audience)
         s.add(m.FactRef(fact_id=f.id, kind="person", ref_id=person.id))
         for e in new_edges:
             e.fact_id = f.id  # a NULL fact_id would make the edge visible to the whole space

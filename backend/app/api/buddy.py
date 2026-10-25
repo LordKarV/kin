@@ -28,6 +28,7 @@ from ..config import get_settings
 from ..db import models as m
 from ..db.session import session_scope
 from ..security import key_ok, locked
+from .calls import legacy_call, legacy_family
 from .twilio import _verify_twilio
 
 log = logging.getLogger("kin.buddy")
@@ -47,10 +48,12 @@ async def buddy_voice(request: Request) -> Response:
     if not host:
         raise HTTPException(500, "PUBLIC_WSS_HOST is not set (cloudflared/ngrok hostname)")
     with session_scope() as s:
-        if s.get(m.Family, get_settings().demo_family_id) is None:  # nothing pre-seeded: the family is set up in the app first
+        try:  # nothing pre-seeded (or only the world space, D2): the family is set up in the app first
+            fid = legacy_family(s, None).id
+        except HTTPException:
             return Response('<?xml version="1.0" encoding="UTF-8"?>\n<Response><Say>KIN is not set up yet. Open the KIN app, '
                             'add your family, then merge KIN into the call again.</Say></Response>\n', media_type="application/xml")
-        c = m.Call(family_id=get_settings().demo_family_id, transport="phone-merge")
+        c = m.Call(family_id=fid, transport="phone-merge")
         s.add(c); s.flush()
         cid = c.id
     log.info("merged call %s from %s -> call %s", form.get("CallSid"), form.get("From"), cid)
@@ -62,11 +65,10 @@ async def buddy_voice(request: Request) -> Response:
 
 @router.websocket("/twilio/buddy/stream/{call_id}")
 async def buddy_stream(ws: WebSocket, call_id: int) -> None:
+    if not _legacy_call_ok(call_id):  # /twilio/ skips the key gate: never attach a phone line to a world call
+        await ws.close(code=4404, reason="unknown call id")
+        return
     await ws.accept()
-    with session_scope() as s:
-        if s.get(m.Call, call_id) is None:
-            await ws.close(code=4404, reason="unknown call id")
-            return
     session = registry.get_or_create(call_id)
     g = session.translator.g
     sid: str | None = None
@@ -113,6 +115,15 @@ async def buddy_stream(ws: WebSocket, call_id: int) -> None:
         registry.drop_if_empty(call_id)
 
 
+def _legacy_call_ok(call_id: int) -> bool:
+    try:
+        with session_scope() as s:
+            legacy_call(s, call_id)
+    except HTTPException:
+        return False
+    return True
+
+
 async def _run_asr(asr, line: BuddyLine, ready: asyncio.Event) -> None:
     """Start the provider stream off the receive loop, with retries: a slow handshake must not drop the phone call."""
     for attempt in range(1, ASR_START_ATTEMPTS + 1):
@@ -147,6 +158,9 @@ async def watch(ws: WebSocket, call_id: int, key: str | None = Query(default=Non
     """Read-only feed of a call's transcripts and cards (the grandchild's phone screen)."""
     if locked() and not key_ok(key or ws.headers.get("x-kin-key")):
         await ws.close(code=4401, reason="KIN API key required (?key=)")
+        return
+    if not _legacy_call_ok(call_id):  # key only, no X-KIN-User: a world call's transcripts are participant-checked
+        await ws.close(code=4404, reason="unknown call id")
         return
     await ws.accept()
     session = registry.get_or_create(call_id)

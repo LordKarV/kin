@@ -12,6 +12,7 @@ struct MainTabs: View {
                 .tabItem { Label("Messages", systemImage: "bubble.left.and.text.bubble.right.fill") }
         }
         .tint(K.link)
+        .id(model.account)  // a debug sign-in as someone else while home: rebuild so both tabs reload
     }
 }
 
@@ -21,15 +22,21 @@ struct PeopleScreen: View {
     @State private var contacts: [ContactOut]?
     @State private var error: String?
     @State private var myLang: String?
+    @State private var confirm: ConfirmDelete?
 
     var body: some View {
         PeopleList(contacts: contacts, error: error, myLang: myLang, joining: model.joining,
-                   onCall: { Task { await model.startCall() } }, onSignOut: model.signOut,
+                   onCall: { Task { await model.startCall() } }, onSignOut: { model.signOut() },
+                   onDeleteAccount: {
+                       confirm = ConfirmDelete(title: "Delete your account and everything KIN holds about you?",
+                                               button: "Delete my account") { Task { await model.deleteAccount() } }
+                   },
                    retry: { Task { await load() } }) { contact in
             PersonWorldScreen(model: model, contact: contact)
         }
         .task { await load() }
         .refreshable { await load() }
+        .confirmDelete($confirm)
     }
 
     private func load() async {
@@ -38,7 +45,7 @@ struct PeopleScreen: View {
             error = nil
             myLang = try await model.api.me().lang
         } catch {
-            self.error = "Could not load your people: \(error.localizedDescription)"
+            if !model.signOutIfBadToken(error) { self.error = "Could not load your people: \(error.localizedDescription)" }
         }
     }
 }
@@ -51,6 +58,7 @@ struct PeopleList<Destination: View>: View {
     let joining: Bool
     let onCall: () -> Void
     var onSignOut: () -> Void = {}
+    var onDeleteAccount: () -> Void = {}
     let retry: () -> Void
     @ViewBuilder let destination: (ContactOut) -> Destination
 
@@ -85,6 +93,7 @@ struct PeopleList<Destination: View>: View {
                 Menu {
                     Button("Start a call", systemImage: "video.badge.plus", action: onCall)
                     Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive, action: onSignOut)
+                    Button("Delete my account", systemImage: "trash", role: .destructive, action: onDeleteAccount)
                 } label: { CircleIcon(symbol: "person.badge.plus") }
                 .accessibilityLabel("Add someone")
             }

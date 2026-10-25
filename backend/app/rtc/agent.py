@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from typing import Callable
 
 from livekit import api, rtc
 from sqlalchemy import update
@@ -80,12 +81,13 @@ def mint_token(room: str, identity: str, name: str, metadata: dict | None = None
 class _Leg:
     """One person in the room as a CallSession side: their data channel and their private translated-voice track."""
 
-    def __init__(self, room: rtc.Room, identity: str, key: str, person: str, lazy_track: bool = False):
+    def __init__(self, room: rtc.Room, identity: str, key: str, person: str, on_publish: Callable[["_Leg"], None]):
         # identity: LiveKit identity (data destination); key: CallSession side identity (role for legacy)
         self.room, self.identity, self.key, self.person = room, identity, key, person
         self.source = rtc.AudioSource(SAMPLE_RATE, 1)
         self.track = rtc.LocalAudioTrack.create_audio_track(f"kin-to-{identity}", self.source)
-        self.published = not lazy_track  # legacy legs are published by _join before the session starts
+        self.published = False  # legacy legs publish in _join before the session starts; world legs on first audio_start
+        self._on_publish = on_publish
         self._publish_lock = asyncio.Lock()
         self.token: str | None = None
         self.mic_task: asyncio.Task | None = None
@@ -97,6 +99,7 @@ class _Leg:
                 if not self.published:
                     await self.room.local_participant.publish_track(self.track, rtc.TrackPublishOptions())
                     self.published = True
+                    self._on_publish(self)
 
     async def send_json(self, msg: dict) -> None:
         if msg.get("type") == "audio_start":  # publish before the voice starts, so the listener can subscribe in time
@@ -121,23 +124,56 @@ class RoomAgent:
         self.session: CallSession | None = None
         self.legs: dict[str, _Leg] = {}
         self.done = asyncio.Event()
+        self._joining: dict[str, rtc.RemoteParticipant] = {}  # identity -> participant whose session.join is in flight
+        self._tasks: set[asyncio.Task] = set()  # join/leave handlers; run() waits for them before the call can end
 
     async def run(self) -> None:
         url, _, _ = livekit_creds()
         self.session = registry.get_or_create(self.call_id)
-        self.room.on("participant_connected", lambda p: asyncio.create_task(self._safe_join(p)))
-        self.room.on("participant_disconnected", lambda p: asyncio.create_task(self._leave(p)))
+        self.room.on("participant_connected", lambda p: self._spawn(self._safe_join(p)))
+        self.room.on("participant_disconnected", lambda p: self._spawn(self._leave(p)))
         self.room.on("track_subscribed", lambda track, _pub, p: self._listen(track, p))
         await self.room.connect(url, mint_token(room_name(self.call_id), AGENT_IDENTITY, "KIN", agent=True))
+        self._restrict_voice()  # before any publish: nobody may subscribe to a kin-to-* track until it is theirs
         log.info("KIN agent in %s", room_name(self.call_id))
         for p in list(self.room.remote_participants.values()):
             await self._safe_join(p)
         try:
             await self.done.wait()
         finally:
+            # a leave still waiting for its last line (or a join still connecting) must finish before the call can
+            # end, or drop_if_empty runs the call-end extraction without that line (or never, with a zombie side)
+            # only pending ones: the last _leave sets done and returns in one step, so its discard callback is still
+            # queued when we wake, and gathering only done tasks never yields (the whole loop spun at 100% CPU)
+            while pending := [t for t in self._tasks if not t.done()]:
+                await asyncio.wait(pending)
             await self.room.disconnect()
             registry.drop_if_empty(self.call_id)
             log.info("KIN agent left %s", room_name(self.call_id))
+
+    def _spawn(self, coro) -> None:
+        t = asyncio.create_task(coro)
+        self._tasks.add(t)
+        t.add_done_callback(self._reap)
+
+    def _reap(self, t: asyncio.Task) -> None:
+        self._tasks.discard(t)
+        if not t.cancelled() and t.exception() is not None:
+            log.error("KIN join/leave in call %s failed", self.call_id, exc_info=t.exception())
+
+    def _restrict_voice(self, leg: _Leg | None = None) -> None:
+        """Only <identity> may subscribe to kin-to-<identity>: it carries that listener's private grounding (the client
+        also plays only its own, Routing.swift). Each call replaces the whole set, so it lists every published leg."""
+        legs = {x.identity: x for x in self.legs.values() if x.published}
+        if leg is not None:  # a legacy leg publishes before _join registers it
+            legs[leg.identity] = leg
+        perms = [rtc.ParticipantTrackPermission(participant_identity=i, allowed_track_sids=[x.track.sid])
+                 for i, x in legs.items()]
+        try:  # sync in livekit 1.1.21 (an FFI request), not a coroutine
+            self.room.local_participant.set_track_subscription_permissions(allow_all_participants=False,
+                                                                           participant_permissions=perms)
+        except Exception as e:  # noqa: BLE001  (fails open to the old behavior; the client-side routing still holds)
+            log.warning("track permissions for call %s not set: %s", self.call_id, e)
 
     async def _safe_join(self, p: rtc.RemoteParticipant) -> None:
         try:  # one bad participant must not take the room down, and a failed join must be logged
@@ -150,15 +186,26 @@ class RoomAgent:
         if parsed is None or p.identity in self.legs:
             return
         key, person, lang, person_id = parsed
-        world = person_id is not None
-        leg = _Leg(self.room, p.identity, key, person, lazy_track=world)
-        if world:
-            side = await self.session.join(key, person, leg.send_json, leg.send_bytes, lang=lang, person_id=person_id)
-        else:
-            await self.room.local_participant.publish_track(leg.track, rtc.TrackPublishOptions())
-            side = await self.session.join(key, person, leg.send_json, leg.send_bytes)
+        leg = _Leg(self.room, p.identity, key, person, on_publish=self._restrict_voice)
+        # not in self.legs until session.join returns: track_subscribed would start a second ASR during the join
+        self._joining[p.identity] = p
+        try:
+            if person_id is not None:
+                side = await self.session.join(key, person, leg.send_json, leg.send_bytes, lang=lang, person_id=person_id)
+            else:
+                await leg.ensure_track()
+                side = await self.session.join(key, person, leg.send_json, leg.send_bytes)
+        finally:
+            left = self._joining.get(p.identity) is not p  # _leave took it: they hung up while we were joining
+            if not left:
+                del self._joining[p.identity]
         leg.token = side.token
+        if left:  # a zombie side would sit in every later audience and keep the call from ending
+            await self._drop(leg)
+            return
         self.legs[p.identity] = leg
+        if leg.published:  # a publish by another leg during our join replaced the set without this one
+            self._restrict_voice()
         for pub in p.track_publications.values():  # mic published before we arrived
             if pub.track is not None:
                 self._listen(pub.track, p)
@@ -200,22 +247,27 @@ class RoomAgent:
 
     async def _leave(self, p: rtc.RemoteParticipant) -> None:
         leg = self.legs.pop(p.identity, None)
+        if leg is None and self._joining.get(p.identity) is p:
+            del self._joining[p.identity]  # still joining: _join drops the leg when session.join returns
         if leg:
-            if leg.mic_task:
-                leg.mic_task.cancel()
-            await self.session.leave(leg.key, token=leg.token)
-            if leg.key == leg.identity:  # world leg: mark the participant row left so later joins do not list them
-                try:
-                    await asyncio.to_thread(self._mark_left, leg.identity)
-                except Exception:  # noqa: BLE001
-                    log.exception("left_at for %s in call %s", leg.identity, self.call_id)
-            try:
-                if leg.published:  # a world leg with voice off never published its track
-                    await self.room.local_participant.unpublish_track(leg.track.sid)
-            except Exception as e:  # noqa: BLE001  (track already gone when the room closes)
-                log.debug("unpublish %s: %s", leg.identity, e)
+            await self._drop(leg)
         if not self.room.remote_participants:
             self.done.set()
+
+    async def _drop(self, leg: _Leg) -> None:
+        if leg.mic_task:
+            leg.mic_task.cancel()
+        if leg.key == leg.identity:  # world leg: mark the participant row left so later joins do not list them
+            try:  # before session.leave, which can wait seconds for the last line: a rejoin's reset in that wait stands
+                await asyncio.to_thread(self._mark_left, leg.identity)
+            except Exception:  # noqa: BLE001
+                log.exception("left_at for %s in call %s", leg.identity, self.call_id)
+        await self.session.leave(leg.key, token=leg.token)
+        try:
+            if leg.published:  # a world leg with voice off never published its track
+                await self.room.local_participant.unpublish_track(leg.track.sid)
+        except Exception as e:  # noqa: BLE001  (track already gone when the room closes)
+            log.debug("unpublish %s: %s", leg.identity, e)
 
 
     def _mark_left(self, identity: str) -> None:

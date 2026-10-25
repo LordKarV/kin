@@ -26,6 +26,25 @@ WORD = {"mother": "Mom", "father": "Dad", "son": "son", "daughter": "daughter", 
         "younger_sister": "younger sister", "brother": "brother", "sister": "sister"}
 # sibling-type kin terms applied to cousins carry a relative-age constraint
 AGE_RULE = {"anna": "older", "akka": "older", "thambi": "younger", "thangai": "younger"}
+# the referent's sex as a pattern's last step names it; generic steps (child, spouse, sibling) name none
+SEX = {**dict.fromkeys(("father", "son", "husband", "brother", "elder_brother", "younger_brother"), "m"),
+       **dict.fromkeys(("mother", "daughter", "wife", "sister", "elder_sister", "younger_sister"), "f")}
+
+
+def _sex_fits(d: KinTermDef, sex: str | None) -> bool:
+    """False when every gendered pattern of `d` names the other sex: drafted tables add generic steps to gendered
+    words (ja musuko = son, child), so a daughter would otherwise match 'son' through 'child'."""
+    named = {SEX.get(p.split(".")[-1]) for p in d.patterns} - {None}
+    return sex not in ("m", "f") or not named or sex in named
+
+
+def pick_term(terms: list[KinTermDef], path: list[str]) -> KinTermDef | None:
+    """The kin term for a concrete path: an exact pattern first, then the first generic match of the right sex."""
+    key = ".".join(path)
+    kin = [d for d in terms if d.kind == "kin"]
+    sex = SEX.get(path[-1]) if path else None
+    return next((d for d in kin if key in d.patterns), None) or next(
+        (d for d in kin if _sex_fits(d, sex) and any(FamilyGraph.matches(path, pat) for pat in d.patterns)), None)
 
 
 @dataclass
@@ -55,9 +74,13 @@ class ThingNode:
 
 
 class FamilyGraph:
-    def __init__(self, family_id: int, heritage_lang: str, people: list[Node], edges: list[tuple], things: list[ThingNode]):
+    def __init__(self, family_id: int, heritage_lang: str, people: list[Node], edges: list[tuple], things: list[ThingNode],
+                 ego_lang: dict[int, str] | None = None):
+        """ego_lang: person id -> that user's language (world spaces), so address terms follow the listener, not the
+        space's first sign-up. Empty for legacy families (no users): heritage_lang applies to everyone."""
         self.family_id = family_id
         self.heritage_lang = heritage_lang
+        self.ego_lang: dict[int, str] = dict(ego_lang or {})
         self.people: dict[int, Node] = {p.id: p for p in people}
         self.by_slug: dict[str, Node] = {p.slug: p for p in people}
         self.things: list[ThingNode] = things
@@ -103,7 +126,9 @@ class FamilyGraph:
                  for e in session.scalars(eq)]
         things = [ThingNode(t.id, t.slug, t.kind, t.name, t.lang_name, list(t.aliases or []), t.note)
                   for t in session.scalars(select(m.Thing).where(m.Thing.family_id == family_id))]
-        return cls(family_id, fam.heritage_lang if fam else "ta", people, edges, things)
+        ego_lang = dict(session.execute(select(m.User.person_id, m.User.lang).join(m.Person, m.Person.id == m.User.person_id)
+                                        .where(m.Person.family_id == family_id)).all())
+        return cls(family_id, fam.heritage_lang if fam else "ta", people, edges, things, ego_lang)
 
     # ---- who's who (any family, any language) --------------------------------
     def learner_slug(self) -> str:
@@ -195,7 +220,7 @@ class FamilyGraph:
         maxd = max(len(p.split(".")) for p in term.patterns)
         out: set[int] = set()
         for t in self.people:
-            if t == ego:
+            if t == ego or not _sex_fits(term, self.people[t].gender):
                 continue
             paths = self.all_paths(ego, t, maxd)
             if any(self.matches(p, pat) for p in paths for pat in term.patterns):
@@ -227,15 +252,16 @@ class FamilyGraph:
             d = lookup(a)
             if d and path and any(self.matches(path, pat) for pat in d.patterns):
                 return a
-        if path:
+        lang = self.ego_lang.get(ego)
+        if path and lang != "en":  # the en table only repeats the role ("your grandmother Paatti grandmother")
             from .kin_tables import load_table
             try:
-                terms = load_table(self.heritage_lang).terms
+                terms = load_table(lang or self.heritage_lang).terms
             except (KeyError, FileNotFoundError):
                 terms = KIN_TERMS
-            for d in terms:
-                if d.kind == "kin" and any(self.matches(path, pat) for pat in d.patterns):
-                    return d.term
+            d = pick_term(terms, path)
+            if d is not None and normalize_term(d.term) not in {normalize_term(tgt.name), normalize_term(self.role(ego, target))}:
+                return d.term
         return None
 
     # ---- rendering --------------------------------------------------------
@@ -272,6 +298,8 @@ class FamilyGraph:
         t = self.people[target]
         if ego == target:
             return f"you ({t.name})"
+        if self.shortest_path(ego, target) is None:  # no kin path (world spaces): never "your relative X (relative)"
+            return t.name
         r = self.role(ego, target)
         if r in ("mom", "dad"):
             return f"your {r} ({t.name})"

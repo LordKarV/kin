@@ -73,6 +73,8 @@ class ValidateCtx:
     fact_speaker: dict[int, int]  # own fact id -> its speaker
     storyline_speakers: dict[int, frozenset[int]] = field(default_factory=dict)  # storyline id -> speakers offered it
     names: dict[tuple[str, int], str] = field(default_factory=dict)  # (table kind, id) -> display name
+    # speaker -> the known rows build_prompt offered that speaker (their KNOWN ENTITIES plus the participants)
+    by_speaker: dict[int, frozenset[tuple[str, int]]] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -153,8 +155,11 @@ def validate_ctx(window_lines: list[Line], participants: list[Participant], own_
             story_speakers[st_id] = story_speakers.get(st_id, frozenset()) | {sid}
     names = {("person", p.id): p.name for p in participants}
     names.update({(c.kind, c.id): c.name for cs in candidates.values() for c in cs[:MAX_CANDIDATES]})
+    parts = frozenset(("person", p.id) for p in participants)
+    by_speaker = {sid: parts | {(c.kind, c.id) for c in candidates.get(sid, [])[:MAX_CANDIDATES]}
+                  for sid in {ln.speaker_id for ln in window_lines}}
     return ValidateCtx({ln.n: ln.speaker_id for ln in window_lines}, frozenset(users), slugs, frozenset(cands),
-                       fact_speaker, story_speakers, names)
+                       fact_speaker, story_speakers, names, by_speaker)
 
 
 def run_extraction(llm: LLM | None, call_id: int | None, window_lines: list[Line], participants: list[Participant],
@@ -245,6 +250,11 @@ def _check_fact(f: FactOut, refs: dict[str, EntityOut], ctx: ValidateCtx,
     touched = [subj, *(resolve(r, speaker, refs, ctx) for r in f.refs)]
     if any(r is None for r in touched):
         return f"unknown ref in {f.refs}", f
+    # Another speaker's KNOWN ENTITIES are private to them: linking to one would show it to this speaker and merge
+    # two different people.
+    offered = ctx.by_speaker.get(speaker, frozenset()) | {("person", speaker)}
+    if any(not r[0].startswith("new:") and r not in offered for r in touched):
+        return f"refs not offered to speaker {speaker}", f
     for name, fid in (("same_as", f.same_as), ("contradicts", f.contradicts)):
         if fid is not None and ctx.fact_speaker.get(fid) != speaker:
             return f"{name}={fid} is not one of speaker {speaker}'s own facts", f
@@ -285,6 +295,23 @@ def _synth_tie_fact(t: TieOut, speaker: int, refs: dict[str, EntityOut], ctx: Va
                    sensitive_kind="", same_as=None, contradicts=None, storyline=None)
 
 
+def _offered_entities(entities: list[EntityOut], facts: list[FactOut], dropped: list[str],
+                      ctx: ValidateCtx) -> list[EntityOut]:
+    """apply_update adds an existing entity's forms even when no fact cites it, so a known entity must have been
+    offered to a speaker who said it: one whose accepted fact cites it (checked in _check_fact), or, when nothing
+    cites it, every speaker in the window (whoever said it had it). Drops the rest, with a reason."""
+    cited = {t for f in facts for t in (f.subject, *f.refs)}
+    speakers = set(ctx.speaker_of_line.values())
+    out = []
+    for e in entities:
+        key = (ENTITY_TABLE[e.kind], e.existing_id)
+        if e.existing_id is None or e.ref in cited or all(key in ctx.by_speaker.get(sp, ()) for sp in speakers):
+            out.append(e)
+        else:
+            dropped.append(f"entity {e.ref!r}: existing_id {e.existing_id} not offered to every speaker")
+    return out
+
+
 def validate(update: WorldUpdateOut, ctx: ValidateCtx) -> tuple[WorldUpdateOut, list[str]]:
     """Drop every item that breaks a 6.2 rule (and anything that depended on it). Returns (clean update, reasons)."""
     dropped: list[str] = []
@@ -300,10 +327,10 @@ def validate(update: WorldUpdateOut, ctx: ValidateCtx) -> tuple[WorldUpdateOut, 
     refs = {e.ref: e for e in entities}
     facts: list[FactOut] = []
     introducer: dict[str, int] = {}  # new entity ref -> speaker of the first fact about or mentioning it
-    for f in update.facts:
+    for i, f in enumerate(update.facts):
         why, f2 = _check_fact(f, refs, ctx, introducer)
         if why:
-            dropped.append(f"fact {f.text_en[:40]!r}: {why}")
+            dropped.append(f"fact #{i}: {why}")  # never the text: these are logged, and some were refused for privacy
         else:
             facts.append(f2)
     ties: list[TieOut] = []
@@ -325,6 +352,7 @@ def validate(update: WorldUpdateOut, ctx: ValidateCtx) -> tuple[WorldUpdateOut, 
                 continue
             facts.append(f)
         ties.append(t if t.kind in TIE_KINDS else t.model_copy(update={"kind": "knows"}))
+    entities = _offered_entities(entities, facts, dropped, ctx)
     for r in dropped:
         log.info("extraction dropped: %s", r)
     return WorldUpdateOut(entities=entities, ties=ties, facts=facts), dropped

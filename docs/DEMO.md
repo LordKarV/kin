@@ -27,11 +27,33 @@ open Kin.xcodeproj                                     # Run on an iPhone simula
 xcodebuild -project Kin.xcodeproj -scheme Kin -destination 'generic/platform=iOS Simulator' build
 ```
 
-The simulator reaches `http://localhost:8000`. A phone needs the laptop's LAN address under Sign up > Server, and a
-LiveKit URL it can reach.
+The simulator reaches `http://localhost:8000`. A phone needs the laptop's LAN address under Sign up > Server (for
+example `192.168.1.20:8000`; the app adds `http://` when it is missing), and a LiveKit URL it can reach.
 
-Known gap: a phone signs up as its own user, and nothing lets it sign in as the users the driver creates. Until that
-exists (see the 4C report), the phones show the live call and the driver plays the planted story.
+### Phones as Arjun, Mei and Paatti
+
+The driver prints a `kin://signin?token=...` link for each person right after the planted history. On a debug build,
+open the link on the phone (AirDrop or paste it into Notes and tap it), or paste it into Sign up > Server > "Sign-in
+link". The phone checks the token with `GET /api/me` and becomes that person; a release build ignores these links.
+
+```bash
+cd backend && KIN_BASE=http://192.168.1.20:8000 .venv/bin/python ../scripts/demo_common_ground.py --plant-only
+```
+
+`--plant-only` plants call 1, Arjun's facts, Paatti's two Ravis, the SMS and the Priya call, sets the clock to 0,
+prints the links and exits, so the phones play call 2 and the Paatti call themselves. Without it the driver joins
+call 2 as Arjun and Mei with the same LiveKit identities a phone would use, and the two kick each other out. With
+`KIN_BASE` set to the LAN address the links also carry `server=`; for `localhost` they do not, and the phone keeps the
+server it has. `KIN_KEY` adds `key=`.
+
+Lost the links? On the server host (on Vultr, over ssh), `curl -X POST http://localhost:8000/api/dev/signin -H
+"X-KIN-Key: $KIN_KEY" -H 'content-type: application/json' -d '{"person": "p_arjun_2"}'` (the slug the driver
+printed) returns a new token for that person, and the old one stops working. The route answers only loopback callers.
+Wrap the token as `kin://signin?token=<token>`.
+
+Starting a call from a phone and sharing the invite sends `http://<server>/?call=N&code=C`. Tapping it opens a small
+page on the KIN server that hands off to the app as `kin://join`. The code is required for a new person to join, and
+it changes when the server restarts, so share a fresh invite after a restart.
 
 ## What the driver does, and what to point at
 
@@ -50,10 +72,15 @@ exists (see the 4C report), the phones show the live call and the driver plays t
    friends?"). Arjun gets "You haven't told Paatti: went hiking with Mei when she visited" (his own experience; nothing
    Mei said is ever suggested). Arjun types "I went hiking with Mei when she visited." Paatti gets a Tamil caption and
    a card for Mei ("your grandson Arjun's friend Mei, from high school, now in Shanghai"), followed by its Tamil
-   version; Arjun's hiking chip is retracted because he just told her.
+   version; Arjun's hiking chip is retracted because he just told her. Then Paatti types
+   `ரவி மாமா நேத்து வந்தாரு, ரவி பெரியப்பா அடுத்த வாரம் வர்றாரு.` ("Ravi mama came yesterday; Ravi periyappa is coming
+   next week."). Arjun's caption names each uncle for who he is: "your uncle Ravi (Mom's younger brother)" and "your
+   uncle Ravi (Dad's elder brother)". Both were planted at clock -3: Paatti told Arjun about them, then Arjun placed
+   each by kin path (by slug, so the second Ravi is not merged into the first).
 
 Rehearsed 2026-10-25 on `livekit-server --dev` with the live model. All five beats printed as above (one run, about 70
-seconds).
+seconds). The two-Ravis line and `--plant-only` were added after that rehearsal and have only run offline
+(`backend/tests/test_demo_driver.py`); rehearse them live before the demo.
 
 ## Fallbacks
 
@@ -63,7 +90,7 @@ seconds).
 - **SMS:** `/api/dev/sms` stands in for Twilio until a number is set up.
 - **The live call misbehaves on stage:** run the driver and show its output; it goes through the same engine.
 
-## Not planted
+## Known gaps
 
-The "two Ravis" moment in the Paatti call needs Paatti's own family (two people named Ravi, placed by kin path). The
-driver does not create it yet.
+- Paatti's own view of the Ravis is plain "Ravi": placing a sibling by kin path does not make him her son.
+- `--next-day` needs the driver; phones playing call 2 can repeat the beat after `POST /api/dev/clock {"offset_days": 1}`.

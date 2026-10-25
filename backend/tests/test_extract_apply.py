@@ -9,8 +9,10 @@ from sqlalchemy import func, select
 from app import llm as llm_mod
 from app.db import models as m
 from app.db.session import init_db, session_scope
+from app.graph.kinship import FamilyGraph
 from app.world import apply as ap
 from app.world import extract as ex
+from app.world import privacy
 from app.world.contracts import WorldUpdateOut
 from app.world.users import create_user
 
@@ -112,7 +114,9 @@ def test_call1_creates_lin_with_translit_aliases_tie_and_audience(w):
         tie = s.scalars(select(m.Tie)).one()
         assert (tie.src_person, tie.dst_person, tie.kind) == (w["mei"], lin.id, "friend") and tie.fact_id == res.facts[0]
         f = s.get(m.Fact, res.facts[0])
-        assert (f.subject_id, f.speaker_id, f.third_party, f.text_src) == (w["mei"], w["mei"], False, LIN_LINE)
+        # Mei is the subject, but the fact is about Lin, a third party: it expires (PRODUCT hard rule)
+        assert (f.subject_id, f.speaker_id, f.third_party, f.text_src) == (w["mei"], w["mei"], True, LIN_LINE)
+        assert f.expires_at == T0 + timedelta(days=120)
         assert _aud(s, f.id) == {w["mei"]: "said", w["arjun"]: "heard"}
         assert s.scalar(select(m.FactRef.ref_id).where(m.FactRef.fact_id == f.id)) == lin.id
         assert (w["mei"], "fact", f.id, "said") in res.evidence and (w["arjun"], "person", lin.id, "heard") in res.evidence
@@ -292,6 +296,23 @@ def test_link_kin_attaches_existing_paatti_through_placeholder_mom(w):
         assert ravi.display_name == "Ravi" and s.scalar(select(func.count(m.Person.id)).where(m.Person.display_name == "Mom")) == 1
 
 
+def test_kin_sibling_becomes_the_child_of_the_anchors_parents(w):
+    """Arjun places Paatti as his mother's mother, then Ravi as his mother's younger brother (by slug and by name):
+    Paatti must see each as her son, and Arjun's render is unchanged."""
+    from app.world.view import WorldView
+    with session_scope() as s:
+        _, paatti, _ = create_user(s, "Paatti", "ta")
+        ap.place_person(s, w["space"], w["arjun"], "", w["arjun"], "mother.mother", person=paatti.slug, now=T0)
+        ravi = ap._new_person(s, w["space"], "Ravi")
+        ap.place_person(s, w["space"], w["arjun"], "", w["arjun"], "mother.younger_brother", person=ravi.slug, now=T0)
+        uma, _ = ap.link_kin(s, w["space"], w["arjun"], "mother.younger_sister", None, me=w["arjun"], name="Uma", now=T0)
+        view = WorldView.build(s, w["space"], [w["arjun"], paatti.id], T0)
+        assert view.render(paatti.id, ravi.id) == "your son Ravi magan (your son)"  # was plain 'Ravi'
+        assert view.render(paatti.id, uma.id).startswith("your daughter Uma")
+        assert view.render(w["arjun"], ravi.id) == "your uncle Ravi (Mom's younger brother)"
+        assert all(e.fact_id is not None for e in s.scalars(select(m.Edge)))
+
+
 def test_validate_drops_tie_without_tie_fact_when_two_people_spoke():
     ctx = ex.ValidateCtx({1: 5, 2: 6}, frozenset({5, 6}), {}, frozenset(), {})
     upd = WorldUpdateOut.model_validate({"entities": [LIN], "ties": CALL1["ties"], "facts": []})
@@ -377,3 +398,90 @@ def test_place_person_unknown_slug_raises(w):
         with pytest.raises(LookupError):
             ap.place_person(s, w["space"], w["arjun"], "", w["mei"], "friend", person="p_lin_17", now=T0)
         assert s.scalar(select(func.count(m.Person.id))) == 3
+
+
+def test_lin_introduced_through_a_tie_is_swept_after_the_ttl(w):
+    with session_scope() as s:
+        res, _ = _run(s, w, [("mei", LIN_LINE)], CALL1)
+        lin_id = res.entities["e1"]
+        own, _ = _run(s, w, [("arjun", "I like tea")], {"entities": [], "ties": [], "facts": [
+            fact("speaker", "likes tea", [1], predicate="likes")]})
+        assert s.get(m.Fact, own.facts[0]).expires_at is None  # a user's own fact naming no third party stays
+        assert privacy.sweep_expired(s, T0 + timedelta(days=119))["orphans"] == 0
+        counts = privacy.sweep_expired(s, T0 + timedelta(days=121))
+        assert counts["orphans"] == 1 and s.get(m.Person, lin_id) is None
+        assert s.scalar(select(func.count(m.Tie.id))) == 0 and s.get(m.Fact, own.facts[0]) is not None
+
+
+def test_place_person_tie_to_a_non_user_expires_and_to_a_user_does_not(w):
+    with session_scope() as s:
+        lin, _ = ap.place_person(s, w["space"], w["arjun"], "Lin", w["mei"], "friend", now=T0)
+        arjun, _ = ap.place_person(s, w["space"], w["arjun"], "", w["mei"], "friend", person=w["arjun_slug"], now=T0)
+        by_dst = {t.dst_person: s.get(m.Fact, t.fact_id) for t in s.scalars(select(m.Tie))}
+        assert by_dst[lin.id].third_party and by_dst[lin.id].expires_at == T0 + timedelta(days=120)
+        assert not by_dst[arjun.id].third_party and by_dst[arjun.id].expires_at is None
+
+
+def test_place_person_tie_is_idempotent_and_refuses_a_self_tie(w):
+    with session_scope() as s:
+        lin, _ = ap.place_person(s, w["space"], w["arjun"], "Lin", w["mei"], "friend", now=T0)
+        again, ev = ap.place_person(s, w["space"], w["arjun"], "Lin", w["mei"], "friend", call_audience=[w["priya"]],
+                                    now=T0, call_id=w["call"])  # an iOS retry, this time on a call with Priya
+        assert again.id == lin.id and ev == [(w["arjun"], "person", lin.id, "confirmed")]
+        tie = s.scalars(select(m.Tie)).one()
+        assert s.scalar(select(func.count(m.Fact.id))) == 1
+        assert _aud(s, tie.fact_id) == {w["arjun"]: "card", w["mei"]: "told", lin.id: "told", w["priya"]: "heard"}
+        _, ev = ap.place_person(s, w["space"], w["priya"], "Lin", w["mei"], "friend", now=T0)  # she heard it: nothing new
+        assert ev == [(w["priya"], "person", lin.id, "confirmed")]
+        assert s.scalar(select(func.count(m.Tie.id))) == 1 and s.scalar(select(func.count(m.Fact.id))) == 1
+        with pytest.raises(ValueError):
+            ap.place_person(s, w["space"], w["arjun"], "", w["mei"], "friend", person=w["mei_slug"], now=T0)
+        with pytest.raises(ValueError):
+            ap.place_person(s, w["space"], w["arjun"], "Mei", w["mei"], "friend", now=T0)
+        assert s.scalar(select(func.count(m.Tie.id))) == 1
+
+
+def test_placing_a_known_tie_never_adds_anyone_to_someone_elses_fact(w):
+    """Review rank 1: Priya placing Lin as Mei's friend joined the audience of Mei's own fact (and its source line),
+    which only Mei and Arjun heard; so did everyone on Priya's call."""
+    with session_scope() as s:
+        res, _ = _run(s, w, [("mei", LIN_LINE)], CALL1)
+        f1, lin = res.facts[0], s.get(m.Person, res.entities["e1"])
+        heard = _aud(s, f1)
+        _, mallory, _ = create_user(s, "Mallory", "en")
+        args = (s, w["space"], w["priya"], "", w["mei"], "friend")
+        ap.place_person(*args, call_audience=[mallory.id], person=lin.slug, now=T0, call_id=w["call"])
+        assert _aud(s, f1) == heard
+        ties = s.scalars(select(m.Tie).order_by(m.Tie.id)).all()
+        mine = s.get(m.Fact, ties[-1].fact_id)
+        assert len(ties) == 2 and (mine.speaker_id, mine.source_kind, mine.third_party) == (w["priya"], "card", True)
+        assert _aud(s, mine.id) == {w["priya"]: "card", w["mei"]: "told", lin.id: "told", mallory.id: "heard"}
+        ap.place_person(*args, person=lin.slug, now=T0)  # Priya's retry finds her own card behind the second tie
+        ap.place_person(s, w["space"], w["arjun"], "", w["mei"], "friend", person=lin.slug, now=T0)  # Arjun heard F1
+        assert s.scalar(select(func.count(m.Tie.id))) == 2 and _aud(s, f1) == heard
+
+
+def test_placing_over_an_expired_tie_writes_a_fresh_one(w):
+    """Review rank 4: reusing a tie whose fact is past its TTL answered 'confirmed', then the sweep deleted it."""
+    with session_scope() as s:
+        lin, _ = ap.place_person(s, w["space"], w["arjun"], "Lin", w["mei"], "friend", now=T0)
+        later = T0 + timedelta(days=121)
+        ap.place_person(s, w["space"], w["arjun"], "Lin", w["mei"], "friend", now=later)
+        old, fresh = s.scalars(select(m.Tie).order_by(m.Tie.id)).all()
+        assert s.get(m.Fact, fresh.fact_id).expires_at == later + timedelta(days=120)
+        privacy.sweep_expired(s, later)
+        assert [t.id for t in s.scalars(select(m.Tie))] == [fresh.id] and s.get(m.Person, lin.id) is not None
+
+
+def test_placed_paatti_renders_as_grandmother_in_each_listeners_language(w):
+    """Demo bug 1: Mei (zh) signed up first, so the space is zh, and Paatti was '?' (rendered male)."""
+    with session_scope() as s:
+        _, paatti, _ = create_user(s, "Paatti", "ta")
+        ap.place_person(s, w["space"], w["arjun"], "", w["arjun"], "mother.mother", person=paatti.slug, now=T0)
+        assert paatti.gender == "f"
+        g = FamilyGraph.from_session(s, w["space"])
+        assert g.render(w["arjun"], paatti.id) == "your grandmother Paatti (Mom's mom)"
+        assert g.render(paatti.id, w["arjun"]) == "your grandson Arjun peran (your daughter's son)"
+        n_edges = s.scalar(select(func.count(m.Edge.id)))
+        ap.place_person(s, w["space"], w["arjun"], "", w["arjun"], "mother.mother", person=paatti.slug, now=T0)
+        assert s.scalar(select(func.count(m.Edge.id))) == n_edges  # placing her again adds no duplicate parent edge

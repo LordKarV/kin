@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Iterator
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from ..config import get_settings
@@ -40,7 +40,15 @@ def reset_engine() -> None:
 def init_db() -> None:
     from . import models  # noqa: F401  (registers tables)
 
-    models.Base.metadata.create_all(get_engine())
+    engine = get_engine()
+    models.Base.metadata.create_all(engine)
+    # create_all never alters an existing table: an old kin.db would start cleanly and then 500 on the first write.
+    # ponytail: fail fast with a clear message instead of migrations; add Alembic when data must survive a schema change.
+    insp = inspect(engine)
+    for t in models.Base.metadata.sorted_tables:
+        missing = {c.name for c in t.columns} - {c["name"] for c in insp.get_columns(t.name)}
+        if missing:
+            raise RuntimeError(f"{engine.url} predates this schema ({t.name} lacks {sorted(missing)}); delete it")
 
 
 def checkpoint_truncate(s: Session) -> None:

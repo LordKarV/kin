@@ -66,3 +66,41 @@ def test_simulation_does_not_touch_real_learner_rows_and_uses_lemmas():
         assert "சாப்பிட்டியா" in w8["passthrough"] and "மழை" in {t["lemma_surface"] for t in w8["trajectories"]}
         assert all(t["lemma"] == t["lemma"].strip() for t in w8["trajectories"])
         assert w8["mastery"] and all({"lemma", "p_known", "mastered"} <= set(r) for r in w8["mastery"])
+
+
+def test_fade_routes_never_touch_the_world_space(monkeypatch):
+    """Seeding off: family 1 is the world space, and Fade (a legacy-family mode) answers 404 like a missing family."""
+    monkeypatch.setenv("SEED_DEMO_FAMILY", "0")
+    from app import config
+    from app.db.session import reset_engine, session_scope
+    from app.world.users import create_user
+    config.get_settings.cache_clear(); reset_engine()
+    with TestClient(app) as c:
+        with session_scope() as s:
+            _, me, _ = create_user(s, "Arjun", "ta")
+            slug = me.slug
+        body = {"learner": slug, "text": "நேத்து"}
+        assert c.get(f"/api/fade/mastery?learner={slug}").status_code == 404
+        for path in ("expose", "verify", "policy", "reset", "simulate"):
+            assert c.post(f"/api/fade/{path}", json=body).status_code == 404, path
+
+
+def test_fade_verify_never_reads_a_world_utterance():
+    """With the legacy family seeded, a world user's slug and a world transcript are still out of Fade's reach."""
+    import pytest
+    from app.db import models as m
+    from app.db.session import session_scope
+    from app.world.users import create_user, get_space
+    with TestClient(app) as c:
+        with session_scope() as s:
+            _, me, _ = create_user(s, "Paatti", "ta")
+            call = m.Call(family_id=get_space(s).id, transport="livekit", mode="world"); s.add(call); s.flush()
+            u = m.Utterance(call_id=call.id, speaker_id=me.id, listener_id=me.id, src_text="நேத்து போன் பண்ணான்")
+            s.add(u); s.flush()
+            uid, pid, slug = u.id, me.id, me.slug
+        r = c.post("/api/fade/verify", json={"utterance_id": uid, "understood": True}).json()
+        assert r["lemmas"] == [] and r["learner"] == "p_arjun"
+        with pytest.raises(ValueError):  # the world slug is not a learner in the legacy family
+            c.get(f"/api/fade/mastery?learner={slug}")
+        with session_scope() as s:
+            assert s.query(m.Mastery).filter(m.Mastery.learner_id == pid).count() == 0

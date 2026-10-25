@@ -6,11 +6,11 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import get_settings
 from ..db import models as m
 from ..db.session import get_session
 from ..graph.kin_tables import MUSE_LANGUAGES, available_codes, load_table
 from ..mt.translate import reset_translator_cache
+from .calls import legacy_family
 
 router = APIRouter(tags=["languages"])
 
@@ -38,9 +38,7 @@ class LangIn(BaseModel):
 def set_family_language(body: LangIn, s: Session = Depends(get_session)) -> dict:
     if body.code not in available_codes():
         raise HTTPException(400, f"unsupported or missing language table: {body.code}")
-    fam = s.get(m.Family, body.family_id or get_settings().demo_family_id)
-    if fam is None:
-        raise HTTPException(404, "family not found")
+    fam = legacy_family(s, body.family_id)
     fam.heritage_lang = body.code
     s.flush()
     reset_translator_cache()

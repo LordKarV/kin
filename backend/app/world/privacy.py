@@ -9,12 +9,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from sqlalchemy import delete, or_, select, text, update
+from sqlalchemy import delete, exists, or_, select, text, update
 from sqlalchemy.orm import Session
 
 from ..db import models as m
 from ..db.session import session_scope
 from . import clock
+from .apply import world_slug
 
 log = logging.getLogger(__name__)
 
@@ -23,14 +24,17 @@ def _n(counts: dict[str, int], key: str, result) -> None:
     counts[key] = counts.get(key, 0) + (result.rowcount or 0)
 
 
-def _strip_ids(s: Session, model, col: str, ids: set[int], counts: dict[str, int], key: str) -> None:
-    """Remove ids from a JSON list column. ponytail: Python scan of the whole table; json_each query if it grows."""
+def _strip_ids(s: Session, model, col: str, ids: set[int], counts: dict[str, int], key: str, **clear) -> None:
+    """Remove ids from a JSON list column, and set `clear` columns on every row that cited one.
+    ponytail: Python scan of the whole table; json_each query if it grows."""
     if not ids:
         return
     for row in s.scalars(select(model)):
         cur = getattr(row, col) or []
         if ids & set(cur):
             setattr(row, col, [x for x in cur if x not in ids])  # new list, so the ORM sees the change
+            for k, v in clear.items():
+                setattr(row, k, v)
             counts[key] = counts.get(key, 0) + 1
 
 
@@ -55,11 +59,16 @@ def _purge_facts(s: Session, fact_ids: set[int], counts: dict[str, int]) -> None
         return
     ids = list(fact_ids)
     state_ids = list(s.scalars(select(m.StorylineState.id).where(m.StorylineState.fact_id.in_(ids))))
+    stories = set(s.scalars(select(m.StorylineState.storyline_id).where(m.StorylineState.fact_id.in_(ids))))
+    stories |= set(s.scalars(select(m.Fact.storyline_id).where(m.Fact.id.in_(ids), m.Fact.storyline_id.is_not(None))))
+    founded = [sid for sid in stories if s.scalars(select(m.StorylineState.fact_id).where(
+        m.StorylineState.storyline_id == sid).order_by(m.StorylineState.seq).limit(1)).first() in fact_ids]
     _n(counts, "knowledge", s.execute(delete(m.Knowledge).where(or_(
         (m.Knowledge.item_kind == "fact") & m.Knowledge.item_id.in_(ids),
         (m.Knowledge.item_kind == "state") & m.Knowledge.item_id.in_(state_ids)))))
     _strip_ids(s, m.CardLog, "fact_ids", fact_ids, counts, "card_log_stripped")
-    _strip_ids(s, m.Message, "fact_ids", fact_ids, counts, "messages_stripped")
+    # The stored ack restates the news, so it goes with the fact.
+    _strip_ids(s, m.Message, "fact_ids", fact_ids, counts, "messages_stripped", reply="")
     _n(counts, "fact_audience", s.execute(delete(m.FactAudience).where(m.FactAudience.fact_id.in_(ids))))
     _n(counts, "fact_refs", s.execute(delete(m.FactRef).where(m.FactRef.fact_id.in_(ids))))
     _n(counts, "storyline_states", s.execute(delete(m.StorylineState).where(m.StorylineState.fact_id.in_(ids))))
@@ -81,8 +90,29 @@ def _purge_facts(s: Session, fact_ids: set[int], counts: dict[str, int]) -> None
             src_text="", translation="", translations={}, grounded_spans=[], cards=[], passthrough=[], src_lang_tags=[],
             sensitive_topic="")))
         _n(counts, "glossary", s.execute(delete(m.GlossaryEntry).where(m.GlossaryEntry.utterance_id.in_(red))))
+    # Deleting a correction brings back what it replaced ("moved to Beijing" deleted: "lives in Shanghai" again).
+    back = list(s.scalars(select(m.Fact.id).where(m.Fact.superseded_by.in_(ids), m.Fact.id.not_in(ids))))
+    if back:
+        _n(counts, "facts_restored", s.execute(update(m.Fact).where(m.Fact.id.in_(back), m.Fact.status == "superseded")
+                                               .values(status="active")))
+        s.execute(update(m.StorylineState).where(m.StorylineState.fact_id.in_(back),
+                                                 m.StorylineState.status == "superseded").values(status="active"))
     s.execute(update(m.Fact).where(m.Fact.superseded_by.in_(ids)).values(superseded_by=None))
     _n(counts, "facts", s.execute(delete(m.Fact).where(m.Fact.id.in_(ids))))
+    # A storyline left with no state and no fact keeps only a title and keys taken from the deleted words. Checked
+    # after the fact delete because facts.storyline_id is ON DELETE CASCADE: a storyline still cited must stay.
+    if stories:
+        _n(counts, "storylines", s.execute(delete(m.Storyline).where(
+            m.Storyline.id.in_(stories), ~exists().where(m.StorylineState.storyline_id == m.Storyline.id),
+            ~exists().where(m.Fact.storyline_id == m.Storyline.id))))
+    # The title, keys and slug came from the founding (first) state's fact (apply._storyline). The next state now
+    # founds the thread; with no state left but a fact still citing it, the title is the hidden-title "news".
+    for sid in founded:
+        nxt = s.execute(select(m.StorylineState.label, m.Fact.keys).join(m.Fact, m.Fact.id == m.StorylineState.fact_id)
+                        .where(m.StorylineState.storyline_id == sid).order_by(m.StorylineState.seq).limit(1)).first()
+        title, keys = (nxt.label[:120], nxt.keys or []) if nxt else ("news", [])
+        _n(counts, "storylines_retitled", s.execute(update(m.Storyline).where(m.Storyline.id == sid).values(
+            title=title, keys=keys, slug=world_slug("s", title, sid))))
 
 
 def delete_fact(s: Session, fact_id: int, by_person: int) -> dict[str, int]:
@@ -159,7 +189,12 @@ def delete_person(s: Session, person_id: int) -> dict[str, int]:
 
 
 def delete_account(s: Session, user: m.User) -> dict[str, int]:
-    return delete_person(s, user.person_id)
+    """delete_person, then the third parties only this user's facts linked (they would otherwise wait for the sweep)."""
+    counts = delete_person(s, user.person_id)
+    for pid in list(s.scalars(_orphans_q())):
+        for k, v in delete_person(s, pid).items():
+            counts[k] = counts.get(k, 0) + v
+    return counts
 
 
 def _orphans_q():

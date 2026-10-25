@@ -44,19 +44,26 @@ def _p(w, pid, item_id):
     return kn.p_now(w.kcache.get((pid, "person", item_id)), clock.now())
 
 
+def _line(ids, speaker, text, audience, translations=None):
+    """A persisted utterance by `speaker` that `audience` heard; returns its id."""
+    with session_scope() as s:
+        u = m.Utterance(call_id=ids["call"], speaker_id=ids[speaker], src_text=text,
+                        audience=[ids[k] for k in audience], translations=translations or {})
+        s.add(u)
+        s.flush()
+        return u.id
+
+
 def test_tap_lin_returns_who_card_with_first_mention_and_asked_evidence(live):
     ids, make = live
     w = make("arjun", "mei", "dana")
     before_all = dict(w.kcache)
     before = _p(w, ids["arjun"], ids["lin"])
-    with session_scope() as s:
-        u = m.Utterance(call_id=ids["call"], speaker_id=ids["mei"], src_text="我和林去攀岩了")
-        s.add(u)
-        s.flush()
-        uid = u.id
+    uid = _line(ids, "mei", "我和林去攀岩了", ["arjun", "dana"], {"en": "I went climbing with Lin."})
     items = explain(w, ids["call"], ids["arjun"], "Lin", utterance_id=uid)
     assert [(it["kind"], it["key"]) for it in items] == [("who", f"who:{ids['lin_slug']}")]
     assert "Fudan" in items[0]["body"] and "first mentioned" in items[0]["body"]
+    assert items[0]["gap"] is None  # the client labels a tapped card "You asked", not "New to you" / "Reminder"
     assert _p(w, ids["arjun"], ids["lin"]) < before  # the tap is evidence he did not know
     assert w.kcache[(ids["arjun"], "person", ids["lin"])].n_asked == 1
     others = lambda kc: {k: v for k, v in kc.items() if k[0] != ids["arjun"]}  # noqa: E731
@@ -114,9 +121,60 @@ def test_tap_storyline_keyword_returns_storyline_card(live):
     with session_scope() as s:
         sid, _f1, _f2, state2 = add_job_story(s, ids)
     w = make("arjun", "mei")
-    items = explain(w, ids["call"], ids["arjun"], "工作")
+    uid = _line(ids, "mei", "我的工作面试进入第二轮了", ["arjun"])
+    items = explain(w, ids["call"], ids["arjun"], "工作", utterance_id=uid)
     assert [(it["kind"], it["key"]) for it in items] == [("storyline", f"story:{sid}")]
+    assert "second round" in items[0]["body"]  # Mei raised her own storyline in a line he heard (D10)
     assert w.kcache[(ids["arjun"], "state", state2)].n_asked == 1
+
+
+def test_tap_discloses_only_what_the_speaker_said_in_a_line_the_listener_heard(live):
+    """The tapped text is the caller's: a guessed name or keyword must not open the speaker's facts and storylines."""
+    ids, make = live
+    with session_scope() as s:
+        _sid, _f1, _f2, state2 = add_job_story(s, ids)
+        jess = m.Person(family_id=ids["space"], slug="p_jess_x", display_name="Jess")
+        s.add(jess)
+        s.flush()
+        add_fact(s, ids["space"], jess.id, ids["arjun"], "lives_in", "lives in Austin",
+                 [(ids["arjun"], "said"), (ids["priya"], "heard")], ids["t0"])  # told only to Priya
+    w = make("arjun", "mei", "dana")
+    hello = _line(ids, "mei", "你好", ["arjun", "dana"])
+    items = explain(w, ids["call"], ids["dana"], "Lin", utterance_id=hello)
+    assert [it["kind"] for it in items] == ["ask"] and "Fudan" not in str(items)
+    assert explain(w, ids["call"], ids["dana"], "工作", utterance_id=hello)[0]["kind"] == "ask"
+    assert (ids["dana"], "state", state2) not in w.kcache and "second round" not in str(w.delivered)
+    w2 = make("arjun", "mei")  # Mei guesses "Jess" while Arjun has said nothing she heard
+    for uid in (None, _line(ids, "arjun", "hello", ["mei"])):
+        items = explain(w2, ids["call"], ids["mei"], "Jess", utterance_id=uid)
+        assert [it["kind"] for it in items] == ["ask"] and "Austin" not in str(items)
+    said = _line(ids, "arjun", "Jess is visiting", ["mei"])  # once he names her, a push card could show it
+    items = explain(w2, ids["call"], ids["mei"], "Jess", utterance_id=said)
+    assert [it["kind"] for it in items] == ["who"] and "Austin" in items[0]["body"]
+    assert explain(w2, ids["call"], ids["mei"], "Jess")[0]["kind"] == "who"  # no id: his latest line she heard
+    with pytest.raises(LookupError):  # a line said only to Priya
+        explain(w2, ids["call"], ids["mei"], "Jess", utterance_id=_line(ids, "arjun", "Jess", ["priya"]))
+
+
+def test_tap_of_an_unsaid_name_ranks_as_the_listener(live):
+    """Two Ravis: one Priya told Arjun about, one only Mei knows. Arjun taps "Ravi" on a line where Mei said no name,
+    so Mei's hidden tie must not win the ranking and blank the card for the Ravi he did hear of."""
+    from tests.test_cg_cards import add_tie
+    ids, make = live
+    with session_scope() as s:
+        heard, hidden = (m.Person(family_id=ids["space"], slug=f"p_ravi_{k}", display_name="Ravi") for k in "ph")
+        s.add_all([heard, hidden])
+        s.flush()
+        add_tie(s, ids["space"], ids["priya"], heard.id, "friend", "from Pune", [(ids["priya"], "said"),
+                                                                                  (ids["arjun"], "heard")], ids["t0"])
+        add_tie(s, ids["space"], ids["mei"], hidden.id, "friend", "from Hangzhou", [(ids["mei"], "said")], ids["t0"])
+        rp, rh = heard.id, hidden.id
+    w = make("arjun", "mei")
+    w.recent = [(ids["arjun"], [SimpleNamespace(kind="person", ids=(rp,))])]  # he said Ravi a moment ago
+    hello = _line(ids, "mei", "你好", ["arjun"])
+    items = explain(w, ids["call"], ids["arjun"], "Ravi", utterance_id=hello)
+    assert [(it["kind"], it["key"]) for it in items] == [("who", "who:p_ravi_p")]
+    assert "Hangzhou" not in str(items) and (ids["arjun"], "person", rh) not in w.kcache
 
 
 def test_unknown_name_asks_and_plain_word_returns_nothing(live):

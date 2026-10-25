@@ -207,3 +207,92 @@ def test_body_is_truncated_to_1600(mock_llm, monkeypatch):
         post(c, "y" * 5000)
     with session_scope() as s:
         assert len(s.scalars(select(m.Message)).one().body) == sms_mod.MAX_BODY
+
+
+def _sensitive_parse(ctx):
+    fact = {"predicate": "started", "text_en": "started seeing a therapist for anxiety", "keys": [["therapist"]],
+            "sensitive_kind": "health", "storyline": None, "told": []}
+    return sms_mod.SmsOut.model_validate({"facts": [fact], "ack": "Thanks for sharing that you started seeing a therapist."})
+
+
+def test_sensitive_sms_keeps_only_the_topic_word_anywhere(mock_llm, monkeypatch):
+    monkeypatch.setattr(sms_mod, "_parse", _sensitive_parse)
+    with TestClient(app) as c:
+        sign_up(c, "Arjun", phone=ARJUN)
+        assert "therapist" in post(c, "started seeing a therapist for my anxiety").text  # the author's own reply
+    with session_scope() as s:
+        assert [f.text for f in s.scalars(select(m.Fact))] == ["health"]
+        msg = s.scalars(select(m.Message)).one()
+        assert (msg.body, msg.reply) == ("", sms_mod.FALLBACK)
+
+
+def test_deleting_an_sms_fact_clears_the_stored_ack(mock_llm):
+    with TestClient(app) as c:
+        arjun = sign_up(c, "Arjun", phone=ARJUN)
+        post(c, "started bouldering!")
+        fid = next(iter(_facts()))
+        assert c.delete(f"/api/me/facts/{fid}", headers=arjun["h"]).status_code == 200
+    with session_scope() as s:
+        msg = s.scalars(select(m.Message)).one()
+        assert (msg.fact_ids, msg.reply) == ([], "")
+
+
+def test_dropped_sms_fact_is_logged_without_its_text(mock_llm, caplog):
+    with TestClient(app) as c:
+        arjun = sign_up(c, "Arjun", phone=ARJUN)
+        befriend(c, arjun, sign_up(c, "Priya"))
+        post(c, "news")
+    assert "sms fact dropped" in caplog.text and "internship" not in caplog.text
+
+
+@pytest.fixture
+def no_dev(monkeypatch):
+    monkeypatch.setenv("DEV_ENDPOINTS", "0")
+    from app.config import get_settings
+    get_settings.cache_clear()
+
+
+def test_a_typed_number_links_nothing_until_its_code_is_texted_from_it(mock_llm, no_dev):
+    with TestClient(app) as c:
+        eve = sign_up(c, "Eve", phone=ARJUN)  # Eve types Arjun's number
+        assert c.get("/api/me", headers=eve["h"]).json()["phone"] is None
+        assert c.patch("/api/me", headers=eve["h"], json={"phone": ARJUN}).status_code == 403
+        arjun = sign_up(c, "Arjun", phone=ARJUN)  # no 409: the number is not Eve's
+        code = c.get("/api/me/phone-code", headers=arjun["h"]).json()
+        assert code["text"] == f"KIN {code['code']}" and code["linked"] is False
+        assert sms_mod.UNKNOWN_REPLY in post(c, "started bouldering", sid="SM0").text
+        eve_code = c.get("/api/me/phone-code", headers=eve["h"]).json()["code"]
+        assert eve_code != code["code"]
+        assert sms_mod.UNKNOWN_REPLY in post(c, "KIN 000000", sid="SM1").text  # a wrong code links nothing
+        assert sms_mod.LINKED_REPLY in post(c, f"kin {code['code'].upper()}", sid="SM2").text
+        assert c.get("/api/me", headers=arjun["h"]).json()["phone"] == ARJUN
+        assert c.get("/api/me/phone-code", headers=arjun["h"]).json()["linked"] is True
+        post(c, "started bouldering", sid="SM3")
+        assert c.patch("/api/me", headers=arjun["h"], json={"phone": ""}).json()["phone"] is None  # unlinking is fine
+    with session_scope() as s:
+        assert [(f.subject_id, f.text) for f in s.scalars(select(m.Fact))] == [(arjun["id"], "started bouldering")]
+        assert len(s.scalars(select(m.Message)).all()) == 1  # link texts store nothing
+    assert eve["id"] != arjun["id"]
+
+
+def test_link_attempts_are_rate_limited_per_number(mock_llm, no_dev, monkeypatch):
+    monkeypatch.setattr(sms_api, "RATE_LIMIT", 2)
+    with TestClient(app) as c:
+        arjun = sign_up(c, "Arjun")
+        code = c.get("/api/me/phone-code", headers=arjun["h"]).json()["code"]
+        replies = [post(c, f"KIN {x}", sid=f"SM{i}").text for i, x in enumerate(("000000", "111111", code))]
+    assert sms_mod.SLOW_REPLY in replies[2]
+    with session_scope() as s:
+        assert s.scalars(select(m.User).where(m.User.person_id == arjun["id"])).one().phone is None
+
+
+def test_link_text_sent_again_after_linking_gets_linked_and_stores_nothing(mock_llm, no_dev):
+    with TestClient(app) as c:
+        arjun = sign_up(c, "Arjun")
+        code = c.get("/api/me/phone-code", headers=arjun["h"]).json()["code"]
+        replies = [post(c, f"KIN {code}", sid="SM9").text for _ in range(2)]  # a Twilio retry of the link text
+        again = post(c, f"KIN {code}", sid="SM10").text  # or the code sent a second time
+    assert all(sms_mod.LINKED_REPLY in r for r in replies + [again])
+    assert "SmsOut" not in mock_llm.calls
+    with session_scope() as s:
+        assert s.scalars(select(m.Message)).all() == []

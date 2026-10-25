@@ -12,6 +12,16 @@ struct KinAPIError: LocalizedError, Equatable {
     let status: Int?  // nil: transport or decoding failure
     let message: String
     var errorDescription: String? { message }
+
+    /// The X-KIN-User token is missing or dead (signing in again fixes it). The KIN key gate also answers 401, but a
+    /// wrong key must never cost the user their only token: both token 401s start with "X-KIN-User", the key's does not.
+    var isBadToken: Bool { status == 401 && message.hasPrefix("X-KIN-User") }
+}
+
+/// DELETE /api/me reply (backend DeleteMeOut).
+struct DeleteMeOut: Decodable, Equatable {
+    let facts: Int
+    let utterances: Int
 }
 
 /// Async URLSession client for the KIN backend (docs/ARCHITECTURE.md 9.2). Every call times out after 15 s.
@@ -26,11 +36,13 @@ struct KinAPI: Sendable {
         try await send("POST", "/api/users", UserIn(name: name, lang: lang, phone: phone), auth: false)
     }
     func me() async throws -> MeOut { try await send("GET", "/api/me") }
+    /// Deletes my account and everything KIN holds about me (PRODUCT: deleted means gone).
+    func deleteMe() async throws -> DeleteMeOut { try await send("DELETE", "/api/me") }
     func contacts() async throws -> [ContactOut] { try await send("GET", "/api/contacts") }
     func world() async throws -> WorldOut { try await send("GET", "/api/world") }
     func place(_ body: PlaceIn) async throws -> PlaceOut { try await send("POST", "/api/world/place", body) }
-    func joinWorld(callId: Int?) async throws -> JoinWorldOut {
-        try await send("POST", "/api/rtc/join", JoinWorldIn(callId: callId))
+    func joinWorld(callId: Int?, invite: String? = nil) async throws -> JoinWorldOut {
+        try await send("POST", "/api/rtc/join", JoinWorldIn(callId: callId, invite: invite))
     }
     func pause(callId: Int, paused: Bool) async throws -> PauseOut {
         try await send("POST", "/api/calls/\(callId)/pause", PauseIn(paused: paused))

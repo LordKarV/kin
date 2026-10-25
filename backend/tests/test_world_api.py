@@ -4,7 +4,7 @@ import json
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app import llm as llm_mod
 from app.db import models as m
@@ -186,6 +186,26 @@ def test_dev_clock_shifts_world_now(mock_llm, monkeypatch):
         assert c.post("/api/dev/clock", json={"offset_days": 0}).status_code == 404
 
 
+def test_dev_routes_are_loopback_only_when_locked(mock_llm, monkeypatch):
+    """A real KIN key travels in every invite link, so on a locked server the key alone must not reach /api/dev/*."""
+    monkeypatch.setenv("KIN_API_KEY", "real-key")
+    from app.config import get_settings
+    get_settings.cache_clear()
+    key = {"X-KIN-Key": "real-key"}
+    sms = {"from": "+15550000001", "body": "x"}
+    with TestClient(app, headers=key) as c:  # client host "testclient": not loopback
+        for path, body in (("/api/dev/clock", {"offset_days": 1}), ("/api/dev/sms", sms),
+                           ("/api/dev/apply", {"speaker": "p_x", "audience": [], "update": {}})):
+            r = c.post(path, json=body)
+            assert (r.status_code, r.json()["detail"]) == (404, "Not Found"), path
+        assert clock.offset_days() == 0
+    with TestClient(app, headers=key, client=("127.0.0.1", 50000)) as c:
+        assert c.post("/api/dev/clock", json={"offset_days": 1}).status_code == 200
+        assert c.post("/api/dev/sms", json=sms).status_code == 200
+        mei, arjun = sign_up(c, "Mei", "zh"), sign_up(c, "Arjun")
+        plant_lin(c, mei, [arjun])  # asserts 200
+
+
 def test_dev_apply_plants_lin_with_audience_and_knowledge(mock_llm):
     with TestClient(app) as c:
         mei, arjun = sign_up(c, "Mei", "zh"), sign_up(c, "Arjun")
@@ -260,3 +280,81 @@ def test_dev_apply_forces_line_zero(mock_llm):
         assert r.status_code == 200 and len(r.json()["facts"]) == 1
     with session_scope() as s:
         assert s.get(m.Fact, r.json()["facts"][0]).source_kind == "setup"
+
+
+def test_world_storyline_carries_owner_and_hides_an_sms_title(mock_llm):
+    from tests.test_cg_cards import add_fact
+    with TestClient(app) as c:
+        arjun, mei = sign_up(c, "Arjun"), sign_up(c, "Mei", "zh")
+        befriend(c, arjun, mei)
+        now = clock.now()
+        with session_scope() as s:
+            space = s.get(m.Person, arjun["id"]).family_id
+            story = m.Storyline(family_id=space, slug="s_intern", owner_id=arjun["id"], title="Google Maps team internship",
+                                keys=[["internship"]], created_at=now, updated_at=now)
+            s.add(story)
+            s.flush()
+            f1 = add_fact(s, space, arjun["id"], arjun["id"], "state", "applied", [(arjun["id"], "authored")], now,
+                          storyline_id=story.id, source_kind="message", shareable=False)
+            f2 = add_fact(s, space, arjun["id"], arjun["id"], "state", "got an offer",
+                          [(arjun["id"], "said"), (mei["id"], "heard")], now, storyline_id=story.id)
+            s.add_all([m.StorylineState(storyline_id=story.id, seq=1, label="applied", fact_id=f1, at=now),
+                       m.StorylineState(storyline_id=story.id, seq=2, label="got an offer", fact_id=f2, at=now)])
+        theirs = c.get("/api/world", headers=mei["h"]).json()["storylines"]
+        assert [(x["title"], x["owner"], [st["label"] for st in x["states"]]) for x in theirs] == \
+            [("news", arjun["slug"], ["got an offer"])]
+        mine = c.get("/api/world", headers=arjun["h"]).json()["storylines"]
+        assert [(x["title"], x["owner"]) for x in mine] == [("Google Maps team internship", arjun["slug"])]
+
+
+def test_place_same_as_confirms_either_candidate_of_an_ambiguous_ask(mock_llm, monkeypatch):
+    """ "Which Ravi?" (cards._ask_ambiguous) posts relation same_as with the candidate as owner. One Ravi Arjun knows;
+    the other only Paatti, the call's other participant, may disclose (her friend from the temple). That one is
+    accepted only while the live call holds the ask card that offered it, so a guessed slug probes nothing."""
+    from types import SimpleNamespace
+
+    from app.audio import pipeline
+    from app.world import cards as C
+    from app.world.contracts import SuggestionOut
+    from tests.test_cg_cards import add_tie, new_call
+    with TestClient(app) as c:
+        arjun, paatti, priya = sign_up(c, "Arjun"), sign_up(c, "Paatti", "ta"), sign_up(c, "Priya")
+        now = clock.now()
+        with session_scope() as s:
+            space = s.get(m.Person, arjun["id"]).family_id
+            ravis = [m.Person(family_id=space, slug=f"p_ravi_{k}", display_name="Ravi") for k in ("a", "b", "c")]
+            s.add_all(ravis)
+            s.flush()
+            add_tie(s, space, arjun["id"], ravis[0].id, "friend", "", [(arjun["id"], "said")], now)
+            add_tie(s, space, paatti["id"], ravis[1].id, "friend", "from the temple", [(paatti["id"], "said")], now)
+            add_tie(s, space, priya["id"], ravis[2].id, "friend", "", [(priya["id"], "said")], now)  # Arjun never heard
+            call = new_call(s, space)
+            s.add_all([m.CallParticipant(call_id=call, person_id=p["id"], identity=f"p{p['id']}", lang="en", joined_at=now)
+                       for p in (arjun, paatti)])
+            ids = [r.id for r in ravis]
+        temple = "Paatti's friend Ravi (from the temple)"
+        card = C.ask("Ravi", "Ravi", "Which Ravi?", [SuggestionOut(owner="p_ravi_a", relation="same_as", label="your friend Ravi"),
+                                                     SuggestionOut(owner="p_ravi_b", relation="same_as", label=temple)])
+        live = {call: SimpleNamespace(world=SimpleNamespace(delivered={(f"p{arjun['id']}", card.key): card}))}
+        monkeypatch.setattr(pipeline.registry, "get", live.get)
+        place = lambda who, slug, call_id=call: c.post(  # noqa: E731
+            "/api/world/place", headers=who["h"], json={"name": "Ravi", "owner": slug, "relation": "same_as", "call_id": call_id})
+        for rid, slug in zip(ids[:2], ("p_ravi_a", "p_ravi_b")):
+            r = place(arjun, slug)
+            assert r.status_code == 200, r.text
+            assert (r.json()["id"], r.json()["person"]) == (rid, slug)
+        assert place(arjun, "p_ravi_b").json()["render"] == temple  # what the card showed, nothing more
+        assert place(arjun, "p_ravi_b", None).status_code == 404  # outside the call Paatti is not speaking
+        assert place(arjun, "p_ravi_c").status_code == 404  # only Priya heard of this Ravi, and no card offered her
+        assert place(priya, "p_ravi_c").status_code == 403  # not her call
+        assert place(paatti, "p_ravi_a").status_code == 404  # the card went to Arjun, not to her
+        live[call] = SimpleNamespace(world=SimpleNamespace(delivered={}))  # live call, no ask card delivered
+        assert place(arjun, "p_ravi_b").status_code == 404
+        live.pop(call)  # the call ended: its CallParticipant rows remain, the card is gone
+        assert place(arjun, "p_ravi_b").status_code == 404
+        assert place(arjun, "p_ravi_a").status_code == 200  # a Ravi he knows himself needs no card
+    with session_scope() as s:
+        rows = {k.item_id: k.n_confirmed for k in s.scalars(select(m.Knowledge).where(
+            m.Knowledge.knower_id == arjun["id"], m.Knowledge.item_kind == "person", m.Knowledge.item_id.in_(ids)))}
+        assert rows == {ids[0]: 2, ids[1]: 2}
+        assert s.scalar(select(func.count(m.Tie.id)).where(m.Tie.dst_person.in_(ids))) == 3  # no tie created

@@ -435,7 +435,8 @@ public struct WorldStoryline: Codable, Sendable, Equatable {
     public let title: String
     public let status: String
     public let states: [WorldStoryState]
-    enum CodingKeys: String, CodingKey { case id, title, status, states }
+    public let owner: String?  // whose storyline (a person slug); absent from servers that predate it
+    enum CodingKeys: String, CodingKey { case id, title, status, states, owner }
 }
 
 extension WorldStoryline {
@@ -445,6 +446,7 @@ extension WorldStoryline {
         title = try c.decode(String.self, forKey: .title)
         status = try c.decode(String.self, forKey: .status)
         states = try c.decode(.states, or: [WorldStoryState]())
+        owner = try c.decodeIfPresent(String.self, forKey: .owner)
     }
 }
 
@@ -495,8 +497,9 @@ public struct PlaceOut: Codable, Sendable, Equatable {
 
 public struct JoinWorldIn: Codable, Sendable, Equatable {
     public let callId: Int?
-    enum CodingKeys: String, CodingKey { case callId = "call_id" }
-    public init(callId: Int? = nil) { self.callId = callId }
+    public let invite: String?  // the invite link's code: needed to take a new seat in an existing call
+    enum CodingKeys: String, CodingKey { case invite; case callId = "call_id" }
+    public init(callId: Int? = nil, invite: String? = nil) { self.callId = callId; self.invite = invite }
 }
 
 public struct JoinWorldOut: Codable, Sendable, Equatable {
@@ -509,8 +512,9 @@ public struct JoinWorldOut: Codable, Sendable, Equatable {
     public let name: String
     public let lang: String
     public let participants: [Participant]
+    public let invite: String?  // this call's invite code, for the share link
     enum CodingKeys: String, CodingKey {
-        case room, token, url, identity, person, name, lang, participants
+        case room, token, url, identity, person, name, lang, participants, invite
         case callId = "call_id"
     }
 }

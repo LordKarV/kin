@@ -3,15 +3,17 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from ..cards.glance import engine_for
 from ..cards.images import get_pictures
 from ..cards.lexicon import CATEGORIES, ensure_lexicon, load_lexicon, path_for
-from ..config import get_settings
+from ..db.session import get_session
 from ..graph.kin_tables import MUSE_LANGUAGES
 from ..mt.translate import get_translator
+from .calls import legacy_family
 
 log = logging.getLogger("kin.api.cards")
 router = APIRouter(tags=["cards"])
@@ -45,8 +47,8 @@ class GlanceIn(BaseModel):
 
 
 @router.post("/api/cards/glance")
-def glance(body: GlanceIn, background: BackgroundTasks) -> dict:
-    tr = get_translator(body.family_id or get_settings().demo_family_id)
+def glance(body: GlanceIn, background: BackgroundTasks, s: Session = Depends(get_session)) -> dict:
+    tr = get_translator(legacy_family(s, body.family_id).id)
     g = tr.g
     speaker = body.speaker or g.elder_slug()
     listener = body.listener or g.learner_slug()

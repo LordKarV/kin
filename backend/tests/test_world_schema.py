@@ -164,3 +164,13 @@ def test_subject_delete_drops_fact_and_speaker_delete_nulls_it(db):
     with session_scope() as s:
         assert s.get(m.Fact, fact_id) is None
         assert s.get(m.Fact, about_arjun).speaker_id is None
+
+
+def test_init_db_refuses_a_db_that_predates_the_schema(tmp_path):
+    import sqlite3
+    con = sqlite3.connect(tmp_path / "test.db")  # conftest's DATABASE_URL
+    con.execute("CREATE TABLE families (id INTEGER PRIMARY KEY, name VARCHAR, heritage_lang VARCHAR)")
+    con.commit()
+    con.close()
+    with pytest.raises(RuntimeError, match=r"families lacks \[.*'kind'"):
+        init_db()

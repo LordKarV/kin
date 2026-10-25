@@ -123,7 +123,7 @@ def test_scan_speed_5000_forms():
 def test_single_han_char_needs_both_boundaries_without_cue():
     # Deliberate recall cost of rejecting 林檎 at text start (stricter than ARCHITECTURE 3.2's wording).
     idx = AliasIndex([("林", "person", 1)])
-    assert idx.scan("我见了林。") == []
+    assert idx.scan("我想林。") == []
     assert idx.scan("林去了") == []
     assert ids(idx.scan("Lin 林 说")) == [(1,)]
 
@@ -155,3 +155,55 @@ def test_roman_suffixes_only_for_non_latin_speaker_table():
     idx = AliasIndex([("Minji", "person", 1)])
     assert ids(idx.scan("Minjiga wasseo", speaker_lang="ko")) == [(1,)]
     assert idx.scan("Minjiga wasseo", speaker_lang="en") == []
+
+
+def test_single_han_char_inside_compound_is_rejected_even_before_a_cue():
+    # 柏林/森林/小林 are one word; the right cue (的, 都, さん) must not rescue the 林 inside them.
+    lin, li, zhang = (AliasIndex([(f, "person", 1)]) for f in ("林", "李", "张"))
+    for idx, text in ((lin, "柏林的冬天很冷"), (lin, "森林都烧了"), (lin, "小林さんが来た"), (li, "我的行李也丢了"), (zhang, "你紧张吗")):
+        assert idx.scan(text) == [], text
+    for text in ("我和林去攀岩了", "林也喜欢攀岩", "我跟林说", "昨日は林さんが来た"):   # kana on the left is a boundary
+        assert ids(lin.scan(text)) == [(1,)], text
+    # a Han char that ends a common word is a boundary (昨天, 然后, 所以, 见了, 他说)
+    for text in ("他说林也来", "然后林说", "昨天林也来了", "所以林也去了", "今天林都没来", "我见了林也很高兴", "我见了林。"):
+        assert ids(lin.scan(text)) == [(1,)], text
+    assert lin.scan("传说林中") == []       # word end on the left still needs a cue or boundary on the right
+    assert lin.scan("他想林也来") == []      # recall cost: any other Han char on the left
+
+
+def test_capitalized_name_does_not_match_a_lowercase_word_in_cased_text():
+    idx = AliasIndex([("Will", "person", 1), ("May", "person", 2), ("An", "person", 3), ("Grace", "person", 4)])
+    for text in ("I will call you in may", "I had an apple", "We said grace"):
+        assert idx.scan(text) == [], text
+    assert ids(idx.scan("I saw May and Will")) == [(2,), (1,)]
+    assert ids(idx.scan("i saw may today")) == [(2,)]          # all-lowercase STT: case carries no signal
+    assert ids(idx.scan("Will you come")) == [(1,)]           # ceiling: sentence-initial word still matches
+
+
+def test_case_rule_decides_per_id_not_per_shared_terminal():
+    # Amma and amma fold to one terminal; only the person with a lowercase form is case-blind, in either order.
+    for forms in ([("Amma", "person", 1), ("amma", "person", 2)], [("amma", "person", 2), ("Amma", "person", 1)]):
+        assert ids(AliasIndex(forms).scan("I told amma")) == [(2,)], forms
+        assert sorted(ids(AliasIndex(forms).scan("I told Amma"))[0]) == [1, 2], forms
+    # the skeleton trie shares terminals across spellings too (Lynn and lin both skeleton to lin)
+    assert ids(AliasIndex([("Lynn", "person", 1), ("lin", "person", 2)]).scan("I told lin")) == [(2,)]
+
+
+def test_case_rule_is_for_people_only():
+    # dishes, groups and concept keys are common words that STT writes lowercase
+    idx = AliasIndex([("Dosa", "thing", 1), ("Climbing club", "group", 2), ("Climbing", "fact", 3)])
+    assert sorted(h.kind for h in idx.scan("We had dosa after climbing club")) == ["group", "thing"]
+    assert ids(idx.scan("We went climbing", "en")) == [(3,)]
+
+
+def test_katakana_form_inside_a_katakana_word_is_rejected():
+    idx = AliasIndex([("リン", "person", 1)])
+    assert idx.scan("リンゴを食べた") == [] and idx.scan("キリンを見た") == [] and idx.scan("リンーー") == []
+    assert ids(idx.scan("リンさんが来た")) == [(1,)] and ids(idx.scan("昨日リンと会った")) == [(1,)]
+
+
+def test_thai_form_ending_before_a_vowel_sign_is_rejected():
+    idx = AliasIndex([("ลิน", "person", 1)])
+    assert idx.scan("ไปคลินิก") == [] and idx.scan("ลินา") == []
+    assert idx.scan("เลิน") == [] and idx.scan("ไปเลินไป") == []   # leading vowel belongs to the first consonant
+    assert ids(idx.scan("ลินไปปีนเขา")) == [(1,)]

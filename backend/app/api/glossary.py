@@ -4,16 +4,16 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import get_settings
 from ..db import models as m
 from ..db.session import get_session
+from .calls import legacy_family
 
 router = APIRouter(prefix="/api/glossary", tags=["glossary"])
 
 
 @router.get("")
 def glossary(family_id: int | None = None, limit: int = 100, s: Session = Depends(get_session)) -> list[dict]:
-    fid = family_id or get_settings().demo_family_id
+    fid = legacy_family(s, family_id).id
     rows = s.scalars(select(m.GlossaryEntry).where(m.GlossaryEntry.family_id == fid).order_by(m.GlossaryEntry.id.desc()).limit(limit)).all()
     people = {p.id: p.display_name for p in s.scalars(select(m.Person).where(m.Person.family_id == fid))}
     utts = {u.id: u for u in s.scalars(select(m.Utterance).where(m.Utterance.id.in_([r.utterance_id for r in rows if r.utterance_id])))} if rows else {}

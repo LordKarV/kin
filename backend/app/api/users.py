@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -17,7 +18,7 @@ from ..world.contracts import ContactOut, DeleteMeOut, FormsOut, MeOut, MePatch,
 from ..world.extract import MAX_FORMS, clean_forms
 from ..world.match import fold
 from ..world.sms import refresh_calls
-from ..world.users import create_user, normalize_phone, user_by_token
+from ..world.users import create_user, normalize_phone, phone_code, user_by_token
 from ..world.view import WorldView
 
 log = logging.getLogger("kin.api.users")
@@ -66,6 +67,21 @@ def fetch_forms(person_id: int) -> None:
         log.exception("FormsOut for person %s failed", person_id)
 
 
+def _new_lang_others(s: Session, person: m.Person, lang: str) -> list[int]:
+    """The other users' person ids when `lang` is new to the space: their names need forms in its script (a Tamil
+    transcript writes Mei as மெய்). fetch_forms always asks for English, so English is never new."""
+    rows = s.execute(select(m.User.person_id, m.User.lang).join(m.Person, m.Person.id == m.User.person_id)
+                     .where(m.Person.family_id == person.family_id, m.User.person_id != person.id)).all()
+    return [] if lang == "en" or lang in {lg for _pid, lg in rows} else [pid for pid, _lg in rows]
+
+
+class PhoneCodeOut(BaseModel):  # local: contracts.py belongs to the iOS contract owners
+    code: str
+    text: str  # what to text from the phone, "KIN <code>"
+    sms_number: str = ""
+    linked: bool
+
+
 def _me_out(s: Session, user: m.User) -> MeOut:
     p = s.get(m.Person, user.person_id)
     return MeOut(user_id=user.id, person_id=p.id, person=p.slug, name=p.display_name, lang=user.lang, phone=user.phone)
@@ -85,12 +101,19 @@ def circle(view: WorldView, me: int, pid: int) -> str | None:
 
 @router.post("/users", response_model=UserOut)
 def sign_up(body: UserIn, background: BackgroundTasks, s: Session = Depends(get_session)) -> UserOut:
+    phone = body.phone
+    if phone is not None and not get_settings().dev_endpoints:
+        # First come would win someone else's number: outside the demo a phone links by texting "KIN <code>".
+        log.info("sign-up phone not linked: texting the code from GET /api/me/phone-code links it")
+        phone = None
     try:
-        user, person, token = create_user(s, body.name, body.lang, body.phone)
+        user, person, token = create_user(s, body.name, body.lang, phone)
     except ValueError as e:
         raise HTTPException(409 if "already linked" in str(e) else 422, str(e)) from e
+    others = _new_lang_others(s, person, body.lang)
     s.commit()  # the background task reads the person in its own session
-    background.add_task(fetch_forms, person.id)
+    for pid in [person.id, *others]:
+        background.add_task(fetch_forms, pid)
     return UserOut(user_id=user.id, person_id=person.id, person=person.slug, space_id=person.family_id, token=token,
                    sms_number=get_settings().sms_number)
 
@@ -101,15 +124,21 @@ def get_me(user: m.User = Depends(current_user), s: Session = Depends(get_sessio
 
 
 @router.patch("/me", response_model=MeOut)
-def patch_me(body: MePatch, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> MeOut:
+def patch_me(body: MePatch, background: BackgroundTasks, user: m.User = Depends(current_user),
+             s: Session = Depends(get_session)) -> MeOut:
     p = s.get(m.Person, user.person_id)
+    others: list[int] = []
     if body.name is not None:
         p.display_name = body.name.strip() or p.display_name
     if body.lang is not None:
         if body.lang not in MUSE_LANGUAGES:
             raise HTTPException(422, f"unsupported language {body.lang!r}")
+        if body.lang != user.lang:
+            others = _new_lang_others(s, p, body.lang)
         user.lang = body.lang
     if body.phone is not None:
+        if body.phone.strip() and not get_settings().dev_endpoints:  # clearing your own number is always allowed
+            raise HTTPException(403, "link a phone by texting 'KIN <code>' from it (code: GET /api/me/phone-code)")
         phone = normalize_phone(body.phone) if body.phone.strip() else None
         if body.phone.strip() and phone is None:
             raise HTTPException(422, f"invalid phone number {body.phone!r}")
@@ -119,8 +148,16 @@ def patch_me(body: MePatch, user: m.User = Depends(current_user), s: Session = D
     s.flush()
     out = _me_out(s, user)
     s.commit()
+    for pid in others:
+        background.add_task(fetch_forms, pid)
     refresh_calls(person_id=p.id)
     return out
+
+
+@router.get("/me/phone-code", response_model=PhoneCodeOut)
+def get_phone_code(user: m.User = Depends(current_user)) -> PhoneCodeOut:
+    code = phone_code(user)
+    return PhoneCodeOut(code=code, text=f"KIN {code}", sms_number=get_settings().sms_number, linked=user.phone is not None)
 
 
 @router.delete("/me", response_model=DeleteMeOut)

@@ -89,7 +89,7 @@ def _reduce_sensitive(x: ExtractionOut) -> dict:
 def end_call(call_id: int) -> dict:
     with session_scope() as s:
         call = s.get(m.Call, call_id)
-        if call is None:
+        if call is None or call.mode == "world":  # a world transcript never goes to the legacy summarizer
             raise ValueError("call not found")
         text, utts = _transcript_text(s, call_id)
         call.ended_at = datetime.now(timezone.utc)
@@ -137,7 +137,9 @@ def approve_call(call_id: int, remember_topics: list[str]) -> dict:
     with session_scope() as s:
         cs = s.scalar(select(m.CallSummary).where(m.CallSummary.call_id == call_id))
         call = s.get(m.Call, call_id)
-        if cs is None or call is None:
+        if call is None or call.mode == "world":
+            raise ValueError("call not found")
+        if cs is None:
             raise ValueError("call has no summary yet; call /end first")
         fid = call.family_id
         g = get_translator(fid)
@@ -193,7 +195,7 @@ def search(q: str, family_id: int, limit: int = 8) -> list[dict]:
     out: list[dict] = []
     with session_scope() as s:
         people = {p.id: p.display_name for p in s.scalars(select(m.Person).where(m.Person.family_id == family_id))}
-        calls = {c.id: c for c in s.scalars(select(m.Call).where(m.Call.family_id == family_id))}
+        calls = {c.id: c for c in s.scalars(select(m.Call).where(m.Call.family_id == family_id, m.Call.mode != "world"))}
         rem = remembered_by_call(s, list(calls))
         for u in s.scalars(select(m.Utterance).where(m.Utterance.call_id.in_(list(calls)))) if calls else []:
             if withheld(u, rem):

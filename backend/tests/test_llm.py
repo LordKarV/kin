@@ -77,3 +77,14 @@ def test_structured_completion_raises_on_invalid_json_not_silently():
     client = llm.LLM(api_key="k", base_url="https://api.meta.ai/v1", model="m", transport=transport)
     with pytest.raises(llm.StructuredOutputError):
         client.structured(Address, system="x", user="y")
+
+
+def test_invalid_output_logs_where_it_broke_but_the_raw_text_only_at_debug(caplog):
+    transport, _ = _fake_server(lambda r, n: _chat_reply(json.dumps({"street": "my therapist visit"})))
+    client = llm.LLM(api_key="k", base_url="https://api.meta.ai/v1", model="m", transport=transport)
+    with caplog.at_level("DEBUG", logger="kin.llm"), pytest.raises(llm.StructuredOutputError) as err:
+        client.structured(Address, system="x", user="y")
+    assert "therapist" not in str(err.value) and "city" in str(err.value)
+    loud = " ".join(r.getMessage() for r in caplog.records if r.levelname != "DEBUG")
+    quiet = " ".join(r.getMessage() for r in caplog.records if r.levelname == "DEBUG")
+    assert "city: Field required" in loud and "therapist" not in loud and "therapist" in quiet

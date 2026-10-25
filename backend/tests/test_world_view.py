@@ -96,6 +96,14 @@ def test_card_body_uses_only_speakers_own_identity_facts(world):
     assert "Pudong" not in body and world["lives_mei"] not in fids  # Mei said it, Arjun cannot disclose it
 
 
+def test_card_body_first_mentioned_only_counts_what_the_listener_heard(world):
+    """Paatti never heard of Mei: Arjun's facts disclosed now must not date the card ("New to you" + "Sep 14")."""
+    v = _view(world, "arjun", "paatti")
+    body, fids = v.card_body(world["paatti"], "person", world["mei"], world["arjun"], NOW)
+    assert "Shanghai" in body and "first mentioned" not in body
+    assert "first mentioned Sep 14" in v.card_body(world["arjun"], "person", world["mei"], None, NOW)[0]
+
+
 def test_card_body_first_mentioned(world):
     with session_scope() as s:
         later = _fact(s, world["space"], world["lin"], world["mei"], "lives_in", "lives in Beijing",

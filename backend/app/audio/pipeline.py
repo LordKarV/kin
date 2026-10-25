@@ -18,11 +18,14 @@ from ..config import get_settings
 from ..db import models as m
 from ..db.session import session_scope
 from ..mt.translate import Translator, get_translator
+from ..world import clock
 from .asr import ASRSession, make_asr
 from .tts import TTS, get_tts
 
 log = logging.getLogger("kin.pipeline")
 _LAT_LOCK = threading.Lock()  # ponytail: one global lock; per-utterance locks if merges ever contend
+ASR_RETRY_S = 2.0  # ponytail: fixed backoff after a failed ASR connect; exponential if Muse ever rate-limits reconnects
+INFLIGHT_WAIT_S = 8.0  # leave() waits this long for a final still in MT (about 2 s) so it is stored and extracted
 SendJSON = Callable[[dict], Awaitable[None]]
 SendBytes = Callable[[bytes], Awaitable[None]]
 
@@ -45,6 +48,8 @@ class Side:
     tts_lock: asyncio.Lock = field(default_factory=asyncio.Lock)  # one utterance's audio at a time per listener
     voice_on: bool = False       # world calls: translated voice is opt-in, captions are the default (Amendment 2)
     name: str = ""
+    asr_retry_at: float = 0.0    # time.monotonic() before which on_audio does not reopen a failed ASR
+    inflight: asyncio.Task | None = None  # world calls: the ASR final in MT/persist/cards (survives the ASR loop's cancel)
 
 
 @dataclass
@@ -104,21 +109,26 @@ class CallSession:
         return side
 
     async def _stop_asr(self, side: Side) -> None:
+        asr, side.asr = side.asr, None  # cleared first, so the loop's finally knows this stop was ours and stays quiet
         if side.asr_task:
             side.asr_task.cancel()
-        if side.asr:
-            try:
-                await side.asr.finish()
-            except Exception:  # noqa: BLE001
-                pass
-        side.asr = None
+        if asr:
+            await _close_asr(asr)
 
     async def leave(self, role: str, token: str | None = None) -> None:
         side = self.sides.get(role)
         if not side or (token is not None and side.token != token):
             return  # a stale connection must not evict the live one
         self.sides.pop(role, None)
-        await self._stop_asr(side)
+        await self._stop_asr(side)  # first, so no new final starts while we wait for the one in flight
+        t = side.inflight
+        if t is not None and not t.done():  # hanging up right after a line must not lose it (stored, captioned, extracted)
+            # ponytail: a line Muse is still endpointing is still lost; needs an endStream flush before the cancel (VERIFY)
+            _, late = await asyncio.wait({t}, timeout=INFLIGHT_WAIT_S)
+            if late:
+                log.warning("final from %s still in flight after %ss; leaving before it lands", role, INFLIGHT_WAIT_S)
+        if role in self.sides:  # rejoined while we waited: world.join already ran for the new connection
+            return
         if self.world is not None:
             try:
                 await asyncio.to_thread(self.world.leave, role)
@@ -128,28 +138,39 @@ class CallSession:
             return
         peer = self.peer(role)
         if peer:
-            try:
-                await peer.send_json({"type": "peer", "present": False})
-            except Exception:  # noqa: BLE001
-                pass
+            await self._safe_send(peer, {"type": "peer", "present": False})
 
     def peer(self, role: str) -> Side | None:
         return next((s for r, s in self.sides.items() if r != role), None)
 
     # ---- audio in -----------------------------------------------------------
-    async def _start_asr(self, side: Side) -> None:
+    async def _start_asr(self, side: Side, reopen: bool = False) -> None:
+        asr = None
         try:
             keyterms = self.world.keyterms(side.identity) if self.world is not None else self.translator.linker.keyterms()
-            side.asr = make_asr(language=side.lang, keyterms=keyterms)
-            await side.asr.start()
-            side.asr_task = asyncio.create_task(self._asr_loop(side))
+            asr = side.asr = make_asr(language=side.lang, keyterms=keyterms)
+            await asr.start()
         except Exception as e:  # noqa: BLE001
-            log.warning("ASR unavailable for %s (%s); typed input still works", side.role, e)
-            await side.send_json({"type": "status", "asr": "unavailable", "detail": str(e)[:200]})
+            # clear the dead session so on_audio reopens after the backoff; left in place, the side stayed deaf all call
+            if side.asr is asr:
+                side.asr = None
+            side.asr_retry_at = time.monotonic() + ASR_RETRY_S
+            log.warning("ASR unavailable for %s (%s); retrying in %ss, typed input still works", side.identity, e, ASR_RETRY_S)
+            if asr is not None:
+                await _close_asr(asr)  # a handshake that connected but got no sessionId still holds a socket
+            await self._safe_send(side, {"type": "status", "asr": "unavailable", "detail": str(e)[:200]})
+            return
+        if side.asr is not asr:  # the side left or reconnected while we were connecting
+            await _close_asr(asr)
+            return
+        side.asr_task = asyncio.create_task(self._asr_loop(side, asr))
+        if reopen:  # clears the "ended"/"unavailable" banner; the first start stays quiet so "joined" comes first
+            await self._safe_send(side, {"type": "status", "asr": "ok", "detail": ""})
 
-    async def _asr_loop(self, side: Side) -> None:
+    async def _asr_loop(self, side: Side, asr: ASRSession | None = None) -> None:
+        asr = asr or side.asr
         try:
-            async for ev in side.asr.events():
+            async for ev in asr.events():
                 if self.world is not None:
                     await self._world_event(side, ev)
                     continue
@@ -165,15 +186,20 @@ class CallSession:
                     log.exception("utterance failed: %s", e)
                     await self._safe_send(side, {"type": "error", "stage": "pipeline", "message": str(e)[:200]})
         finally:
-            side.asr = None
-            await self._safe_send(side, {"type": "status", "asr": "ended", "detail": "ASR stream closed; restart the mic to reconnect. Typed input still works."})
+            # still ours: the provider closed the stream. A deliberate stop (leave, reconnect) already cleared it and
+            # stays quiet: its "ended" could reach the rejoined client (same LiveKit identity), with no "ok" to follow
+            if side.asr is asr:
+                side.asr = None
+                await self._safe_send(side, {"type": "status", "asr": "ended", "detail": "ASR stream closed; reconnecting. Typed input still works."})
 
     async def on_audio(self, role: str, pcm16: bytes) -> None:
         side = self.sides.get(role)
         if not side or self.paused:  # paused: frames are dropped before ASR (privacy, 8.1)
             return
         if side.asr is None:  # (re)open lazily: first frame after a drop restarts the provider stream
-            await self._start_asr(side)
+            if time.monotonic() < side.asr_retry_at:
+                return
+            await self._start_asr(side, reopen=True)
             if side.asr is None:
                 return
         try:
@@ -191,8 +217,8 @@ class CallSession:
     async def _safe_send(self, side: Side, msg: dict) -> None:
         try:
             await side.send_json(msg)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001  (a dead leg must not break the call, but say so)
+            log.warning("send %s to %s failed: %s", msg.get("type"), side.identity, e)
 
     async def on_text(self, role: str, text: str) -> None:
         side = self.sides.get(role)
@@ -399,7 +425,10 @@ class CallSession:
                 await self._deliver(self.world.on_partial(side.identity, ev.text))  # sync, in memory (8.2)
                 return
             side.speech_end_at = time.perf_counter()
-            await self._world_final(side, ev.text, lang_tags=ev.lang_tags, t_start=ev.t_start, t_end=ev.t_end)
+            # shielded: hanging up cancels this ASR loop, and leave() waits for the line instead of cutting it mid-MT
+            side.inflight = asyncio.ensure_future(
+                self._world_final(side, ev.text, lang_tags=ev.lang_tags, t_start=ev.t_start, t_end=ev.t_end))
+            await asyncio.shield(side.inflight)
         except Exception as e:  # noqa: BLE001
             log.exception("world utterance failed: %s", e)
             await self._safe_send(side, {"type": "error", "stage": "pipeline", "message": str(e)[:200]})
@@ -576,7 +605,7 @@ class CallSession:
     def _persist_world(self, side: Side, listeners: list[Side], audience: list[int], text: str, lang_tags: list, t_start: float,
                        t_end: float, first, translations: dict, lat: dict) -> int:
         with session_scope() as s:
-            u = m.Utterance(call_id=self.call_id, speaker_id=side.person_id,
+            u = m.Utterance(call_id=self.call_id, speaker_id=side.person_id, created_at=clock.now(),  # dev clock: said_at
                             listener_id=next((L.person_id for L in listeners if L.person_id), None), t_start=t_start, t_end=t_end,
                             src_text=text, src_lang_tags=lang_tags, lang=side.lang, audience=audience, translations=translations,
                             translation=first.result.translation if first else "",
@@ -591,6 +620,13 @@ class CallSession:
             u = s.get(m.Utterance, utterance_id)
             if u:
                 u.latencies = {**(u.latencies or {}), **lat}
+
+
+async def _close_asr(asr: ASRSession) -> None:
+    try:
+        await asr.finish()
+    except Exception as e:  # noqa: BLE001  (the provider socket is often already gone)
+        log.debug("ASR finish failed: %s", e)
 
 
 def _person_ref(person_id: int | None) -> tuple[str, str]:

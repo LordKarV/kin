@@ -10,6 +10,13 @@ struct Tile: Identifiable {
     let track: VideoTrack?
 }
 
+/// Whether a routed peer video track becomes the tile's video: a live camera wins, any other live video fills in.
+/// A muted track never shows: LiveKit mutes (does not unpublish) on camera off, so the track stays subscribed and
+/// would freeze on its last frame instead of falling back to the avatar.
+func showsPeerVideo(route: TrackRoute, isCamera: Bool, isMuted: Bool, haveVideo: Bool) -> Bool {
+    route == .peerVideo && !isMuted && (isCamera || !haveVideo)
+}
+
 /// The LiveKit side of a world call. The call screen (task 4B) reads `participants`, `peers`, `selfTile`, the state
 /// flags and `messages()`, and calls the toggles and `hangUp()`.
 @MainActor
@@ -28,7 +35,8 @@ final class CallController: ObservableObject {
     @Published private(set) var cameraOn = true
     @Published private(set) var voiceOn = false  // amendment 2: captions by default
     @Published private(set) var kinSpeaking = false
-    @Published var lastError: String?
+    /// The call banner's error, cleared by the next success or after `errorLifetime` (see `fail`).
+    @Published private(set) var lastError: String?
 
     /// Subscribers to `messages()`, keyed so each stream can remove itself when its task is cancelled.
     private var sinks: [UUID: AsyncStream<KinWorldMsg>.Continuation] = [:]
@@ -41,12 +49,15 @@ final class CallController: ObservableObject {
     private let onEnded: @MainActor (Int) -> Void
     private let onFailed: @MainActor (String) -> Void
     private var ended = false
+    private let errorLifetime: Duration
+    private var errorExpiry: Task<Void, Never>?
 
     /// `onEnded(callId)` after a joined call ends; `onFailed(message)` when the room never connected.
-    init(api: KinAPI, join: JoinWorldOut, onEnded: @escaping @MainActor (Int) -> Void,
-         onFailed: @escaping @MainActor (String) -> Void) {
+    init(api: KinAPI, join: JoinWorldOut, errorLifetime: Duration = .seconds(6),
+         onEnded: @escaping @MainActor (Int) -> Void, onFailed: @escaping @MainActor (String) -> Void) {
         self.api = api
         self.join = join
+        self.errorLifetime = errorLifetime
         self.onEnded = onEnded
         self.onFailed = onFailed
         participants = join.participants
@@ -63,9 +74,6 @@ final class CallController: ObservableObject {
         sink.onTermination = { [weak self] _ in Task { @MainActor in self?.sinks[id] = nil } }
         return stream
     }
-
-    /// The invite for this call, on the API server's host (KIN key carried when the app has one).
-    func inviteURL(apiBase: URL, key: String?) -> URL? { Invite(callId: callId, key: key).url(host: apiBase) }
 
     /// Set just before AppModel.startCall() for an audio call, so the camera is never published. ponytail: a
     /// one-shot flag because AppModel.startCall (2E) has no camera parameter; thread `camera:` through it instead.
@@ -95,28 +103,28 @@ final class CallController: ObservableObject {
         }
         do { try await room.localParticipant.setMicrophone(enabled: true) } catch {
             micOn = false
-            lastError = "Microphone unavailable: \(error.localizedDescription)"
+            fail("Microphone unavailable: \(error.localizedDescription)")
         }
         if !camera {
             cameraOn = false
         } else {
             do { try await room.localParticipant.setCamera(enabled: true) } catch {
                 cameraOn = false  // the audio call works without video
-                lastError = "Camera unavailable: \(error.localizedDescription)"
+                fail("Camera unavailable: \(error.localizedDescription)")
             }
         }
         sync()
     }
 
     func setMic(_ on: Bool) async {
-        do { try await room.localParticipant.setMicrophone(enabled: on); micOn = on } catch {
-            lastError = "Microphone: \(error.localizedDescription)"
+        do { try await room.localParticipant.setMicrophone(enabled: on); micOn = on; lastError = nil } catch {
+            fail("Microphone: \(error.localizedDescription)")
         }
     }
 
     func setCamera(_ on: Bool) async {
-        do { try await room.localParticipant.setCamera(enabled: on); cameraOn = on } catch {
-            lastError = "Camera: \(error.localizedDescription)"
+        do { try await room.localParticipant.setCamera(enabled: on); cameraOn = on; lastError = nil } catch {
+            fail("Camera: \(error.localizedDescription)")
         }
         sync()
     }
@@ -126,7 +134,8 @@ final class CallController: ObservableObject {
             let out = try await api.pause(callId: callId, paused: paused)
             isPaused = !out.on
             pausedBy = out.pausedBy
-        } catch { lastError = "Pause: \(error.localizedDescription)" }
+            lastError = nil
+        } catch { fail("Pause: \(error.localizedDescription)") }
     }
 
     func setVoice(_ on: Bool) async {
@@ -134,18 +143,19 @@ final class CallController: ObservableObject {
             try await api.voice(callId: callId, on: on)
             voiceOn = on
             if !on { setSpeaking([]) }
-        } catch { lastError = "Voice: \(error.localizedDescription)" }
+            lastError = nil
+        } catch { fail("Voice: \(error.localizedDescription)") }
     }
 
     func feedback(key: String, action: FeedbackIn.Action) async {
-        do { _ = try await api.feedback(callId: callId, key: key, action: action) } catch {
-            lastError = "Feedback: \(error.localizedDescription)"
+        do { _ = try await api.feedback(callId: callId, key: key, action: action); lastError = nil } catch {
+            fail("Feedback: \(error.localizedDescription)")
         }
     }
 
     func typeText(_ text: String) async {
-        do { _ = try await api.typeText(callId: callId, text: text) } catch {
-            lastError = "Send: \(error.localizedDescription)"
+        do { _ = try await api.typeText(callId: callId, text: text); lastError = nil } catch {
+            fail("Send: \(error.localizedDescription)")
         }
     }
 
@@ -202,7 +212,8 @@ final class CallController: ObservableObject {
                 guard route != .ignore else { continue }
                 if route == .kinVoice { hasKinVoice = true }
                 subscribe(pub)
-                if route == .peerVideo, pub.source == .camera || video == nil, let t = pub.track as? VideoTrack {
+                if showsPeerVideo(route: route, isCamera: pub.source == .camera, isMuted: pub.isMuted, haveVideo: video != nil),
+                   let t = pub.track as? VideoTrack {
                     video = t
                 }
             }
@@ -225,8 +236,20 @@ final class CallController: ObservableObject {
         Task { @MainActor in
             defer { subscribing.remove(sid) }
             do { try await pub.set(subscribed: true) } catch {
-                lastError = "Could not play \(pub.name.isEmpty ? "a track" : pub.name): \(error.localizedDescription)"
+                fail("Could not play \(pub.name.isEmpty ? "a track" : pub.name): \(error.localizedDescription)")
             }
+        }
+    }
+
+    /// Shows `message` in the call banner for `errorLifetime`. CallView shows `lastError ?? world.error`, so an error
+    /// that stayed would hide every later one (the simulator fails the camera on every connect).
+    private func fail(_ message: String) {
+        lastError = message
+        errorExpiry?.cancel()
+        errorExpiry = Task { [weak self, errorLifetime] in
+            try? await Task.sleep(for: errorLifetime)  // throws only when a newer error cancelled this one
+            guard !Task.isCancelled else { return }
+            self?.lastError = nil
         }
     }
 
@@ -263,8 +286,9 @@ final class CallController: ObservableObject {
     }
 }
 
-/// LiveKit calls delegates off the main thread; this forwards the events the controller needs as closures.
-private final class RoomEvents: NSObject, RoomDelegate, Sendable {
+/// LiveKit calls delegates off the main thread; this forwards the events the controller needs as closures. Internal
+/// only so a test can check that LiveKit sees each optional requirement.
+final class RoomEvents: NSObject, RoomDelegate, Sendable {
     let onChange: @Sendable () -> Void
     let onData: @Sendable (Data) -> Void
     let onDisconnect: @Sendable () -> Void
@@ -284,6 +308,11 @@ private final class RoomEvents: NSObject, RoomDelegate, Sendable {
     func room(_ room: Room, participant: RemoteParticipant, didUnsubscribeTrack publication: RemoteTrackPublication) { onChange() }
     func room(_ room: Room, participant: LocalParticipant, didPublishTrack publication: LocalTrackPublication) { onChange() }
     func room(_ room: Room, participant: LocalParticipant, didUnpublishTrack publication: LocalTrackPublication) { onChange() }
+    // Camera off mutes the track rather than unpublishing it, so the tile has to re-sync to show the avatar.
+    func room(_ room: Room, participant: LiveKit.Participant, trackPublication: TrackPublication,
+              didUpdateIsMuted isMuted: Bool) {
+        onChange()
+    }
     func room(_ room: Room, didDisconnectWithError error: LiveKitError?) { onDisconnect() }
     func room(_ room: Room, participant: RemoteParticipant?, didReceiveData data: Data, forTopic topic: String,
               encryptionType: EncryptionType) {

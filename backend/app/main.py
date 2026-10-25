@@ -1,15 +1,35 @@
 """KIN backend: FastAPI app."""
 from __future__ import annotations
 
+import html
 import logging
 from contextlib import asynccontextmanager
+from urllib.parse import urlencode
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from .config import get_settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+log = logging.getLogger("kin.main")
+WORLD_CLOSE_TIMEOUT_S = 25  # LiveWorld.close runs the final extraction (an LLM call) per live call
+
+
+async def _close_live_worlds() -> None:
+    """Shutdown (or a --reload restart) mid-call: run each live world call's final extraction and knowledge flush,
+    which otherwise only happen when the room empties."""
+    import asyncio
+
+    from .audio.pipeline import registry
+
+    worlds = [cs for cs in registry.active() if cs.world is not None]
+    results = await asyncio.gather(*(asyncio.wait_for(asyncio.to_thread(cs.world.close), WORLD_CLOSE_TIMEOUT_S)
+                                     for cs in worlds), return_exceptions=True)
+    for cs, res in zip(worlds, results):
+        if isinstance(res, BaseException):
+            log.error("closing live world call %s at shutdown failed: %r", cs.call_id, res)
 
 
 @asynccontextmanager
@@ -39,6 +59,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         sweep_task.cancel()
+        await _close_live_worlds()
 
 
 app = FastAPI(title="KIN", version="0.1.0", lifespan=lifespan)
@@ -88,6 +109,19 @@ app.include_router(world.router)
 app.include_router(dev.router)
 app.include_router(sms.router)
 app.include_router(explain.router)
+
+
+@app.get("/", include_in_schema=False)
+def invite_page(request: Request) -> HTMLResponse:
+    """Share sends `http(s)://<server>/?call=N[&key=K][&code=C]` (Messages makes that tappable); this page hands it to
+    the app as kin://join. Outside /api, so the key gate does not apply; the page only echoes the link's own query."""
+    query = {k: v for k, v in request.query_params.items() if k in ("call", "key", "code")}
+    if "call" not in query:
+        return HTMLResponse("<!doctype html><title>KIN</title><p>This is a KIN server.</p>")
+    link = html.escape("kin://join?" + urlencode(query))
+    return HTMLResponse(f'<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
+                        f'<meta http-equiv="refresh" content="0;url={link}"><title>Join the KIN call</title>'
+                        f'<p><a href="{link}">Open the call in KIN</a></p>')
 
 
 @app.get("/health")

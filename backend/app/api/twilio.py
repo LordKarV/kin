@@ -11,6 +11,8 @@ from ..audio.twilio_bridge import PhoneLeg, relay_twiml
 from ..config import get_settings
 from ..db import models as m
 from ..db.session import session_scope
+from ..security import locked
+from .calls import legacy_call, legacy_family
 
 log = logging.getLogger("kin.twilio")
 router = APIRouter(tags=["phone"])
@@ -37,15 +39,18 @@ def _heritage_locale() -> str:
 
 def _new_call() -> int:
     with session_scope() as s:
-        c = m.Call(family_id=get_settings().demo_family_id, transport="twilio")
+        c = m.Call(family_id=legacy_family(s, None).id, transport="twilio")  # the phone bridge is legacy: never the space
         s.add(c); s.flush()
         return c.id
 
 
 def _verify_twilio(request: Request, form: dict) -> None:
-    """Reject webhooks not signed by our Twilio account (enforced whenever an auth token is configured)."""
+    """Reject webhooks not signed by our Twilio account. Without an auth token only an unlocked dev server accepts them:
+    /twilio/ skips the KIN key gate, so a locked (exposed) server must fail closed."""
     token = get_settings().twilio_auth_token
     if not token:
+        if locked():
+            raise HTTPException(403, "TWILIO_AUTH_TOKEN is not set")
         return
     from twilio.request_validator import RequestValidator
 
@@ -95,6 +100,12 @@ def dial(body: Dial) -> dict:
 
 @router.websocket("/twilio/relay")
 async def relay(ws: WebSocket, call_id: int = Query(...), role: str = Query("grandparent")):
+    try:
+        with session_scope() as s:
+            legacy_call(s, call_id)  # a world call, or one in the space, is never bridged to an unauthenticated phone leg
+    except HTTPException:
+        await ws.close(code=4404, reason="unknown call")
+        return
     await ws.accept()
     session = registry.get_or_create(call_id)
     g = session.translator.g

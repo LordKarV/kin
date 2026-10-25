@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 import logging
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 
 from ..audio.pipeline import registry
-from ..db import models as m
 from ..db.session import session_scope
 from ..security import key_ok, locked
+from .calls import legacy_call
 
 log = logging.getLogger("kin.ws")
 router = APIRouter()
@@ -21,9 +21,10 @@ async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: s
     if locked() and not key_ok(key or ws.headers.get("x-kin-key")):
         await ws.close(code=4401, reason="KIN API key required (?key=)")
         return
-    with session_scope() as s:
-        exists = s.get(m.Call, call_id) is not None
-    if not exists:
+    try:  # a world call, or a legacy-mode row in the world space, answers like a missing call (D2)
+        with session_scope() as s:
+            family_id = legacy_call(s, call_id).family_id
+    except HTTPException:
         await ws.close(code=4404, reason="unknown call id; create one with POST /api/calls")
         return
     await ws.accept()
@@ -58,7 +59,7 @@ async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: s
                     await session.on_text(role, data.get("text", ""))
                 elif t == "verify":
                     from ..fade.service import record_verification  # Phase 4
-                    await send_json(record_verification(data))
+                    await send_json(record_verification(data, family_id))
                 elif t == "ping":
                     await send_json({"type": "pong"})
     except WebSocketDisconnect:

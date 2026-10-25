@@ -124,6 +124,43 @@ final class WorldReducerTests: XCTestCase {
         XCTAssertEqual(triggerTerms(shown.card), ["P1"])
     }
 
+    func testHeldCardKeepsItsSlot() {
+        var s = touch(run([glance(lin)]), key: "who:p_lin_17", touching: true, now: t0)
+        s = run([glance(who(1))], from: s)
+        XCTAssertEqual(slots(s.rail).card?.key, "who:p_lin_17", "a newer card never swaps in under a finger")
+        s = touch(s, key: "who:p_lin_17", touching: false, now: t0)
+        XCTAssertEqual(slots(s.rail).card?.key, "who:p1", "the newer card shows once the finger lifts")
+    }
+
+    func testRailCapNeverEvictsAHeldCard() {
+        let held = touch(run([glance(lin)]), key: "who:p_lin_17", touching: true, now: t0)
+        XCTAssertEqual(run((1...4).map { glance(who($0)) }, from: held).rail.map(\.key),
+                       ["who:p4", "who:p3", "who:p2", "who:p_lin_17"])
+        XCTAssertEqual(run((1...4).map { glance(ask($0)) }, from: held).rail.map(\.key),
+                       ["ask:x4", "ask:x3", "ask:x2", "who:p_lin_17"])
+    }
+
+    func testPauseReleasesAHeldCard() {
+        var s = touch(run([glance(lin)]), key: "who:p_lin_17", touching: true, now: t0)
+        let later = t0.addingTimeInterval(5)
+        s = run([#"{"type":"kin_status","on":false,"paused_by":{"person":"p_mei_5","name":"Mei"}}"#], from: s, at: later)
+        XCTAssertEqual(s.rail.first?.touched, false, "the paused screen drops the card, so its release never arrives")
+        XCTAssertEqual(s.rail.first?.born, later, "its lifetime restarts like any release")
+        s = run([#"{"type":"kin_status","on":true,"paused_by":null}"#, glance(who(1))], from: s, at: later)
+        XCTAssertEqual(slots(s.rail).card?.key, "who:p1", "after resume a newer card takes the slot")
+    }
+
+    func testPartialClearsOnPauseAndWhenItsSpeakerLeaves() {
+        let partial = #"{"type":"partial","speaker":"p5","person":"p_mei_5","lang":"zh","text":"我和林"}"#
+        let mei = #"{"identity":"p5","person":"p_mei_5","name":"Mei","lang":"zh"}"#
+        let arjun = #"{"identity":"p3","person":"p_arjun_3","name":"Arjun","lang":"en"}"#
+        XCTAssertNil(run([partial, #"{"type":"kin_status","on":false,"paused_by":{"person":"p_mei_5","name":"Mei"}}"#]).partial,
+                     "the server drops speech while paused, so no final would clear it")
+        XCTAssertEqual(run([partial, #"{"type":"kin_status","on":true,"paused_by":null}"#]).partial?.text, "我和林")
+        XCTAssertEqual(run([partial, #"{"type":"participants","participants":[\#(arjun),\#(mei)]}"#]).partial?.text, "我和林")
+        XCTAssertNil(run([partial, #"{"type":"participants","participants":[\#(arjun)]}"#]).partial, "Mei left mid-sentence")
+    }
+
     func testKinStatusOffShowsPaused() throws {
         // The screen reads CallController.isPaused/pausedBy, which come straight from kin_status.
         guard case .kinStatus(let off) = msg(#"{"type":"kin_status","on":false,"paused_by":{"person":"p_mei_5","name":"Mei"}}"#)

@@ -675,8 +675,11 @@ cited state facts.
 - `POST /twilio/sms` (form `From, To, Body, MessageSid`; `/twilio/` is outside the key gate). Calls
   `api.twilio._verify_twilio(request, form)` (import it, do not copy it).
 - Idempotent: a repeated `MessageSid` returns the stored `reply`.
-- Sender: `users.phone == normalize_phone(From)`. Unknown number: reply "This number isn't linked to KIN yet. Add it in
-  the app under You." and store nothing.
+- Sender: `users.phone == normalize_phone(From)`. Unknown number: reply `UNKNOWN_REPLY` ("This number isn't linked to
+  KIN yet. Open You in the app for your code, then text KIN and the code.") and store nothing. A body matching
+  `KIN <6 hex>` from an unknown number links it to the unlinked user with that code (`GET /api/me/phone-code`) and gets
+  `LINKED_REPLY` ("Linked. Texts from this number now go to your KIN world."); the same text again from the linked
+  number (or a Twilio retry) gets `LINKED_REPLY` and is not ingested. Link attempts: 30 per hour per number.
 - Body over 1600 chars is truncated; 30 messages per user per hour (in memory), over that: reply "Slow down a little."
 - `ingest(s, user, body, sid) -> (reply, fact_ids)`: save `Message`, then `LLM.structured(SmsOut)` (effort minimal,
   2000 tokens, 8 s budget):
@@ -845,9 +848,15 @@ class Card: key: str; kind: str; item: dict; fact_ids: tuple[int, ...]; payload:
 ### 8.7 LiveKit (`backend/app/api/rtc.py`, `backend/app/rtc/agent.py`)
 
 - `POST /api/rtc/join` accepts the legacy body `{family_id, role, call_id?}` unchanged, or the world body
-  `{call_id?: int}` with header `X-KIN-User`. World: creates `Call(mode="world", family_id=space, transport="livekit")`
-  when `call_id` is missing, else checks the call is `mode="world"`; upserts `CallParticipant`; identity `p{person_id}`;
-  token metadata `{"person": slug, "person_id": id, "lang": lang, "name": name}`.
+  `{call_id?: int, invite?: str}` with header `X-KIN-User`. World: creates `Call(mode="world", family_id=space,
+  transport="livekit")` when `call_id` is missing, else checks the call is `mode="world"`; upserts `CallParticipant`;
+  identity `p{person_id}`; token metadata `{"person": slug, "person_id": id, "lang": lang, "name": name}`.
+- Invites: every world join returns `invite`, the call's code (HMAC-SHA256 over `invite:<call_id>` with a per-process
+  secret, 16 hex; a restart invalidates outstanding codes). A new seat in an existing world call requires it; a held
+  seat (`CallParticipant` row) rejoins without it. A missing or wrong code answers 404, the same as a missing call.
+- `GET /` (outside `/api`, so the key gate does not apply) is the invite hand-off page: the app shares
+  `http(s)://<server>/?call=N[&key=K][&code=C]`, and the page meta-refreshes to `kin://join` with only those three
+  query params, HTML-escaped. With no `call` it is a plain "This is a KIN server." page.
 - `RoomAgent._join`: metadata with `person_id` -> `session.join(p.identity, person, leg.send_json, leg.send_bytes,
   lang=meta["lang"], person_id=meta["person_id"])`; legacy role metadata unchanged. The leg key used for `on_audio` and
   `leave` is the session identity (`p.identity` for world, the role for legacy). The agent subscribes to audio only
@@ -917,10 +926,11 @@ clients ignore unknown kinds):
 |---|---|---|
 | `POST /api/users` (no X-KIN-User) | `{name, lang, phone?}` | `{user_id, person_id, person, space_id, token, sms_number}` (`token` shown once) |
 | `GET /api/me` | | `{user_id, person_id, person, name, lang, phone}` |
-| `PATCH /api/me` | `{name?, lang?, phone?}` | same as GET |
+| `PATCH /api/me` | `{name?, lang?, phone?}` | same as GET (a typed phone, here or at sign-up, is accepted only with `dev_endpoints` on; clearing it always works) |
+| `GET /api/me/phone-code` | | `{code, text:"KIN <code>", sms_number, linked}` (text it from the phone to link it, section 7) |
 | `DELETE /api/me` | | `{deleted:true, facts:n, utterances:n}` |
 | `GET /api/contacts` | | `[{person, name, lang, render, circle:"family|friends|group"}]` (users I share a call, tie or edge with) |
-| `GET /api/world` | | `{me, people:[{id, person, name, render, lang, is_user, circle}], ties:[{src, dst, kind, context}], edges:[{src, dst, relation}], groups:[{id, name, members}], things:[{id, slug, kind, name, owner}], storylines:[{id, title, status, states:[{label, at}]}]}` (visible only) |
+| `GET /api/world` | | `{me, people:[{id, person, name, render, lang, is_user, circle}], ties:[{src, dst, kind, context}], edges:[{src, dst, relation}], groups:[{id, name, members}], things:[{id, slug, kind, name, owner}], storylines:[{id, title, status, states:[{label, at}], owner}]}` (visible only; `owner` is a person slug, null when hidden) |
 | `GET /api/world/relations?lang=` | | `{social:[{kind, label}], kin:[{path, label}]}` |
 | `POST /api/world/place` | `{name?, person?, owner, relation, context?, call_id?}` | `{id, person, name, render}` |
 | `GET /api/me/facts` | | `{about_me:[Fact], i_said:[Fact]}` with `Fact = {id, text, subject, speaker, source_kind, said_at, status, sensitive_kind, pinned, expires_at, heard_by:[{person, name, via}]}` |
@@ -932,13 +942,19 @@ clients ignore unknown kinds):
 | `POST /api/calls/{id}/text` | `{text}` | `{ok:true}` (typed input for LiveKit clients; demo insurance) |
 | `POST /api/calls/{id}/voice` | `{on:bool}` | `{on}` (pause, feedback, text and voice return 409 until the caller has a joined side) |
 | `GET /api/calls/{id}/participants` | | `[{person, identity, lang, joined_at, left_at}]` |
-| `POST /api/rtc/join` | world `{call_id?}` + X-KIN-User, or legacy body | `{call_id, room, token, url, identity, person, name, lang, participants}` / legacy unchanged |
+| `POST /api/rtc/join` | world `{call_id?, invite?}` + X-KIN-User, or legacy body | `{call_id, room, token, url, identity, person, name, lang, invite, participants}` / legacy unchanged (a new seat in an existing world call needs `invite`, else 404) |
+| `GET /` (outside the key gate) | `?call=N&key=K&code=C` | HTML page that hands off to `kin://join` (8.7) |
 | `POST /twilio/sms` | Twilio form | TwiML |
 | `POST /api/dev/sms` | `{from, body}` | `{reply, message_id, facts:[{id, text}]}` |
 | `POST /api/dev/clock` | `{offset_days}` | `{now}` |
+| `POST /api/dev/signin` | `{person}` (a user's person slug) | `{person, token}`: a fresh X-KIN-User token; the old one stops working. Loopback callers only, even unlocked |
 | `POST /api/dev/apply` | `{call_id?, speaker:slug, audience:[slug], update: WorldUpdateOut}` | `{facts:[id], entities:[{ref, id, slug}]}` (same `apply_update` path; validator runs with each fact citing line 0 by `speaker`; a tie with no tie fact is synthesized, since one person speaks) |
 
-Dev routes return 404 when `settings.dev_endpoints` is false.
+Dev routes return 404 when `settings.dev_endpoints` is false. On a locked server (`security.locked()`: a real
+`KIN_API_KEY` or a public host) every `/api/dev/*` route also returns 404 to any caller that is not loopback
+(127.0.0.1 or ::1), because the KIN key travels in every invite link; plant a remote server through an SSH tunnel
+(deploy/vultr/README.md). Unlocked local dev (the default key) is unchanged, except `/api/dev/signin`, which is
+loopback-only always.
 
 ---
 

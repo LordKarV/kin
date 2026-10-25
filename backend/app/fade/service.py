@@ -33,58 +33,70 @@ def _row(s, learner_id: int, lm: str) -> m.Mastery:
     return r
 
 
-def _lang_of(s, learner: str) -> str:
-    p = s.scalar(select(m.Person).where(m.Person.slug == learner))
-    fam = s.get(m.Family, p.family_id) if p else None
+def _lang_of(s, learner: str, family_id: int | None = None) -> str:
+    fam = s.get(m.Family, family_id) if family_id is not None else None
+    if fam is None:
+        p = s.scalar(select(m.Person).where(m.Person.slug == learner))
+        fam = s.get(m.Family, p.family_id) if p else None
     return fam.heritage_lang if fam else "ta"
 
 
-def record_exposures(learner: str, text: str, lang: str | None = None) -> list[str]:
+def record_exposures(learner: str, text: str, lang: str | None = None, family_id: int | None = None) -> list[str]:
     with session_scope() as s:
-        lang = lang or _lang_of(s, learner)
+        lang = lang or _lang_of(s, learner, family_id)
     lms = heritage_lemmas(text, lang)
     with session_scope() as s:
-        lid = _learner_id(s, learner)
+        lid = _learner_id(s, learner, family_id)
         for lm in lms:
             r = _row(s, lid, lm)
             r.p_known = bkt.expose(r.p_known); r.n_exposures += 1
     return lms
 
 
-def record_verification(data: dict) -> dict:
-    """{"learner","understood", "text" | "utterance_id"} → updates every heritage lemma in the text as one observation."""
+def _utterance(s, utterance_id: int, family_id: int | None) -> m.Utterance | None:
+    """With a family, only an utterance of a legacy call in that family: a world transcript never reaches Fade."""
+    u = s.get(m.Utterance, utterance_id)
+    if u is None or family_id is None:
+        return u
+    call = s.get(m.Call, u.call_id)
+    return u if call is not None and call.family_id == family_id and call.mode != "world" else None
+
+
+def record_verification(data: dict, family_id: int | None = None) -> dict:
+    """{"learner","understood", "text" | "utterance_id"} → updates every heritage lemma in the text as one observation.
+    `family_id` scopes the learner slug and the utterance to one legacy family (the REST and /ws/call callers)."""
     learner = data.get("learner") or "p_arjun"
     understood = bool(data.get("understood", True))
     text = data.get("text", "")
     with session_scope() as s:
         lid = lang = None
         if not text and data.get("utterance_id"):
-            u = s.get(m.Utterance, int(data["utterance_id"]))
+            u = _utterance(s, int(data["utterance_id"]), family_id)
             text = u.src_text if u else ""
             if u and u.listener_id:  # use the listener row itself: slugs are only unique per family
                 p = s.get(m.Person, u.listener_id)
                 learner, lid = p.slug, p.id
                 fam = s.get(m.Family, p.family_id)
                 lang = fam.heritage_lang if fam else None
-        lms = heritage_lemmas(text, lang or _lang_of(s, learner))
-        lid = lid or _learner_id(s, learner)
+        lms = heritage_lemmas(text, lang or _lang_of(s, learner, family_id))
+        lid = lid or _learner_id(s, learner, family_id)
         for lm in lms:
             r = _row(s, lid, lm)
             r.p_known = bkt.update(r.p_known, correct=understood); r.n_verified += 1
     return {"type": "verified", "learner": learner, "understood": understood, "lemmas": lms}
 
 
-def mastery(learner: str) -> list[dict]:
+def mastery(learner: str, family_id: int | None = None) -> list[dict]:
     with session_scope() as s:
-        lid = _learner_id(s, learner)
+        lid = _learner_id(s, learner, family_id)
         rows = s.scalars(select(m.Mastery).where(m.Mastery.learner_id == lid).order_by(m.Mastery.p_known.desc())).all()
         return [{"lemma": r.lemma, "p_known": round(r.p_known, 4), "n_exposures": r.n_exposures, "n_verified": r.n_verified,
                  "mastered": r.p_known >= MASTERY_THRESHOLD, "updated_at": r.updated_at.isoformat() if r.updated_at else None} for r in rows]
 
 
-def reset(learner: str) -> int:
+def reset(learner: str, family_id: int | None = None) -> int:
     with session_scope() as s:
-        lid = _learner_id(s, learner)
+        lid = _learner_id(s, learner, family_id)
         rows = s.scalars(select(m.Mastery).where(m.Mastery.learner_id == lid)).all()
         for r in rows:
             s.delete(r)

@@ -134,3 +134,59 @@ def test_linker_lang_and_keyterms_include_names(graph):
     g = FamilyGraph(1, "zh", [lin], [], [])
     assert "Lin" in Linker(g).keyterms()
     assert not [k for k in Linker(graph).keyterms() if re.search(r"[^\x00-\x7f]", k)]
+
+
+def _far_graph() -> FamilyGraph:
+    """Arjun -> Mom -> Paatti by kin; Mei is in the space but on no kin path from Paatti."""
+    people = [Node(1, "p_arjun_1", "Arjun", "", "m", 2005, False, False, "", [("Arjun", "en", "name")]),
+              Node(2, "p_mom_2", "Mom", "", "f", 1977, False, False, "", []),
+              Node(3, "p_paatti_3", "Paatti", "", "f", 1949, False, False, "", [("Paatti", "en", "name")]),
+              Node(4, "p_mei_4", "Mei", "美", "f", 2005, False, False, "", [("Mei", "en", "name")])]
+    edges = [(2, 1, "parent", "", {}), (3, 2, "parent", "", {})]
+    return FamilyGraph(1, "zh", people, edges, [], {1: "en", 3: "ta", 4: "zh"})
+
+
+def test_no_kin_path_renders_just_the_name_and_world_span_wins_on_same_range():
+    """Demo step 5: the legacy linker said 'your relative Mei (relative)' and its span beat the world span."""
+    g = _far_graph()
+    assert g.render(3, 4) == "Mei" and g.render(3, 1) == "your grandson Arjun peran (your daughter's son)"
+    text = "I went hiking with Mei when she visited."
+    world = "your grandson Arjun's friend Mei (from high school)"
+    extra = [{"start": 19, "end": 22, "source": "Mei", "node_id": "p_mei_4", "type": "person", "rendered": world,
+              "confidence": 0.95, "method": "alias"}]
+    seen = []
+    tr = Translator(g, _llm(seen), lang="en")
+    res = tr.translate_speech(text, "p_arjun_1", "p_paatti_3", extra_spans=extra, roster="r", target_lang="ta")
+    res.cards.result()
+    user = _by_call(seen)["SpeechOut"]["messages"][-1]["content"]
+    assert f"'Mei' → p_mei_4: {world}" in user and "relative" not in user
+    assert tr.fallback(text, res.spans).translation == f"I went hiking with {world} when she visited."
+    assert tr.user_prompt("hi", "p_mei_4", "p_arjun_1", [], [], []).startswith("Speaker: Mei. Listener: Arjun.")
+
+
+def test_world_kin_word_names_only_people_the_roster_shows():
+    """Review rank 2: a kin word linked over view.kin named a grandmother the listener cannot see, even past a world
+    span that hides her on purpose, and the Speaker line related people over unseen edges."""
+    g = _far_graph()
+    text = "My grandma is visiting next week."
+    hide = [{"start": 3, "end": 10, "source": "grandma", "node_id": None, "type": "person", "confidence": 0.9}]
+    row = lambda slug, name, text, native="": f"{slug} | {name} | {native} | {text} | "  # noqa: E731  (WorldView.roster)
+    hidden = row("p_arjun_1", "Arjun", "your friend Arjun") + "\n" + row("p_mei_4", "Mei", "you", "美")
+    for extra in ([], hide):
+        seen = []
+        tr = Translator(g, _llm(seen), lang="en")
+        res = tr.translate_speech(text, "p_arjun_1", "p_mei_4", extra_spans=extra, roster=hidden)
+        res.cards.result()
+        user = _by_call(seen)["SpeechOut"]["messages"][-1]["content"]
+        assert "p_paatti_3" not in user and "Paatti" not in user and not any(s.node for s in res.spans)
+        assert tr.fallback(text, res.spans).translation == text
+        assert user.startswith("Speaker: Arjun (your friend Arjun). Listener: Mei.")
+    seen = []
+    shown = hidden + "\n" + row("p_paatti_3", "Paatti", "Arjun's grandmother Paatti")
+    res = Translator(g, _llm(seen), lang="en").translate_speech(text, "p_arjun_1", "p_mei_4", roster=shown)
+    res.cards.result()
+    assert [(s.node, s.display) for s in res.spans] == [("p_paatti_3", "Arjun's grandmother Paatti")]
+    seen = []
+    roster = row("p_arjun_1", "Arjun", "Arjun") + "\n" + row("p_paatti_3", "Paatti", "you")  # no kin edge she may walk
+    Translator(g, _llm(seen), lang="en").translate_speech("hi", "p_arjun_1", "p_paatti_3", roster=roster).cards.result()
+    assert _by_call(seen)["SpeechOut"]["messages"][-1]["content"].startswith("Speaker: Arjun. Listener: Paatti.")

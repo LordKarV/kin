@@ -9,6 +9,9 @@ struct SignupView: View {
     @State private var busy = false
     @State private var error: String?
     @State private var done: UserOut?
+    #if DEBUG
+    @State private var signinLink = ""
+    #endif
 
     var body: some View {
         ScrollView {
@@ -45,7 +48,22 @@ struct SignupView: View {
                 KinField(label: "KIN server", text: $model.baseURLString, keyboard: .URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                ErrorText(message: model.serverAddressError)
                 Button("Reload languages") { Task { await loadLanguages() } }.padding(.top, 4)
+                #if DEBUG
+                // The demo driver prints kin://signin links; pasting one signs this phone in as that person.
+                KinField(label: "Sign-in link (debug)", text: $signinLink, keyboard: .URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                Button("Sign in with link") {
+                    guard let url = URL(string: signinLink.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+                        error = "That is not a link."
+                        return
+                    }
+                    model.open(url)
+                }
+                .disabled(signinLink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                #endif
             }
             .tint(Theme.accent)
         }
@@ -81,7 +99,7 @@ struct SignupView: View {
 
     private func loadLanguages() async {
         do {
-            let all = try await model.api.languages()
+            let all = try await model.signupAPI.languages()
             languages = all.sorted { Self.label($0) < Self.label($1) }
             if !languages.contains(where: { $0.code == lang }) { lang = languages.first { $0.code == "en" }?.code ?? languages.first?.code ?? "en" }
             error = nil
@@ -93,7 +111,7 @@ struct SignupView: View {
         defer { busy = false }
         let p = phone.trimmingCharacters(in: .whitespaces)
         do {
-            done = try await model.api.signup(name: name.trimmingCharacters(in: .whitespaces), lang: lang, phone: p.isEmpty ? nil : p)
+            done = try await model.signupAPI.signup(name: name.trimmingCharacters(in: .whitespaces), lang: lang, phone: p.isEmpty ? nil : p)
             error = nil
         } catch { self.error = error.localizedDescription }
     }

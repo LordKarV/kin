@@ -9,7 +9,7 @@ enum CardAction: Equatable {
 }
 
 /// Draws one rail card in the call screen's card slot. The screen shows one card about their world at a time plus
-/// at most one bridge (`slots(_:)`); a newer card replaces the one on screen.
+/// at most one bridge (`slots(_:)`); a newer card replaces the one on screen unless the one on screen is held.
 enum CardRail {
     /// Which component draws a card. Pure, so tests pin the kind-to-card mapping.
     enum Style: Equatable { case who, bridge, storyline, ask, culture }
@@ -33,7 +33,12 @@ struct CardView: View {
     var body: some View {
         content
             // A touch holds the card (it never vanishes under a finger); lifting restarts its lifetime.
+            // TODO(device check): a LongPressGesture ends once minimumDuration passes, so `touching` likely turns false
+            // 0.2 s into a hold. minimumDuration: .infinity would keep it true until the finger lifts; check on a phone
+            // that the ask and bridge buttons still take taps before changing it.
             .onLongPressGesture(minimumDuration: 0.2, maximumDistance: 20, perform: {}) { onAction(card, .touch($0)) }
+            // A card removed mid-hold (pause, retract) never gets the release; a stuck hold would keep its slot all call.
+            .onDisappear { if card.touched { onAction(card, .touch(false)) } }
             .accessibilityAction(named: "I know this") { onAction(card, .know) }
             .accessibilityAction(named: "Dismiss") { onAction(card, .dismiss) }
     }

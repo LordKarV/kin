@@ -114,8 +114,14 @@ class LLM:
         try:
             return schema_model.model_validate(json.loads(content))
         except (json.JSONDecodeError, ValidationError) as e:
-            log.error("structured output invalid for %s: %s | raw=%r", schema_model.__name__, e, content[:500])
-            raise StructuredOutputError(str(e)) from e
+            # The output restates private facts and SMS text: ERROR (and the raised message, which callers log) gets
+            # only where it broke; the raw text is at DEBUG.
+            why = ("; ".join(f"{'.'.join(map(str, d['loc']))}: {d['msg']}"
+                             for d in e.errors(include_url=False, include_input=False))
+                   if isinstance(e, ValidationError) else str(e))
+            log.error("structured output invalid for %s: %s (%d chars)", schema_model.__name__, why, len(content))
+            log.debug("structured output raw for %s: %r", schema_model.__name__, content[:500])
+            raise StructuredOutputError(why) from e
 
     def text(self, system: str, user: str, reasoning_effort: str | None = None, max_completion_tokens: int = 2500) -> str:
         kwargs: dict[str, Any] = dict(

@@ -32,7 +32,8 @@ BUDGET_S = 8.0  # section 7: reply within the Twilio webhook window (about 15 s,
 MAX_BODY = 1600
 ACK_MAX = 120
 FALLBACK = "Got it."
-UNKNOWN_REPLY = "This number isn't linked to KIN yet. Add it in the app under You."
+UNKNOWN_REPLY = "This number isn't linked to KIN yet. Open You in the app for your code, then text KIN and the code."
+LINKED_REPLY = "Linked. Texts from this number now go to your KIN world."
 SLOW_REPLY = "Slow down a little."
 PREDICATES = frozenset({"did", "started", "plans", "state", "attribute", "lives_in", "from", "works_at", "studies_at"})
 
@@ -161,7 +162,8 @@ def _store(s: Session, ctx: _Ctx, msg: m.Message, out: SmsOut, now: datetime) ->
                          shareable=False)
     for sf in out.facts:
         if sf.predicate not in PREDICATES or not sf.text_en.strip() or _about_other(ctx, sf):
-            log.warning("sms fact dropped (predicate %r or not about the author): %r", sf.predicate, sf.text_en[:60])
+            log.warning("sms fact dropped (predicate %r or not about the author), %d chars", sf.predicate[:16],
+                        len(sf.text_en))  # never the text: logs end up on shared screens
             continue
         fo = FactOut(subject="speaker", predicate=sf.predicate, text_en=sf.text_en.strip(), text_src="", keys=sf.keys,
                      refs=[], lines=[0], sensitive_kind=sf.sensitive_kind, same_as=None, contradicts=None,
@@ -213,7 +215,9 @@ def ingest(s: Session, user: m.User, body: str, sid: str | None = None,
         return _defer(s, msg, ctx, None, now)
     reply = _ack(out)
     try:
-        msg.reply = reply
+        # The author gets the full ack; the stored copy (Twilio retries) is generic when the news is sensitive,
+        # because sensitive facts keep only the topic word (PRODUCT.md, privacy).
+        msg.reply = FALLBACK if any(sf.sensitive_kind for sf in out.facts) else reply
         facts = _store(s, ctx, msg, out, now)
         s.commit()
     except Exception:  # noqa: BLE001  a store bug must not leave the raw body behind (section 7)

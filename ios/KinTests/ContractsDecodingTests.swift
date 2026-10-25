@@ -132,6 +132,29 @@ final class ContractsDecodingTests: XCTestCase {
         XCTAssertEqual(e.stage, "mt|tts|pipeline")
     }
 
+    func testJoinWorldCarriesTheInvite() throws {
+        let out = try JSONDecoder().decode(JoinWorldOut.self, from: Data(#"""
+        {"call_id":12,"room":"kin-call-12","token":"jwt","url":"ws://localhost:7880","identity":"p3","person":"p_arjun_3",
+         "name":"Arjun","lang":"en","participants":[],"invite":"0123456789abcdef"}
+        """#.utf8))
+        XCTAssertEqual(out.invite, "0123456789abcdef")
+        let old = try JSONDecoder().decode(JoinWorldOut.self, from: Data(#"""
+        {"call_id":12,"room":"r","token":"t","url":"u","identity":"p3","person":"p","name":"A","lang":"en","participants":[]}
+        """#.utf8))
+        XCTAssertNil(old.invite)
+        let body = try JSONSerialization.jsonObject(with: JSONEncoder().encode(JoinWorldIn(callId: 12, invite: "c"))) as? [String: Any]
+        XCTAssertEqual(body?["call_id"] as? Int, 12)
+        XCTAssertEqual(body?["invite"] as? String, "c")
+    }
+
+    func testWorldStorylineOwnerIsOptional() throws {
+        let s = try JSONDecoder().decode([WorldStoryline].self, from: Data(#"""
+        [{"id":1,"title":"job search","status":"active","states":[],"owner":"p_mei_5"},
+         {"id":2,"title":"move","status":"active"}]
+        """#.utf8))
+        XCTAssertEqual(s.map(\.owner), ["p_mei_5", nil])
+    }
+
     func testUnknownType() {
         XCTAssertEqual(msg(#"{"type":"hologram","x":1}"#), .unknown("hologram"))
         XCTAssertEqual(msg("not json"), .unknown("malformed"))

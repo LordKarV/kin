@@ -10,12 +10,15 @@ import hashlib
 import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Callable
 
 import openai
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from ..db import models as m
 from ..db.session import session_scope
 from ..graph.kin_tables import MUSE_LANGUAGES
 from ..llm import StructuredOutputError, get_llm
@@ -23,12 +26,13 @@ from . import cards as C
 from . import clock
 from .apply import ApplyCtx, ApplyResult, apply_update
 from .contracts import LocalizeOut, SuggestionOut, WorldUpdateOut
-from .extract import ENTITY_TABLE, Candidate, Line, Participant, own_context, run_extraction, validate, validate_ctx
+from .extract import (ENTITY_TABLE, Candidate, Line, Participant, ValidateCtx, _tie_fact, own_context, run_extraction,
+                      validate, validate_ctx)
 from .match import Hit
 from .view import WorldView
 
 if TYPE_CHECKING:
-    from .live import LiveWorld, _Snap
+    from .live import LiveWorld, _Line, _Snap
 
 log = logging.getLogger("kin.world.live")
 
@@ -48,6 +52,31 @@ LOCALIZE_SYSTEM = ("You localize short context cards shown during a live call. T
 
 def _sha(text: str) -> str:
     return hashlib.sha1(text.encode()).hexdigest()
+
+
+def _new_only(raw: WorldUpdateOut, upd: WorldUpdateOut, first_new: int, vctx: ValidateCtx) -> WorldUpdateOut:
+    """D14 overlap: lines before `first_new` were extracted last time and are context only. Facts citing only them
+    are dropped (a model that ignores same_as would write them twice), with the ties and entities only they carried.
+    `upd` is validate's output for `raw`. A tie fact validate synthesized (6.3, one speaker) sits on the speaker's
+    first line, usually an overlap one, so it is kept: it is a tie fact with no storyline and not sensitive (validate
+    never rewrites those) that the model did not send. ponytail: a tie the model re-sends from overlap lines without
+    its tie fact gets one more tie Fact row (apply keeps the first Tie); marking synthesized facts in validate fixes
+    that. Entities nothing cited pass through as validate let them (apply learns a known entity's new forms, 3.3)."""
+    if first_new == 0:
+        return upd
+    facts = [f for f in upd.facts if max(f.lines) >= first_new
+             or (f.predicate == "tie" and f.storyline is None and not f.sensitive_kind and f not in raw.facts)]
+    for i, f in enumerate(upd.facts):
+        if f not in facts:  # index and length only: fact text is user content (privacy, section 10)
+            log.info("extraction dropped: fact #%d (%d chars) cites only overlap lines %s", i, len(f.text_en), f.lines)
+    refs = {e.ref: e for e in upd.entities}
+    ties = [t for t in upd.ties if _tie_fact(t, facts, refs, vctx) is not None]
+
+    def cited(fs, ts):
+        return {tok for f in fs for tok in (f.subject, *f.refs)} | {tok for t in ts for tok in (t.a, t.b)}
+    used, was = cited(facts, ties), cited(upd.facts, upd.ties)
+    return WorldUpdateOut(entities=[e for e in upd.entities if e.ref in used or e.ref not in was], ties=ties,
+                          facts=facts)
 
 
 def _locked(fn: Callable) -> Callable:
@@ -95,15 +124,19 @@ class LiveJobs:
             self._l10n = {**self._l10n, **{(k, lang, _sha(src[k])): b for k, b in got.items()}}
         return got
 
-    def _prewarm(self, listener: int, lang: str) -> None:
-        """Best effort: bodies are rendered without a speaker, so a live card rendered through one misses."""
+    def _prewarm(self, listener: int, lang: str, speaker: int | None = None) -> None:
+        """Best effort. Bodies render through `speaker` like a live card (cards._entity_card), so the (key, lang, body)
+        cache hits when that speaker names the person; that also covers people the listener sees only through the
+        speaker's own disclosure. Bodies already cached are not sent again (a rejoin prewarms again)."""
         v, now = self.view, clock.now()
         if v is None:
             return
-        people = sorted((p for p in v.people.values() if p.id != listener and v.visible(listener, "person", p.id)
+        people = sorted((p for p in v.people.values() if p.id != listener
+                         and v.visible(listener, "person", p.id, speaker)
                          and not v.structural_known(listener, "person", p.id)),
                         key=lambda p: v.first_mention.get(p.id, _EPOCH), reverse=True)[:LOCALIZE_TOP]
-        self._localize([(f"who:{p.slug}", v.card_body(listener, "person", p.id, None, now)[0]) for p in people], lang)
+        items = [(f"who:{p.slug}", v.card_body(listener, "person", p.id, speaker, now)[0]) for p in people]
+        self._localize([(k, b) for k, b in items if b and (k, lang, _sha(b)) not in self._l10n], lang)
 
     def _lazy_l10n(self, identity: str, lang: str, key: str, body: str) -> None:
         try:
@@ -148,16 +181,39 @@ class LiveJobs:
                 if v.visible(sp, "group", g.id)]
         return out
 
+    def _live_lines(self, start: int, end: int, extra: set[int]) -> tuple[list["_Line"], int, frozenset[int]]:
+        """Window lines that may still go to the LLM, plus the index of the first new one (>= start) and which of the
+        people in the lines or `extra` still exist. A privacy delete mid-call (section 10) removes a speaker or
+        redacts an utterance: those words never go back to the model. Audiences lose deleted people, whose rows
+        would fail the FK and roll back the whole apply."""
+        lo = max(0, start - EXTRACT_OVERLAP)
+        raw = self._lines[lo:end]
+        uids = {ln.utterance_id for ln in raw if ln.utterance_id is not None}
+        with session_scope() as s:
+            alive = frozenset(s.scalars(select(m.Person.id).where(m.Person.id.in_(
+                extra | {p for ln in raw for p in (ln.speaker, *ln.audience)}))))
+            text = dict(s.execute(select(m.Utterance.id, m.Utterance.src_text).where(m.Utterance.id.in_(uids))).all())
+        keep = [(i, replace(ln, audience=tuple(p for p in ln.audience if p in alive)))
+                for i, ln in enumerate(raw, lo)
+                if ln.speaker in alive and (ln.utterance_id is None or (text.get(ln.utterance_id) or "").strip())]
+        if len(keep) < len(raw):
+            log.info("call %s: %d deleted or redacted lines left out of extraction", self.call_id, len(raw) - len(keep))
+        first_new = next((n for n, (i, _ln) in enumerate(keep) if i >= start), len(keep))
+        return [ln for _i, ln in keep], first_new, alive
+
     def _extract(self, start: int, end: int):
         """Blocking: one LLM call, validate, apply. Returns (ApplyResult, clean update, speaker_of_line,
         audience_of_line) or None."""
         v = self.view
-        lines = self._lines[max(0, start - EXTRACT_OVERLAP):end]
-        if v is None or not lines:
+        if v is None:
+            return None
+        everyone = list(dict.fromkeys(self._ever.values()))  # leave() empties parts before the call-end extraction
+        lines, first_new, alive = self._live_lines(start, end, {p for p, _l in everyone})
+        if first_new >= len(lines):  # nothing new survived
             return None
         win = [Line(n, ln.speaker, ln.lang, ln.text) for n, ln in enumerate(lines)]
-        everyone = list(dict.fromkeys(self._ever.values()))  # leave() empties parts before the call-end extraction
-        parts = [Participant(p, v.people[p].slug, v.people[p].name, lang) for p, lang in everyone if p in v.people]
+        parts = [Participant(p, v.people[p].slug, v.people[p].name, lang) for p, lang in everyone
+                 if p in v.people and p in alive]
         speakers = sorted({ln.speaker for ln in lines})
         with session_scope() as s:
             own = {sp: own_context(s, sp) for sp in speakers}
@@ -165,7 +221,8 @@ class LiveJobs:
         upd = run_extraction(None, self.call_id, win, parts, own, cands, sorted({lg for _p, lg in everyone}))
         if upd is None:
             return None
-        clean, _dropped = validate(upd, validate_ctx(win, parts, own, cands))  # drops are logged by validate
+        vctx = validate_ctx(win, parts, own, cands)
+        clean = _new_only(upd, validate(upd, vctx)[0], first_new, vctx)  # drops are logged by validate
         if not (clean.entities or clean.facts or clean.ties):
             return None
         speaker_of = {n: ln.speaker for n, ln in enumerate(lines)}
@@ -187,7 +244,6 @@ class LiveJobs:
         result, clean, speaker_of, line_aud = res
         now = clock.now()
         self._swap(snap)
-        self._evidence(result.evidence, now)
         v = snap.view
         shown: list[tuple[int, int | None, C.Card]] = []
         for e in clean.entities:
@@ -206,7 +262,9 @@ class LiveJobs:
                 if cards:
                     shown += [(L, None, c) for c in cards]
                     self._send_later(ident, self._glance(sp_ident, ident, lang, cards, False))
+        # Section 4 ordering: the late-card decisions above read the state before these lines; shown before heard.
         self._evidence([ev for L, _t, c in shown for ev in self._card_evidence(L, c)], now)
+        self._evidence(result.evidence, now)
         self._log(shown, now)
         self._flush_async()
 

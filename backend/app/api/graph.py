@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import get_settings
 from ..db import models as m
 from ..db.session import get_session
 from ..mt.translate import get_translator
+from .calls import legacy_family
 
 router = APIRouter(prefix="/api/family", tags=["family"])
 
@@ -30,14 +30,12 @@ def families(s: Session = Depends(get_session)) -> list[dict]:
     """Every family with its heritage language (any of the 25 in app/languages.py), for family pickers."""
     from ..graph.kin_tables import MUSE_LANGUAGES
     return [{"id": f.id, "name": f.name, "heritage_lang": f.heritage_lang, "language": MUSE_LANGUAGES.get(f.heritage_lang, f.heritage_lang)}
-            for f in s.scalars(select(m.Family).order_by(m.Family.id))]
+            for f in s.scalars(select(m.Family).where(m.Family.kind != "space").order_by(m.Family.id))]
 
 
 @router.get("/graph")
 def family_graph(family_id: int | None = None, s: Session = Depends(get_session)) -> dict:
-    fid = family_id or get_settings().demo_family_id
-    if s.get(m.Family, fid) is None:
-        raise HTTPException(404, "no family yet: set one up with POST /api/family/setup")
+    fid = legacy_family(s, family_id).id
     g = get_translator(fid).g
     if not g.people:
         raise HTTPException(404, "family has no people yet")

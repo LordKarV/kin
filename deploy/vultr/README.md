@@ -32,13 +32,17 @@ LiveKit, opens the firewall (22, 8000, 7880-7881/tcp, 50000-60000/udp) and gener
 
 - Read the app key: `ssh root@<ip> grep KIN_API_KEY /etc/kin/kin.env`.
 - In the app: Sign up > Server `http://<ip>:8000`, Key = that value.
-- Demo driver against the server: `KIN_BASE=http://<ip>:8000 KIN_KEY=<key> backend/.venv/bin/python scripts/demo_common_ground.py`.
+- Plant the demo story through an SSH tunnel, because a locked server answers `/api/dev/*` only to loopback callers.
+  In one terminal run `ssh -N -L 8100:127.0.0.1:8000 root@<ip>`, then in another, from the repo root:
+  `KIN_BASE=http://127.0.0.1:8100 KIN_KEY=<key> backend/.venv/bin/python scripts/demo_common_ground.py --plant-only`.
+  The tunnel address is loopback, so the printed sign-in links carry no `server=` and each phone keeps
+  `http://<ip>:8000`.
 - Logs: `ssh root@<ip> journalctl -u kin-backend -u livekit -f`.
 
 ## Notes
 
 - No domain yet, so traffic is plain HTTP and `ws://` to the IP (iOS App Transport Security does not apply to IP
   addresses). With a `.tech` domain, put Caddy in front for HTTPS and `wss://`, and set `LIVEKIT_URL` to the `wss://` host.
-- Dev routes (`/api/dev/*`) are on so the demo driver can plant the story, and every `/api` route needs `KIN_API_KEY`
-  because the key is not the default.
+- Dev routes (`/api/dev/*`) are on so the demo driver can plant the story, but because the key is not the default
+  they answer only loopback callers (the key travels in every invite link), and every `/api` route needs `KIN_API_KEY`.
 - A Twilio number can point its SMS webhook at `http://<ip>:8000/twilio/sms` once `TWILIO_*` and `SMS_NUMBER` are set.

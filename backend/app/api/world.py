@@ -5,6 +5,7 @@ Everything returned is what the viewer may see (section 1.3): a WorldView built 
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func, select
@@ -103,9 +104,13 @@ def get_world(user: m.User = Depends(current_user), s: Session = Depends(get_ses
     for st in view.storylines.values():
         if not view.visible(me, "storyline", st.id):
             continue
+        mine = st.owner_id == me
         states = [WorldStateOut(label=label, at=at.date().isoformat()) for _sid, label, at, fid, status in st.states
-                  if status == "active" and (st.owner_id == me or _seen(view, me, fid))]
-        stories.append(WorldStorylineOut(id=st.id, title=st.title, status=st.status, states=states))
+                  if status == "active" and (mine or _seen(view, me, fid))]
+        # the title comes from the founding fact, which may be an SMS only its author saw (cards.storylines)
+        title = st.title if mine or (st.states and _seen(view, me, st.states[0][3])) else "news"
+        stories.append(WorldStorylineOut(id=st.id, title=title, status=st.status, states=states,
+                                         owner=slug.get(st.owner_id)))
     return WorldOut(me=view.people[me].slug, people=people, ties=ties, edges=edges, groups=groups, things=things,
                     storylines=stories)
 
@@ -122,6 +127,8 @@ def relations(lang: str = "", user: m.User = Depends(current_user)) -> Relations
 def place(body: PlaceIn, background: BackgroundTasks, user: m.User = Depends(current_user),
           s: Session = Depends(get_session)) -> PlaceOut:
     me, space_id, now = user.person_id, _space(s, user), clock.now()
+    if body.relation == "same_as":
+        return _confirm(s, me, space_id, body, now)
     view = WorldView.build(s, space_id, [me], now)
     owner = next((p for p in view.people.values() if p.slug == body.owner), None)
     if owner is None or not view.visible(me, "person", owner.id):
@@ -148,6 +155,38 @@ def place(body: PlaceIn, background: BackgroundTasks, user: m.User = Depends(cur
     render = WorldView.build(s, space_id, [me], now).render(me, person.id)
     refresh_calls(person_id=me)
     return PlaceOut(id=person.id, person=person.slug, name=person.display_name, render=render)
+
+
+def _offered(call_id: int, me: int, slug: str) -> str | None:
+    """The label a "Which X?" card delivered to me in this live call showed for candidate `slug`, else None."""
+    from ..audio.pipeline import registry  # local: the pipeline imports the audio stack
+    world = getattr(registry.get(call_id), "world", None)
+    delivered = getattr(world, "delivered", None) or {}  # replaced, never mutated (LiveWorld._admit): safe to read
+    return next((sg["label"] for (ident, _k), c in delivered.items() if ident == f"p{me}" and c.kind == "ask"
+                 for sg in c.payload.get("suggestions") or []
+                 if sg.get("owner") == slug and sg.get("relation") == "same_as"), None)
+
+
+def _confirm(s: Session, me: int, space_id: int, body: PlaceIn, now: datetime) -> PlaceOut:
+    """A "Which Ravi?" pick (cards._ask_ambiguous): `owner` is the candidate the listener means. It creates no tie;
+    it records that the listener knows that person. A candidate only the call's other participant may disclose is
+    accepted only when an ask card delivered to me in that live call offered it, and the reply repeats that card's
+    label: checking disclosure alone would let any past co-participant probe the other's ties by guessing slugs."""
+    label = None
+    if body.call_id is not None:
+        rows = set(s.scalars(select(m.CallParticipant.person_id).where(m.CallParticipant.call_id == body.call_id)))
+        if me not in rows:
+            raise HTTPException(403, "not a participant of that call")
+        label = _offered(body.call_id, me, body.owner)
+    view = WorldView.build(s, space_id, [me], now)
+    p = s.scalar(select(m.Person).where(m.Person.family_id == space_id, m.Person.slug == body.owner))
+    if p is None or (label is None and not (p.id in view.people and view.visible(me, "person", p.id))):
+        raise HTTPException(404, f"no person {body.owner!r} in your world")
+    write_evidence(s, [(me, "person", p.id, "confirmed")], now)
+    s.commit()
+    refresh_calls(person_id=me)
+    return PlaceOut(id=p.id, person=p.slug, name=p.display_name,
+                    render=label if label is not None else view.render(me, p.id))
 
 
 # ---------------------------------------------------------------------------------------------------------------------

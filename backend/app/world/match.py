@@ -16,8 +16,17 @@ log = logging.getLogger(__name__)
 
 ISOLATING = {"han", "hiragana", "katakana", "thai", "lao", "khmer", "myanmar"}
 _SINGLE_CHAR_CUED = {"han", "hiragana", "katakana"}   # single-char Thai/Lao/... forms are never accepted
+_ABUGIDA = {"thai", "lao", "khmer", "myanmar"}
+_FOLLOWING_VOWELS = set("ะาๅະາ")   # spacing (Lo) vowels written after their consonant; SARA AM folds to Mn + SARA AA
+# Kinds whose capitalized Latin forms are names, so a lowercase match in cased text is the common word (will, may).
+# Things (dosa), groups and concept keys are common nouns that STT writes lowercase, so they stay case-blind.
+_CASED_KINDS = {"person"}
 CUE_BEFORE = set("和跟与同叫给找带问对是让") | {"と"}
 CUE_AFTER = set("说她他也都的呢吗们") | {"さん", "ちゃん", "くん", "君", "と", "が", "は", "も"}
+# Last chars of common time words, connectives and verbs (昨天, 然后, 所以, 见了, 他说): a single Han name right after one
+# is a new word. ponytail: 天王的 still gives 王; a Chinese word breaker is the upgrade.
+_WORD_END = set("了天后以就还又才但说见")
+_LEADING_VOWELS = set("เแโใไເແໂໃໄ")   # Thai/Lao vowels written before their consonant
 _SCRIPT_ALIASES = {"cjk": "han", "ideographic": "han"}
 _END = None   # trie terminal key; real keys are single characters
 _STRIP = ""   # terminal of a form with its final virama dropped; valid only before a case suffix
@@ -148,9 +157,11 @@ class AliasIndex:
         for ch in key:
             node = node.setdefault(ch, {})
         term = node.setdefault(end, {"len": len(key), "script": script, "kinds": {}, "needs_suffix": end == _STRIP})
-        entry = term["kinds"].setdefault(kind, [form, []])
+        entry = term["kinds"].setdefault(kind, [form, [], set()])   # [shown form, ids, ids with a non-capitalized form]
         if id_ not in entry[1]:
             entry[1].append(id_)
+        if not form[:1].isupper():
+            entry[2].add(id_)
 
     @staticmethod
     def _walk(trie: dict, s: str, i: int) -> list[tuple[int, dict]]:
@@ -197,16 +208,20 @@ class AliasIndex:
         script = term["script"]
         if script in ISOLATING:
             if term["len"] >= 2:
-                return True
+                return _isolating_ok(s, i, j, script)
             if script not in _SINGLE_CHAR_CUED or longer:
                 return False
             left = s[i - 1] if i > 0 else ""
             right = s[j:]
-            if left in CUE_BEFORE or any(right.startswith(c) for c in CUE_AFTER):
+            if left in CUE_BEFORE:
                 return True
-            # Deliberately stricter than ARCHITECTURE 3.2's "the neighbour": with no cue BOTH sides must be boundaries, else
-            # 林檎を at text start gives 林. Cost: 我见了林。 and 林去了 give nothing (pinned in test_match.py).
-            return _cjk_edge(left) and _cjk_edge(right[:1])
+            # A same-script letter on the left is the same word (柏林的, 森林都, 小林さん) even with a cue on the
+            # right, unless it ends a common word (_WORD_END); kana, Latin or punctuation on the left is a boundary.
+            # Deliberately stricter than ARCHITECTURE 3.2: with no cue BOTH sides must be boundaries, else 林檎を at
+            # text start gives 林. Cost: any other Han char before the name (他想林也来) and a name at text start with
+            # no cue after it (林去了) give nothing (pinned in test_match.py).
+            left_ok = not left or left in _WORD_END or _other_script(left, script)
+            return left_ok and (any(right.startswith(c) for c in CUE_AFTER) or _cjk_edge(right[:1]))
         if term["needs_suffix"]:
             return _left_ok(s, i, script) and _rest_of_token(s, j) in sufs
         return _left_ok(s, i, script) and _right_ok(s, j, script, sufs)
@@ -222,24 +237,51 @@ class AliasIndex:
             e = max(idx[fj - 1] + 1, idx[fj]) if fj < len(idx) else len(text)
             spans.append((idx[fi], e, term, exact))
         spans.sort(key=lambda c: (-(c[1] - c[0]), not c[3], c[0]))
+        # Case is a signal only when the transcript has any capital, so all-lowercase STT and romanized Tamil still match.
+        # ponytail: a sentence-initial "Will you" still matches, and "my amma" in cased text is lost unless that person
+        # also has a lowercase form; a POS tagger is the upgrade.
+        cased = any(c.isupper() for c in text)
         taken = [False] * len(text)
         accepted: set[tuple[int, int]] = set()
         emitted: set[tuple[int, int, str, int]] = set()
         out: list[Hit] = []
         for s, e, term, exact in spans:
+            common_word = cased and text[s].islower()
+            # per id, not per terminal: Amma (id 1) and amma (id 2) share one terminal, and only id 2 is case-blind
+            kinds = [(k, (form, [i for i in ids if i in lower] if common_word and k in _CASED_KINDS else ids))
+                     for k, (form, ids, lower) in term["kinds"].items()]
+            kinds = [(k, v) for k, v in kinds if v[1]]
+            if not kinds:
+                continue                    # leave the span free for another candidate
             if (s, e) not in accepted:
                 if any(taken[s:e]):
                     continue
                 accepted.add((s, e))
                 for k in range(s, e):
                     taken[k] = True
-            for kind, (form, ids) in term["kinds"].items():
+            for kind, (form, ids) in kinds:
                 new = tuple(i for i in ids if (s, e, kind, i) not in emitted)
                 if new:
                     emitted.update((s, e, kind, i) for i in new)
                     out.append(Hit(s, e, text[s:e], kind, new, form, exact))
         out.sort(key=lambda h: (h.start, h.kind, not h.exact))
         return out
+
+
+def _isolating_ok(s: str, i: int, j: int, script: str) -> bool:
+    """2+ char isolating forms need no boundary, except where the text plainly continues the same word."""
+    if script == "katakana":
+        # katakana runs together only inside one word (リンゴ, キリン); particles and honorifics are hiragana
+        return not (i > 0 and script_of(s[i - 1]) == "katakana") and not (j < len(s) and script_of(s[j]) == "katakana")
+    if script in _ABUGIDA:
+        # a leading vowel before the match belongs to its first consonant (เลิน), a vowel sign or tone mark after it to
+        # its last (คลินิก, ลินา): neither is ลิน.
+        # ponytail: no syllable segmentation, so ลินดา and the cluster in เพลิน still give ลิน; a Thai word breaker
+        # is the upgrade.
+        if i > 0 and s[i - 1] in _LEADING_VOWELS:
+            return False
+        return j == len(s) or (unicodedata.category(s[j]) not in ("Mn", "Mc") and s[j] not in _FOLLOWING_VOWELS)
+    return True
 
 
 def _cjk_edge(ch: str) -> bool:

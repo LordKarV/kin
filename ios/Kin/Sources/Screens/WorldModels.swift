@@ -109,8 +109,7 @@ struct PersonWorld: Equatable {
                 let line = extra.isEmpty || base.localizedCaseInsensitiveContains(extra) ? base : "\(base), \(extra)"
                 return Linked(person: p, line: line, source: "From your calls with \(name)")
             }
-        let key = name.lowercased()
-        out.storylines = world.storylines.filter { !key.isEmpty && $0.title.lowercased().contains(key) }
+        out.storylines = world.storylines.filter { $0.owner == slug }  // a title rarely names its owner ("job search")
         out.places = world.things.filter { $0.owner == slug }
         out.said = (facts?.iSaid ?? []).filter { $0.subject == slug }
         return out

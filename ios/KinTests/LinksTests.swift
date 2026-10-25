@@ -37,6 +37,27 @@ final class LinksTests: XCTestCase {
                        "http://localhost:8000/?call=5")
     }
 
+    // The server requires the invite code for a new seat (rtc.py), so the share link must carry it both ways.
+    func testInviteCodeRoundTrip() throws {
+        XCTAssertEqual(parse("kin://join?call=12&code=abc123"), Invite(callId: 12, code: "abc123"))
+        XCTAssertEqual(parse("https://kin.example.com/?call=12&key=k&code=c"), Invite(callId: 12, key: "k", code: "c"))
+        XCTAssertEqual(parse("kin://join?call=12&code="), Invite(callId: 12))
+        let invite = Invite(callId: 7, key: "k", code: "c0de")
+        let url = try XCTUnwrap(invite.url(host: URL(string: "http://192.168.1.20:8000")!))
+        XCTAssertEqual(url.absoluteString, "http://192.168.1.20:8000/?call=7&key=k&code=c0de")
+        XCTAssertEqual(Invite.parse(url), invite)
+    }
+
+    func testSignInLink() {
+        let link = SignInLink.parse(URL(string: "kin://signin?token=a%2Bb_c&server=http%3A%2F%2F192.168.1.20%3A8000&key=k")!)
+        XCTAssertEqual(link, SignInLink(token: "a+b_c", server: "http://192.168.1.20:8000", key: "k"))
+        XCTAssertEqual(SignInLink.parse(URL(string: "KIN://signin?token=t")!), SignInLink(token: "t", server: nil, key: nil))
+        for s in ["kin://signin", "kin://signin?token=", "kin://join?call=1&token=t", "https://kin.example.com/signin?token=t"] {
+            XCTAssertNil(SignInLink.parse(URL(string: s)!), s)
+        }
+        XCTAssertNil(parse("kin://signin?token=t"))  // never mistaken for an invite
+    }
+
     func testInviteMustBeForThisServer() {
         let base = URL(string: "http://localhost:8000")!
         XCTAssertTrue(Invite.isForServer(URL(string: "http://localhost:8000/?call=1")!, base: base))

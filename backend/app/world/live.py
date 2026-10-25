@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import dataclasses
+import itertools
 import logging
 import re
 import threading
@@ -17,25 +18,31 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import TYPE_CHECKING, Awaitable, Callable
+from typing import TYPE_CHECKING, Awaitable, Callable, Iterable
 
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy import update as sql_update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from ..cards.lexicon import load_lexicon
 from ..cards.matcher import Match, Matcher
 from ..db import models as m
 from ..db.session import session_scope
+from ..graph import builder
 from ..graph.kin_tables import load_table
 from . import cards as C
 from . import clock
 from . import knowledge as kn
 from .contracts import NewPerson, SuggestionOut
+from .extract import TIE_KINDS
 from .live_jobs import EXTRACT_EVERY, LiveJobs, _locked, _sha
 from .match import AliasIndex, Hit, fold, script_of
 from .view import TIE_LABEL, WorldView
+from .visibility import FactV
 
 if TYPE_CHECKING:
     from ..mt.translate import Translator
@@ -57,6 +64,10 @@ REL_KIND = {"friend": "friend", "roommate": "roommate", "boss": "coworker", "cow
             "teammate": "teammate"}
 _REL_RE = re.compile(r"\b(my|your|her|his|their)\s+(" + "|".join(REL_KIND) + r")\b", re.IGNORECASE)
 _THE_RE = re.compile(r"\b(that|the)\s+([^\W\d_]+)", re.IGNORECASE)
+_KCOLS = ("p", "half_life_days", "first_at", "last_at", "last_day", "n_heard", "n_shown", "n_said", "n_confirmed",
+          "n_asked")
+_ITEM_TABLE = {"person": m.Person, "thing": m.Thing, "group": m.Group, "fact": m.Fact, "state": m.StorylineState}
+KKey = tuple[int, str, int]  # (knower, item kind, item id)
 
 @dataclass(frozen=True)
 class FinalResult:
@@ -71,6 +82,7 @@ class _Snap:
     index: AliasIndex  # entities (view.index_forms)
     kw: AliasIndex     # concept groups of facts and storylines, plus storyline titles
     by_slug: dict[str, tuple[str, int]]
+    seq: int = 0  # build order (LiveWorld._rebuild): an older build never replaces a newer one
 
 
 @dataclass(frozen=True)
@@ -107,6 +119,31 @@ def _on_pool() -> bool:
     return threading.current_thread().name.startswith(_POOL_PREFIX)
 
 
+def _row_state(r: m.Knowledge) -> kn.State:
+    return kn.State(*(getattr(r, c) for c in _KCOLS))
+
+
+def _alive(s: Session, keys: Iterable[KKey]) -> frozenset[KKey]:
+    """Knowledge keys whose knower and item still exist. A privacy delete mid-call (section 10) must not bring a row
+    back: knower_id has an FK that rolls back the whole flush, and item_id has none, so a reused id would inherit it."""
+    keys = frozenset(keys)
+    ids: dict[str, set[int]] = defaultdict(set)
+    for knower, kind, item_id in keys:
+        ids["person"].add(knower)
+        ids[kind].add(item_id)
+    have = {kind: set(s.scalars(select(t.id).where(t.id.in_(ids[kind])))) for kind, t in _ITEM_TABLE.items()
+            if ids.get(kind)}
+    return frozenset(k for k in keys if k[0] in have.get("person", ()) and k[2] in have.get(k[1], ()))
+
+
+def _own_forms(f: FactV) -> FactV:
+    """5.6: only the concept forms the fact's own text uses. SMS groups mix the news word with its topic word
+    (bouldering, climbing), and an owner who echoes the topic ("how was the climbing?") has not told the news."""
+    text = fold(f.text)[0]
+    used = lambda x: bool(fx := fold(x)[0].strip()) and fx in text  # noqa: E731
+    return replace(f, keys=tuple(g for g in (tuple(x for x in grp if used(x)) for grp in f.keys) if g))
+
+
 class LiveWorld(LiveJobs):
     def __init__(self, call_id: int, space_id: int, emit: Callable[[str, dict], Awaitable[None]],
                  loop: asyncio.AbstractEventLoop) -> None:
@@ -119,6 +156,7 @@ class LiveWorld(LiveJobs):
         self._ever: dict[str, tuple[int, str]] = {}  # everyone who joined: the call-end extraction needs them (6.1)
         self._state = threading.RLock()
         self._snap: _Snap | None = None
+        self._seq = itertools.count(1)
         self.kcache: dict[tuple[int, str, int], kn.State] = {}
         self._dirty: frozenset[tuple[int, str, int]] = frozenset()
         self.sent: frozenset[tuple[str, str]] = frozenset()
@@ -191,7 +229,11 @@ class LiveWorld(LiveJobs):
 
     @_locked
     def _swap(self, snap: _Snap) -> None:
-        """Swap in a rebuilt view, keeping told rows (5.6) whose async write the rebuild may have missed."""
+        """Swap in a rebuilt view, keeping told rows (5.6) whose async write the rebuild may have missed. Join, leave,
+        refresh and extraction rebuild concurrently: a build that started before the current one is dropped."""
+        if self._snap is not None and snap.seq < self._snap.seq:
+            log.info("call %s: dropped view build %s, older than %s", self.call_id, snap.seq, self._snap.seq)
+            return
         aud = snap.view.audience
         pend = {f: o for f, o in self._told_aud.items() if not o <= aud.get(f, frozenset())}
         if pend:
@@ -202,7 +244,8 @@ class LiveWorld(LiveJobs):
         self._translators = {}
 
     def _rebuild(self) -> _Snap:
-        return _build(self.space_id, self._members(), clock.now())
+        seq = next(self._seq)  # taken before the DB read, so a higher number has seen at least as much
+        return replace(_build(self.space_id, self._members(), clock.now()), seq=seq)
 
     def _rebuild_swap(self) -> None:
         self._swap(self._rebuild())
@@ -215,7 +258,7 @@ class LiveWorld(LiveJobs):
             self._ever = {**self._ever, identity: (person_id, lang)}
         now = clock.now()
         try:
-            snap = _build(self.space_id, self._members(), now)  # DB work outside the lock
+            snap = self._rebuild()  # DB work outside the lock
             loaded = self._load(person_id, now)
         except SQLAlchemyError:
             log.exception("world join failed for call %s (%s); cards off until the next refresh", self.call_id,
@@ -226,7 +269,13 @@ class LiveWorld(LiveJobs):
             states, log_rows = loaded
             self.kcache = {**states, **self.kcache}  # the live cache wins over rows it has already moved past
             self._log_rows = self._log_rows + tuple(r for r in log_rows if r not in self._log_rows)
-        if lang != "en":
+        parts = list(self.parts.values())
+        if len(parts) == 2:  # 1:1 (amendment 1): render through the other person, as their live cards will be
+            (pa, la), (pb, lb) = parts
+            for L, lg, S in ((pa, la, pb), (pb, lb, pa)):
+                if lg != "en":
+                    self._submit_l10n(self._prewarm, L, lg, S)
+        elif lang != "en":
             self._submit_l10n(self._prewarm, person_id, lang)
 
     def _load(self, pid: int, now: datetime) -> tuple[dict, tuple[C.LogRow, ...]]:
@@ -235,9 +284,7 @@ class LiveWorld(LiveJobs):
             logs = s.scalars(select(m.CardLog).where(m.CardLog.listener_id == pid,
                                                      m.CardLog.kind.in_(("bridge", "told")),
                                                      m.CardLog.at >= now - LOG_WINDOW)).all()
-            states = {(r.knower_id, r.item_kind, r.item_id): kn.State(
-                r.p, r.half_life_days, r.first_at, r.last_at, r.last_day, r.n_heard, r.n_shown, r.n_said,
-                r.n_confirmed, r.n_asked) for r in rows}
+            states = {(r.knower_id, r.item_kind, r.item_id): _row_state(r) for r in rows}
             log_rows = tuple(C.LogRow(r.call_id, r.listener_id, r.target_id, r.kind, r.key, r.at) for r in logs)
         return states, log_rows
 
@@ -252,10 +299,31 @@ class LiveWorld(LiveJobs):
             self._submit(self._rebuild_swap)
 
     def refresh(self) -> None:
-        """Rebuild the view on the world pool and swap it; kcache is kept. Blocking (call from a worker thread)."""
+        """Rebuild the view on the world pool and swap it, then resync kcache. Blocking (call from a worker thread)."""
         if not self.parts:
             return
         self._swap(self._rebuild() if _on_pool() else _WORLD_POOL.submit(self._rebuild).result())
+        self._resync()
+
+    def _resync(self) -> None:
+        """Catch kcache up with writes made outside this call (refresh_calls runs after each). A privacy delete
+        (section 10) removed people or items: their keys leave the cache, or the next flush would bring them back.
+        /world/place and SMS ingest fold evidence straight into the DB: a clean key takes its row when that row is
+        newer. A dirty key keeps the cache (last write wins, the stated ceiling in _upsert)."""
+        with self._state:
+            keys = frozenset(self.kcache) | self._dirty
+        with session_scope() as s:
+            gone = keys - _alive(s, keys)
+            db = {(r.knower_id, r.item_kind, r.item_id): _row_state(r) for r in s.scalars(
+                select(m.Knowledge).where(m.Knowledge.knower_id.in_(self._members())))}
+        with self._state:
+            cache = {k: st for k, st in self.kcache.items() if k not in gone}
+            for k, st in db.items():
+                cur = cache.get(k)
+                if k not in self._dirty and (cur is None or st.last_at > cur.last_at):
+                    cache[k] = st
+            self.kcache = cache
+            self._dirty = self._dirty - gone
 
     def close(self) -> None:
         """Final extraction and knowledge flush. Blocking; waits for queued world jobs first."""
@@ -349,7 +417,9 @@ class LiveWorld(LiveJobs):
                 owner = self._last_person(taken, mt.start(), exclude=pid)
             kind = REL_KIND[word]
             label = TIE_LABEL.get(kind, kind)
-            targets = {h.to for h in v.adj.get(owner, ()) if h.kind == "tie" and h.label == label and hop_ok(owner, h)}
+            # a possessive never names someone on the call ("my friend" while talking to that friend)
+            targets = {h.to for h in v.adj.get(owner, ())
+                       if h.kind == "tie" and h.label == label and hop_ok(owner, h)} - set(everyone)
             if owner is not None and len(targets) == 1 and free(mt.start(), mt.end()):
                 out.append(Hit(mt.start(), mt.end(), mt.group(0), "person", (targets.pop(),), word, True))
         members = self._members()
@@ -471,7 +541,8 @@ class LiveWorld(LiveJobs):
         relational = self._relational(snap, speaker, text, resolved + ambiguous)
         resolved = sorted(resolved + relational, key=lambda h: h.start)
         self.last_hits[speaker] = frozenset()
-        seen = {(h.start, h.ids[0]) for h in resolved} | {(mt.start, mt.entry.key) for mt in lex}
+        # confirm by entity, not offset: the final often adds a filler or a comma before the name (D6)
+        seen = {(h.kind, h.ids[0]) for h in resolved} | {("lex", mt.entry.key) for mt in lex}
         mentioned = frozenset(h.ids[0] for h in resolved if h.kind == "person")
         sends: Sends = defaultdict(list)
         confirmed: list[tuple[int, C.Card]] = []
@@ -480,7 +551,7 @@ class LiveWorld(LiveJobs):
             if p.speaker != speaker:
                 continue
             ident = k[0]
-            if (p.card.item.get("start"), p.card.item.get("id")) in seen and ident in self.parts:
+            if (p.card.item.get("kind"), p.card.item.get("id")) in seen and ident in self.parts:
                 confirmed.append((self.parts[ident][0], p.card))
                 self._lazy(ident, self.parts[ident][1], p.card)  # sent in English on the partial
             else:
@@ -553,7 +624,7 @@ class LiveWorld(LiveJobs):
                 sends[ident] = [self._glance(speaker, ident, lang, cards, False)]
         self._evidence([e for L, _t, c in shown for e in self._card_evidence(L, c)], now)
         self._log(shown, now)
-        told = self._told(snap, S, slang, text, hits, audience, now)
+        told = self._told(snap, S, slang, text, translations, hits, audience, now)
         if told:
             sends = {**sends, speaker: sends.get(speaker, []) + [{"type": "glance_retract", "keys": told}]}
         self._flush_async()
@@ -563,16 +634,22 @@ class LiveWorld(LiveJobs):
             self._on_loop(self._arm_idle)
         return sends
 
-    def _told(self, snap: _Snap, S: int, slang: str, text: str, hits: list[Hit], audience: list[int],
-              now: datetime) -> list[str]:
+    def _told(self, snap: _Snap, S: int, slang: str, text: str, translations: dict[str, str], hits: list[Hit],
+              audience: list[int], now: datetime) -> list[str]:
         """5.6 fast path: the speaker's own words hit one of their bridge facts, so the line's audience has heard it.
         A FactAudience row also makes the fact visible, so a keyword false positive must not expose a non-shareable
         (SMS) fact: those get a card_log "told" row instead, which only blocks the bridge (7 days).
+        Only forms the fact's own (English) text uses count (_own_forms); a non-English line is also checked through
+        its English translation when the call has one. Without one, news told in another language waits for
+        extraction's same_as.
         Returns the keys of bridge chips shown to the speaker in this call that this line has now covered: the caller
         retracts them. The key stays in `sent`, so the chip is never sent again in this call."""
         v = snap.view
+        texts, langs = [text], [slang]
+        if slang != "en" and translations.get("en"):
+            texts, langs = [text, translations["en"]], [slang, "en"]
         rows = [(f, O) for O in set(audience) - {S}
-                for f in C.relevant(C.bridge_candidates(v, S, O, now), [text], hits, [slang])]
+                for f in C.relevant([_own_forms(f) for f in C.bridge_candidates(v, S, O, now)], texts, hits, langs)]
         ident = self._identity(S)
         covered = [(ident, f"bridge:{f.id}") for f, O in rows
                    if (c := self.delivered.get((ident, f"bridge:{f.id}"))) is not None and c.kind == "bridge"
@@ -626,7 +703,11 @@ class LiveWorld(LiveJobs):
                 continue
             if not name:
                 continue
-            rel = np.relation if np.relation and np.relation != "question" else "friend"
+            rel = np.relation.strip().lower().replace(" ", "_")
+            rel = "friend" if rel in ("", "question") else REL_KIND.get(rel, rel)
+            # the button must be one place_person accepts; free text ("uncle") gets the ask without it, not "friend"
+            placeable = rel in TIE_KINDS or builder._valid(rel)
+            rel_label = rel.replace(".", "'s ").replace("_", " ")
             for ident in listeners:
                 if ident == speaker or ident not in self.parts:
                     continue
@@ -634,8 +715,8 @@ class LiveWorld(LiveJobs):
                 owner = {"speaker": S, "listener": L}.get(np.owner)
                 owner_slug = v.people[owner].slug if owner in v.people else ""
                 owner_name = v.people[owner].name if owner in v.people else np.owner_name
-                label = f"{owner_name}'s {rel}" if owner_name else rel
-                sugg = [SuggestionOut(owner=owner_slug, relation=rel, label=label)] if owner_slug else []
+                label = f"{owner_name}'s {rel_label}" if owner_name else rel_label
+                sugg = [SuggestionOut(owner=owner_slug, relation=rel, label=label)] if owner_slug and placeable else []
                 card = C.ask(np.source or name, name, np.context or f"{v.people[S].name} mentioned {name}", sugg)
                 cards = self._admit(v, ident, L, S, [card], frozenset(), now)
                 if cards:
@@ -727,19 +808,21 @@ class LiveWorld(LiveJobs):
             self._submit(self._upsert, items)
 
     @staticmethod
-    def _upsert(items: dict[tuple[int, str, int], kn.State]) -> None:
-        """Concurrent calls by one user: last write wins per row (4, stated ceiling)."""
+    def _upsert(items: dict[KKey, kn.State]) -> None:
+        """Concurrent calls by one user: last write wins per row (4, stated ceiling). One INSERT ... ON CONFLICT, so
+        two flushes adding the same new key cannot fail each other's batch on the unique constraint. Keys whose
+        knower or item was deleted mid-call are skipped (section 10).
+        ponytail: one statement per flush; chunk it if a flush ever nears SQLite's 32766 bound parameters."""
         if not items:
             return
-        cols = ("p", "half_life_days", "first_at", "last_at", "last_day", "n_heard", "n_shown", "n_said",
-                "n_confirmed", "n_asked")
         with session_scope() as s:
-            rows = {(r.knower_id, r.item_kind, r.item_id): r for r in s.scalars(
-                select(m.Knowledge).where(m.Knowledge.knower_id.in_({k for k, _x, _y in items})))}
-            for (knower, kind, item_id), st in items.items():
-                row = rows.get((knower, kind, item_id))
-                if row is None:
-                    row = m.Knowledge(knower_id=knower, item_kind=kind, item_id=item_id)
-                    s.add(row)
-                for c in cols:
-                    setattr(row, c, getattr(st, c))
+            alive = _alive(s, items)
+            if len(alive) < len(items):
+                log.info("knowledge flush skipped %d rows whose knower or item is gone", len(items) - len(alive))
+            rows = [{"knower_id": k, "item_kind": kind, "item_id": i, **{c: getattr(st, c) for c in _KCOLS}}
+                    for (k, kind, i), st in items.items() if (k, kind, i) in alive]
+            if not rows:
+                return
+            ins = (pg_insert if s.get_bind().dialect.name == "postgresql" else sqlite_insert)(m.Knowledge).values(rows)
+            s.execute(ins.on_conflict_do_update(index_elements=["knower_id", "item_kind", "item_id"],
+                                                set_={c: ins.excluded[c] for c in _KCOLS}))

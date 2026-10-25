@@ -1,5 +1,6 @@
 """Per-language kinship tables for every Muse Voice Transcribe language (25). Tamil is the hand-written gold table;
 the others are Muse Spark drafts validated mechanically and flagged verified=false until a speaker checks them."""
+import itertools
 import json
 import re
 
@@ -7,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.graph.kin_tables import MUSE_LANGUAGES, STEP_WORDS, LanguageTable, all_codes, load_table
-from app.graph.kinship import FamilyGraph, Node
+from app.graph.kinship import SEX, FamilyGraph, Node, pick_term
 from app.graph.linker import Linker
 from app.main import app
 
@@ -105,3 +106,32 @@ def test_muse_asr_language_bias_uses_names_not_codes():
     get_settings.cache_clear()
     asr = make_asr(language="ta", keyterms=["Ravi"])
     assert isinstance(asr, MuseASR) and asr.handshake["languageBias"] == ["Tamil", "English"]
+
+
+@pytest.mark.parametrize("code", sorted(EXPECTED))
+def test_address_term_never_picks_the_other_sex(code):
+    """A generic step in an earlier term (ja musuko: son, child) used to shadow the exact one (musume: daughter)."""
+    kin = [d for d in load_table(code).terms if d.kind == "kin"]
+    for d in kin:
+        for pat in d.patterns:
+            if all(st in SEX for st in pat.split(".")):
+                assert pat in pick_term(kin, pat.split(".")).patterns, (code, pat)
+    for n in (1, 2, 3):
+        for path in itertools.product(sorted(SEX), repeat=n):
+            d = pick_term(kin, list(path))
+            named = {SEX.get(p.split(".")[-1]) for p in d.patterns} - {None} if d else set()
+            assert not named or SEX[path[-1]] in named, (code, ".".join(path), d.term)
+
+
+def test_address_term_follows_the_listeners_language_and_sex():
+    people = [Node(1, "p_mika", "Mika", "", "f", 1975, False, False, "", []),
+              Node(2, "p_kenji", "Kenji", "", "m", 2003, False, False, "", []),
+              Node(3, "p_yui", "Yui", "", "f", 2005, False, False, "", []),
+              Node(4, "p_ali", "Ali", "", "m", 1974, False, False, "", [])]
+    edges = [(1, 2, "parent", "", {}), (1, 3, "parent", "", {}), (4, 1, "spouse", "", {})]
+    g = FamilyGraph(1, "ta", people, edges, [], {1: "ja", 4: "ar", 2: "en"})
+    assert g.render(1, 3) == "your daughter Yui musume (your daughter)"
+    assert g.address_term(1, 2) == "musuko" and g.address_term(4, 1) == "zawja"
+    assert g.address_term(2, 1) is None  # an English listener gets no kin word (the en table repeats the role)
+    musuko = next(d for d in load_table("ja").terms if d.term == "musuko")
+    assert g.resolve_kin_term(musuko, 1) == {2}  # 息子 no longer resolves to the daughter too

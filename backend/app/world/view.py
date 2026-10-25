@@ -372,6 +372,19 @@ class WorldView:
         return None
 
     # ---- cards ------------------------------------------------------------------------------------------------------
+    def story_title(self, st: StoryV, listener: int, speaker: int | None, mentioned: frozenset[int],
+                    now: datetime) -> tuple[str, tuple[int, ...]]:
+        """The title `listener` may see, and the fact a card must cite for it. The title comes from the founding
+        (seq 1) fact (apply._storyline), which may be an SMS only its author saw. It shows when that fact is usable,
+        to the owner, or when the owner is speaking and could disclose the fact but for a later self-report that
+        superseded it (apply._supersede). Only a usable fact is cited: the D13 guard rejects a superseded one."""
+        f0 = self.facts.get(st.states[0][3]) if st.states else None
+        if f0 is not None and usable(f0, self.audience.get(f0.id, frozenset()), listener, speaker, mentioned, now):
+            return st.title, (f0.id,)
+        lifted = (f0 is not None and f0.status == "superseded" and speaker == st.owner_id
+                  and disclosable(replace(f0, status="active"), speaker, mentioned, now))
+        return (st.title if lifted or listener == st.owner_id else "news"), ()
+
     def card_body(self, listener: int, kind: str, id: int, speaker: int | None,
                   now: datetime) -> tuple[str, tuple[int, ...]]:
         if now != self.now:  # one clock per card: judge the render and the cited facts against the same now
@@ -390,7 +403,8 @@ class WorldView:
             steps = [f"{label} ({_day(at)})" for _sid, label, at, fid, status in st.states
                      if fid in usable_ids and status == "active"]
             owner = self.people[st.owner_id].name if st.owner_id in self.people else ""
-            return f"{owner}'s {st.title}: " + " -> ".join(steps), tuple(f.id for f in ok)
+            title, title_fids = self.story_title(st, listener, speaker, mentioned, now)
+            return f"{owner}'s {title}: " + " -> ".join(steps), tuple(dict.fromkeys((*title_fids, *(f.id for f in ok))))
         else:
             head = self.things[id].name if kind == "thing" else self.groups[id].name
             owner = self.things[id].owner_id if kind == "thing" else None
@@ -398,7 +412,9 @@ class WorldView:
                 head += f" ({self.render(listener, owner, speaker)}'s {self.things[id].kind})"
             cited = ok[:CARD_FACTS]
         parts = [head] + [f.text for f in cited]
-        first = min(ok, key=lambda f: f.said_at, default=None)
+        # "first mentioned" is when the listener first heard of it: a fact the speaker discloses now does not count
+        heard = [f for f in ok if fact_visible(f, self.audience.get(f.id, frozenset()), listener, now)]
+        first = min(heard, key=lambda f: f.said_at, default=None)
         if first is not None:
             parts.append(f"first mentioned {_day(first.said_at)}")
             cited = cited + [first]

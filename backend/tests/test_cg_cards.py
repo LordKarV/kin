@@ -338,3 +338,88 @@ def test_term_card_only_across_languages(mock_world_llm):
     assert [(it["kind"], it["key"]) for it in arjun] == [("term", "lex:ta:sambar")]
     assert f"p{ids['Selvi'][0]}" not in fr.sends and f"p{ids['Paatti'][0]}" not in fr.sends
 
+
+
+# ---- fixes: titles, self-referring bridges, script strength, own storylines -----------------------------------------
+def test_storyline_title_from_an_sms_fact_never_reaches_another_listener(demo):
+    """Arjun texted KIN the internship (only he saw it), then told Mei he got the offer: Mei's card names neither."""
+    t0, space, a, mei = demo["t0"], demo["space"], demo["arjun"], demo["mei"]
+    with session_scope() as s:
+        story = m.Storyline(family_id=space, slug="s_intern", owner_id=a, title="Google Maps team internship",
+                            keys=[["internship", "offer"]], created_at=t0, updated_at=t0)
+        s.add(story)
+        s.flush()
+        f1 = add_fact(s, space, a, a, "state", "applied", [(a, "authored")], t0, storyline_id=story.id,
+                      source_kind="message", shareable=False)
+        f2 = add_fact(s, space, a, a, "state", "got an offer", [(a, "said"), (mei, "heard")], t0 + timedelta(days=30),
+                      storyline_id=story.id)
+        s.add_all([m.StorylineState(storyline_id=story.id, seq=1, label="applied", fact_id=f1, at=t0),
+                   m.StorylineState(storyline_id=story.id, seq=2, label="got an offer", fact_id=f2,
+                                    at=t0 + timedelta(days=30))])
+        s.flush()
+        sid = story.id
+        now = t0 + timedelta(days=31)
+        v = WorldView.build(s, space, [a, mei], now)
+    kw = AliasIndex(v.fact_forms())
+    cards = C.storylines(v, {}, mei, a, kw.scan("I got the offer"), [], now)
+    assert [c.key for c in cards] == [f"story:{sid}"]
+    assert cards[0].payload["title"] == "news" and cards[0].payload["body"].startswith("Arjun's news: got an offer")
+    assert "Google" not in json.dumps(cards[0].payload) and f1 not in cards[0].fact_ids
+    assert C.deliver_ok(v, cards[0], mei, a, frozenset(), now)
+    body, fids = v.card_body(mei, "storyline", sid, a, now)
+    assert body.startswith("Arjun's news:") and "Google" not in body and f1 not in fids
+    assert v.card_body(a, "storyline", sid, None, now)[0].startswith("Arjun's Google Maps team internship")
+
+
+def test_storyline_title_survives_the_owner_superseding_the_founding_fact(demo):
+    """Mei's newer self-report superseded "applied" (apply._supersede). Raising the storyline herself, she may still
+    name it to Priya, who never heard the founding line; the superseded fact is not cited for the guard to reject."""
+    mei, priya = demo["mei"], demo["priya"]
+    with session_scope() as s:
+        sid, f1, _f2, _ = add_job_story(s, demo)
+        s.get(m.Fact, f1).status = "superseded"
+        s.query(m.StorylineState).filter_by(fact_id=f1).one().status = "superseded"
+        s.flush()
+        now = demo["t0"] + timedelta(days=31)
+        v = WorldView.build(s, demo["space"], [priya, mei], now)
+    kw = AliasIndex(v.fact_forms() + [(st.title, "storyline", st.id) for st in v.storylines.values()])
+    cards = C.storylines(v, {}, priya, mei, kw.scan("我的工作面试进入第二轮了"), [], now)
+    assert [c.payload["body"][:len("Mei's job search:")] for c in cards] == ["Mei's job search:"]
+    assert f1 not in cards[0].fact_ids and C.deliver_ok(v, cards[0], priya, mei, frozenset(), now)
+    body, fids = v.card_body(priya, "storyline", sid, mei, now)
+    assert body.startswith("Mei's job search:") and f1 not in fids
+    assert v.card_body(priya, "storyline", sid, None, now)[0].startswith("Mei's news:")  # Mei is not speaking
+
+
+def test_bridge_never_suggests_telling_someone_a_fact_about_themselves(demo, offset):
+    """Arjun told Priya who Mei is; Mei mentioning Shanghai must not prompt him to tell Mei about Mei."""
+    offset(42)
+    t0, space, a, mei, priya = demo["t0"], demo["space"], demo["arjun"], demo["mei"], demo["priya"]
+    with session_scope() as s:
+        tie = add_fact(s, space, a, a, "tie", "Mei is Arjun's friend from high school, now in Shanghai",
+                       [(a, "said"), (priya, "heard")], t0 + timedelta(days=40), refs=[("person", mei)],
+                       keys=[("Shanghai", "上海")])
+        hike = add_fact(s, space, a, a, "did", "went hiking in Shanghai", [(a, "said"), (priya, "heard")],
+                        t0 + timedelta(days=40), keys=[("Shanghai", "上海")])
+        v = WorldView.build(s, space, [a, mei], clock.now())
+    found = C.bridge_candidates(v, a, mei, clock.now())
+    assert tie not in [f.id for f in found] and hike in [f.id for f in found]
+    cards = C.bridges(v, {}, a, mei, ["我在上海挺好的"], [], clock.now(), C.CardLogView(demo["call"]), ["zh"])
+    assert [c.key for c in cards] == [f"bridge:{hike}"]
+
+
+@pytest.mark.parametrize("lang,form,text", [("ta", "கோயில்", "நேத்து கோயில் போனேன்"), ("hi", "मंदिर", "कल मंदिर गया"),
+                                            ("ko", "등산", "어제 등산 갔어"), ("ru", "поход", "вчера ходил в поход"),
+                                            ("ta", "நண்பர்கள்", "என் நண்பர்கள் வந்தாங்க")])
+def test_relevant_one_concept_is_strong_in_every_alphabet(lang, form, text):
+    f = _self_fact(1, ((form,),))
+    assert C.relevant([f], [text], [], [lang]) == [f]
+    assert C.relevant([_self_fact(2, (("ab",),))], ["ab cd"], [], ["en"]) == []  # short Latin stays weak
+
+
+def test_storyline_owner_gets_no_card_about_their_own_thread(demo):
+    a, mei = demo["arjun"], demo["mei"]
+    v, kw, now, sid, *_ = _story_view(demo)
+    hits = kw.scan("How is your job search going? 工作")
+    assert C.storylines(v, {}, mei, a, hits, [], now) == []  # Mei owns it
+    assert [c.key for c in C.storylines(v, {}, a, mei, hits, [], now)] == [f"story:{sid}"]

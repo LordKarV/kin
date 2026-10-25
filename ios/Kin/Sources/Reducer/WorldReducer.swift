@@ -34,6 +34,7 @@ struct Caption: Equatable {
     var utteranceId: Int? = nil  // sent with a tap-to-explain request
     var lang: String? = nil      // speaker's language
     var targetLang: String? = nil
+    var speakerIdentity: String? = nil  // set on partials, so one can be dropped when its speaker leaves
 }
 
 struct WorldState: Equatable {
@@ -77,11 +78,21 @@ func reduce(_ state: WorldState, _ msg: KinWorldMsg, me: String, now: Date) -> W
         s.participants = j.participants
     case .participants(let p):
         s.participants = p.participants
-    case .kinStatus:
-        break  // ponytail: CallController owns KIN on/paused (REST reply + kin_status); one source for the screen
+        // Their final will never come, so live words from someone who left would keep their typing dots.
+        if let id = s.partial?.speakerIdentity, !p.participants.contains(where: { $0.identity == id }) { s.partial = nil }
+    case .kinStatus(let st):
+        // ponytail: CallController owns KIN on/paused (REST reply + kin_status); one source for the screen. The
+        // server drops speech while paused, so a half line from before the pause would wait for a final that never comes.
+        // The paused screen removes every card, so a finger on one never lifts on it; release it here, or it would hold
+        // its slot (and dodge the rail cap) for the rest of the call.
+        if !st.on {
+            s.partial = nil
+            for card in s.rail where card.touched { s = touch(s, key: card.key, touching: false, now: now) }
+        }
     case .partial(let p):
         guard p.speaker != me, !p.text.isEmpty else { break }
-        s.partial = Caption(speaker: s.name(of: p.speaker), text: p.text, isPartial: true, spans: [:], lang: p.lang)
+        s.partial = Caption(speaker: s.name(of: p.speaker), text: p.text, isPartial: true, spans: [:], lang: p.lang,
+                            speakerIdentity: p.speaker)
     case .transcript(let t):
         guard t.speakerIdentity != me else { break }  // my own words are not captioned back to me
         var spans: [String: GroundedSpan] = [:]
@@ -166,8 +177,9 @@ func add(_ state: WorldState, _ card: RailCard) -> WorldState {
     }
     s.rail.insert(card, at: 0)
     while s.rail.count > WorldState.railCap {
-        // Evict the oldest card that is not an open ask; only when every card is an ask, the oldest ask.
-        let victim = s.rail.lastIndex { !$0.isAsk } ?? s.rail.count - 1
+        // Evict the oldest card that is not an open ask; when every card is an ask, the oldest ask. A card under a
+        // finger is never the one evicted.
+        let victim = s.rail.lastIndex { !$0.isAsk && !$0.touched } ?? s.rail.lastIndex { !$0.touched } ?? s.rail.count - 1
         s.rail.remove(at: victim)
     }
     return s

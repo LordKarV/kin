@@ -11,6 +11,7 @@ from ..db.session import get_session
 from ..graph.builder import add_relative, create_family, relations, suggest
 from ..graph.kin_tables import available_codes
 from ..mt.translate import get_translator, reset_translator_cache
+from .calls import legacy_family
 
 router = APIRouter(prefix="/api/family", tags=["family"])
 
@@ -61,6 +62,7 @@ def setup(body: SetupIn, s: Session = Depends(get_session)) -> dict:
 
 @router.post("/relative")
 def relative(body: RelativeIn, s: Session = Depends(get_session)) -> dict:
+    legacy_family(s, body.family_id)
     try:
         p = add_relative(s, body.family_id, body.path, body.name.strip(), body.you_call_them.strip())
     except ValueError as e:
@@ -76,6 +78,6 @@ def relation_choices() -> list[dict]:
 
 
 @router.get("/suggest")
-def suggest_relations(term: str, family_id: int) -> list[dict]:
+def suggest_relations(term: str, family_id: int, s: Session = Depends(get_session)) -> list[dict]:
     """What a kin word the grandparent just used can mean, in this family's language (from its kin table)."""
-    return suggest(term, get_translator(family_id).g.heritage_lang)
+    return suggest(term, legacy_family(s, family_id).heritage_lang)

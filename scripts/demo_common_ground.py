@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """Drive the docs/PRODUCT.md demo against a running KIN server, through its HTTP API and LiveKit only.
 
-Every call is one-to-one. The script creates Mei (zh), Arjun (en, phone), Priya (en) and Paatti (ta), plants call 1
-and Arjun's own facts with the dev routes, sends the "started bouldering" SMS, has Arjun tell Priya on a call, then
-runs call 2 (Arjun and Mei) and the Paatti call. For each call it joins both people as LiveKit participants, types the
-lines with POST /api/calls/{id}/text, and prints what each listener received next to what they should get.
+Every call is one-to-one. The script creates Mei (zh), Arjun (en, phone), Priya (en) and Paatti (ta), plants call 1,
+Arjun's own facts and Paatti's two Ravis with the dev routes, sends the "started bouldering" SMS, has Arjun tell Priya
+on a call, then runs call 2 (Arjun and Mei) and the Paatti call. For each call it joins both people as LiveKit
+participants, types the lines with POST /api/calls/{id}/text, and prints what each listener received next to what they
+should get.
+
+After creating the users it prints a kin://signin link per person. Open one on a phone (debug build) to sign in as that
+person. --plant-only stops after the planted history and the Priya call, so the phones play call 2 and the Paatti call
+themselves (the driver then holds no LiveKit identity a phone uses).
 
 Needs: the backend started with DEV_ENDPOINTS=1 and a MODEL_API_KEY (MT and the SMS parse are live), `livekit-server
 --dev`, and a fresh database (the users are created here; a second run hits "phone already linked").
 
     cd backend && .venv/bin/python ../scripts/demo_common_ground.py [--next-day] [--wait 10]
+    cd backend && KIN_BASE=http://<laptop LAN IP>:8000 .venv/bin/python ../scripts/demo_common_ground.py --plant-only
     cd backend && .venv/bin/python ../scripts/demo_common_ground.py --reset-clock
 
 Env: KIN_BASE (default http://localhost:8000), KIN_KEY (the KIN API key, if the server is locked).
@@ -22,6 +28,7 @@ import asyncio
 import json
 import os
 import sys
+from urllib.parse import urlencode, urlsplit
 
 import httpx
 
@@ -33,6 +40,19 @@ MEI_LINE = "我和林去攀岩了"  # "I went climbing with Lin."
 PAATTI_LINE = "உன் நண்பர்கள் எல்லாம் எப்படி இருக்காங்க?"  # "How are all your friends?"
 ARJUN_TO_PAATTI = "I went hiking with Mei when she visited."
 ARJUN_TO_PRIYA = "I started bouldering last week."
+# "Ravi mama came yesterday; Ravi periyappa is coming next week." Two uncles named Ravi, told apart by the kin word.
+PAATTI_RAVIS = "ரவி மாமா நேத்து வந்தாரு, ரவி பெரியப்பா அடுத்த வாரம் வர்றாரு."
+LOOPBACK = ("localhost", "127.0.0.1", "::1")
+
+
+def signin_link(token: str, base: str = BASE, key: str = KEY) -> str:
+    """kin://signin for the iOS debug build. `server` only when a phone could reach it (not loopback)."""
+    q = {"token": token}
+    if urlsplit(base).hostname not in LOOPBACK:
+        q["server"] = base
+    if key:
+        q["key"] = key
+    return "kin://signin?" + urlencode(q)
 
 
 class HttpError(SystemExit):
@@ -92,7 +112,8 @@ class Demo:
         except httpx.HTTPError as e:
             raise HttpError(f"POST {path}: {type(e).__name__}: {e} (is the backend running at {BASE}?)") from e
         if r.status_code == 404 and path.startswith("/api/dev/"):
-            raise HttpError(f"POST {path}: 404. Start the backend with DEV_ENDPOINTS=1 (dev routes are off by default).")
+            raise HttpError(f"POST {path}: 404. Start the backend with DEV_ENDPOINTS=1 (dev routes are off by default); "
+                            "a locked server answers them only on loopback, so go through an ssh tunnel.")
         if r.status_code >= 400 and not (ok409 and r.status_code == 409):
             raise HttpError(f"POST {path}: HTTP {r.status_code}: {r.text[:400]}")
         return r
@@ -111,6 +132,11 @@ class Demo:
             out = await self.json("/api/users", {"name": name, "lang": lang, "phone": phone})
             self.token[name], self.slug[name] = out["token"], out["person"]
             print(f"user {name} ({lang}) -> {out['person']}")
+
+    def print_signin_links(self) -> None:
+        print("\nSign a phone in as one of these people (debug build: open the link, or paste it under Sign up > Server):")
+        for name, tok in self.token.items():
+            print(f"  {name}: {signin_link(tok)}")
 
     async def apply(self, speaker: str, audience: list[str], update: dict) -> dict:
         body = {"speaker": self.slug[speaker], "audience": [self.slug[a] for a in audience], "update": update}
@@ -142,6 +168,24 @@ class Demo:
                                                    "relation": "mother.mother"}, "Arjun")
         print(f"placed Paatti for Arjun: {out['render']}")
 
+    async def plant_ravis(self) -> None:
+        """Paatti's two Ravis (demo beat 5): told to Arjun, then placed by kin path so each is named for who he is.
+        Placed by slug: placing the second "Ravi" by name would attach the first one at a second kin path."""
+        ravis = [("ravi_mama", ["ரவி மாமா", "Ravi mama"], "Ravi mama lives in Chennai", "ரவி மாமா சென்னையில இருக்கான்",
+                  "mother.younger_brother"),
+                 ("ravi_periyappa", ["ரவி பெரியப்பா", "Ravi periyappa"], "Ravi periyappa lives in Madurai",
+                  "ரவி பெரியப்பா மதுரையில இருக்காரு", "father.elder_brother")]
+        out = await self.apply("Paatti", ["Arjun"], {
+            "entities": [{"ref": ref, "name": "Ravi", "native": "ரவி", "forms": forms, "kind": "person",
+                          "existing_id": None} for ref, forms, *_ in ravis],
+            "ties": [],
+            "facts": [_fact(ref, "lives_in", text, [], [], src) for ref, _f, text, src, _r in ravis]})
+        slug = {e["ref"]: e["slug"] for e in out["entities"]}
+        for ref, _f, _t, _s, relation in ravis:
+            placed = await self.json("/api/world/place", {"person": slug[ref], "owner": self.slug["Arjun"],
+                                                          "relation": relation}, "Arjun")
+            print(f"placed {ref} for Arjun: {placed['render']}")
+
     async def sms(self) -> None:
         out = await self.json("/api/dev/sms", {"from": ARJUN_PHONE, "body": "started bouldering"})
         print(f"SMS from Arjun -> reply {out['reply']!r}, facts {[f['text'] for f in out.get('facts', [])]}")
@@ -149,7 +193,7 @@ class Demo:
     # ---- calls -------------------------------------------------------------------------------------------------------
     async def call(self, a: str, b: str) -> tuple[int, dict[str, Leg]]:
         ja = await self.json("/api/rtc/join", {}, a)
-        jb = await self.json("/api/rtc/join", {"call_id": ja["call_id"]}, b)
+        jb = await self.json("/api/rtc/join", {"call_id": ja["call_id"], "invite": ja["invite"]}, b)
         legs = {a: await Leg(a).connect(ja), b: await Leg(b).connect(jb)}
         print(f"\n-- call {ja['call_id']}: {a} and {b}")
         return ja["call_id"], legs
@@ -207,12 +251,17 @@ async def run(args: argparse.Namespace) -> None:
         await d.plant_arjun()
 
         await d.clock(-3)
+        await d.plant_ravis()
         await d.sms()
         cid, legs = await d.call("Arjun", "Priya")
         await d.say(cid, legs, "Arjun", ARJUN_TO_PRIYA, {"Priya": "the caption only (no cards)"})
         await d.hang_up(legs)
 
         await d.clock(0)
+        d.print_signin_links()
+        if args.plant_only:
+            print("\nPlanted. The phones play call 2 and the Paatti call; the driver holds no LiveKit seat.")
+            return
         cid, legs = await d.call("Arjun", "Mei")
         await d.say(cid, legs, "Mei", MEI_LINE, {
             "Arjun": "Lin card (reminder: Mei's friend from the Fudan climbing wall) and the private bridge "
@@ -233,6 +282,8 @@ async def run(args: argparse.Namespace) -> None:
             "Paatti": "a Tamil caption and a card for Mei (your grandson Arjun's friend, from high school, now in "
                       "Shanghai), localized to Tamil",
             "Arjun": "the hiking bridge retracted (he just told her)"})
+        await d.say(cid, legs, "Paatti", PAATTI_RAVIS, {
+            "Arjun": "a caption that names each Ravi for who he is: Mom's younger brother, then Dad's elder brother"})
         await d.hang_up(legs)
         await d.clock(0)
 
@@ -240,6 +291,8 @@ async def run(args: argparse.Namespace) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--reset-clock", action="store_true", help="set the server clock offset back to 0 and exit")
+    ap.add_argument("--plant-only", action="store_true",
+                    help="plant the history and the Priya call, print sign-in links, and exit (phones play the rest)")
     ap.add_argument("--next-day", action="store_true", help="after call 2, move the clock +1 day and repeat Mei's line")
     ap.add_argument("--wait", type=float, default=10.0, help="seconds to wait for cards after each line")
     asyncio.run(run(ap.parse_args()))

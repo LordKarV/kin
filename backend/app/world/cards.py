@@ -121,7 +121,8 @@ def _entity_card(view: WorldView, kcache: KCache, listener: int, speaker: int, h
 
 def _render_facts(view: WorldView, ego: int, e: int, speaker: int | None) -> tuple[int, ...]:
     """Fact ids behind the hops `view.render(ego, e, speaker)` walks, mirroring view._render's branch order.
-    Kin hops carry no fact. ponytail: mirrors view._render; returning the hop ids from view.card_body would be better."""
+    ponytail: kin renders cite nothing here although link_kin stamps each edge with a fact, so the guard trusts
+    view._kin_ok for them; returning the hop ids from view.card_body would close that."""
     mentioned = frozenset({e})
     ok = lambda a, h: view._hop_ok(ego, speaker, a, h, mentioned)  # noqa: E731
     if e == ego or view._kin_ok(ego, e, ok):
@@ -173,18 +174,24 @@ def _lex_card(mt: Match) -> Card:
 
 # ---- bridges (5) ------------------------------------------------------------------------------------------------------
 def bridge_candidates(view: WorldView, listener: int, other: int, now: datetime) -> list[FactV]:
-    """Self-only by construction (visibility.bridge_candidate): the listener's own facts `other` has not heard."""
+    """Self-only by construction (visibility.bridge_candidate): the listener's own facts `other` has not heard.
+    A fact that refers to `other` is news about them, not for them ("Mei is my friend in Shanghai")."""
     lo = now - BRIDGE_WINDOW
     # listener in audience: apply always writes the speaker's row; without it the guard would drop the card
     found = [f for f in view.facts.values() if f.said_at >= lo and listener in view.audience.get(f.id, frozenset())
+             and ("person", other) not in f.refs
              and bridge_candidate(f, view.audience.get(f.id, frozenset()), listener, other, now)]
     return sorted(found, key=lambda f: f.said_at, reverse=True)[:BRIDGE_CANDIDATES]
 
 
 def _strong(form: str) -> bool:
+    """Hangul is spaced but syllabic, so it counts like the isolating scripts; every other alphabet (Tamil,
+    Devanagari, Cyrillic, Arabic) like Latin, in code points (vowel signs included)."""
     f = fold(form)[0].strip()
     script = next((script_of(c) for c in f if c.isalpha()), "common")
-    return (script == "latin" and len(f) >= STRONG_LATIN) or (script in ISOLATING and len(f) >= STRONG_ISOLATING)
+    if script in ISOLATING or script == "hangul":
+        return len(f) >= STRONG_ISOLATING
+    return script != "common" and len(f) >= STRONG_LATIN
 
 
 def relevant(facts: list[FactV], texts: Iterable[str], hits: Iterable[Hit], langs: Iterable[str] = ()) -> list[FactV]:
@@ -263,6 +270,8 @@ def storylines(view: WorldView, kcache: KCache, listener: int, speaker: int, kw_
     persons = frozenset(i for h in hits if h.kind == "person" for i in h.ids)
     out: list[Card] = []
     for st in view.storylines.values():
+        if st.owner_id == listener:  # their own thread: nothing to catch up on
+            continue
         concept = any(("fact", fid) in kw for _sid, _l, _at, fid, _s in st.states)
         if ("storyline", st.id) not in kw and not (st.owner_id in persons and concept):
             continue
@@ -285,18 +294,19 @@ def storylines(view: WorldView, kcache: KCache, listener: int, speaker: int, kw_
             continue
         last = usable_states[-STORY_STATES:]
         name = view.people[owner].name if owner in view.people else ""
+        title, title_fids = view.story_title(st, listener, speaker, persons, now)
         if len(unclear) >= 2:
-            body = f"{name}'s {st.title}: unclear: {last[0][1]} or {last[1][1]}"
+            body = f"{name}'s {title}: unclear: {last[0][1]} or {last[1][1]}"
         else:
-            body = f"{name}'s {st.title}: " + " -> ".join(f"{label} ({at:%b})" for _s, label, at, _f in last)
+            body = f"{name}'s {title}: " + " -> ".join(f"{label} ({at:%b})" for _s, label, at, _f in last)
         states = [StateOut(label=label, at=at.date().isoformat(),
                            known=kn.p_now(kcache.get((listener, "state", sid)), now) >= kn.FORGOT)
                   for sid, label, at, _f in last]
         key = f"story:{st.id}"
-        payload = _glance(key=key, kind="storyline", title=st.title, body=body, category="storyline",
+        payload = _glance(key=key, kind="storyline", title=title, body=body, category="storyline",
                           storyline_id=st.id, states=states)
         out.append(Card(key, "storyline", {"kind": "storyline", "id": st.id, "state": newest},
-                        tuple(f for *_x, f in last), payload))
+                        tuple(dict.fromkeys((*title_fids, *(f for *_x, f in last)))), payload))
     return out
 
 

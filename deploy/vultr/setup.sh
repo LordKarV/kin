@@ -35,6 +35,7 @@ logging:
   level: info
 EOF
   # Environment variables override the copied /opt/kin/.env (pydantic-settings), so these win for deployment.
+  # DEV_ENDPOINTS=1 is safe here: with a real KIN_API_KEY the server is locked, so /api/dev/* answers loopback only.
   cat >"$ETC/kin.env" <<EOF
 LIVEKIT_URL=ws://$PUBLIC_IP:7880
 LIVEKIT_API_KEY=$lk_key

@@ -2,7 +2,9 @@
 transcripts, voice opt-in, pause, and the call routes' auth. LiveWorld is a fake with the 8.5 signatures; no network."""
 import asyncio
 import json
-from datetime import datetime, timezone
+import threading
+import time
+from datetime import datetime, timedelta, timezone
 
 import httpx
 import pytest
@@ -11,7 +13,7 @@ from sqlalchemy import func, select
 
 from app import llm as llm_mod
 from app.audio import pipeline
-from app.audio.asr import ASREvent
+from app.audio.asr import ASREvent, MockASR
 from app.audio.glossary_audio import media_dir
 from app.audio.pipeline import CallSession
 from app.audio.tts import MockTTS
@@ -19,7 +21,7 @@ from app.db import models as m
 from app.db.session import session_scope
 from app.main import app
 from app.mt.translate import Translator
-from app.world import live, privacy
+from app.world import clock, live, privacy
 from app.world.live import FinalResult
 from app.world.users import create_user, get_space
 from tests.graph_fixtures import graph  # noqa: F401
@@ -141,8 +143,10 @@ def _people(langs: dict[str, str]):
 
 
 async def _settle(cs):
-    while cs.bg_tasks:
-        await asyncio.gather(*list(cs.bg_tasks))
+    # only pending ones: a finished task can still be in the set (its discard callback is queued), and gathering only
+    # done tasks returns without yielding, so `while cs.bg_tasks` spun forever
+    while pending := [t for t in cs.bg_tasks if not t.done()]:
+        await asyncio.gather(*pending)
 
 
 async def _group(graph, llm_log, voice=("Arjun", "Priya", "Wei"), bridge=True):
@@ -466,3 +470,77 @@ def test_reconnect_keeps_voice_and_one_dead_leg_does_not_cut_others(graph):
         await _settle(cs)
         assert legs["Priya"].nbytes() > 0 and fresh.of("audio_end")
     asyncio.run(run())
+
+
+def test_hangup_during_mt_still_stores_and_extracts_the_line(graph, monkeypatch):
+    """Leaving used to cancel the ASR loop mid-MT: no utterance row, no caption, the line never reached on_translated."""
+    async def run():
+        in_mt = threading.Event()
+
+        class SlowLLM(LLMLog):
+            def handler(self, req):
+                in_mt.set()
+                time.sleep(0.3)  # MT takes about 2 s live
+                return super().handler(req)
+        cs, ppl, legs, _ = await _group(graph, SlowLLM(), bridge=False)
+        made = []
+        monkeypatch.setattr(pipeline, "make_asr", lambda **kw: made.append(MockASR()) or made[-1])
+        mei = ppl["Mei"]["id"]
+        await cs._start_asr(cs.sides[mei])
+        await made[0].inject(TEXT)  # Mei says it, then taps End while MT is in flight
+        while not in_mt.is_set():
+            await asyncio.sleep(0.01)
+        await cs.leave(mei)
+        await _settle(cs)
+        assert _utterance_count(cs.call_id) == 1 and legs["Arjun"].of("transcript")
+        names = [c[:2] for c in cs.world.calls]
+        assert names.index(("translated", mei)) < names.index(("leave", mei))  # extracted before the speaker left
+    asyncio.run(run())
+
+
+def test_rejoin_while_leave_waits_for_the_last_line_keeps_her_in_the_world(graph, monkeypatch):
+    """leave() waits for the in-flight line; a rejoin in that wait ran world.join, then the old leave's world.leave
+    dropped her from LiveWorld while she was back in sides: no cards or bridges for the rest of the call."""
+    async def run():
+        in_mt = threading.Event()
+
+        class SlowLLM(LLMLog):
+            def handler(self, req):
+                in_mt.set()
+                time.sleep(0.3)
+                return super().handler(req)
+        cs, ppl, legs, _ = await _group(graph, SlowLLM(), bridge=False)
+        made = []
+        monkeypatch.setattr(pipeline, "make_asr", lambda **kw: made.append(MockASR()) or made[-1])
+        mei = ppl["Mei"]
+        await cs._start_asr(cs.sides[mei["id"]])
+        await made[0].inject(TEXT)
+        while not in_mt.is_set():
+            await asyncio.sleep(0.01)
+        leaving = asyncio.create_task(cs.leave(mei["id"]))
+        await asyncio.sleep(0.05)
+        fresh = Leg()  # Mei's phone comes back (Wi-Fi blip) while leave() waits for her line
+        await cs.join(mei["id"], mei["slug"], fresh.send_json, fresh.send_bytes, start_asr=False,
+                      lang=mei["lang"], person_id=mei["pid"])
+        await leaving
+        await _settle(cs)
+        evs = [c[0] for c in cs.world.calls if c[0] in ("join", "leave") and c[1] == mei["id"]]
+        assert mei["id"] in cs.sides and evs[-1] == "join", evs
+        assert _utterance_count(cs.call_id) == 1  # the line still landed
+    asyncio.run(run())
+
+
+def test_live_utterance_is_stamped_with_the_dev_clock(graph, monkeypatch):
+    """apply._said_at reads Utterance.created_at: wall time made a -42 day call 'first mentioned today'."""
+    monkeypatch.setattr(clock, "_offset_days", -42.0)
+
+    async def run():
+        cs, ppl, _legs, _ = await _group(graph, LLMLog(), bridge=False)
+        await cs.on_text(ppl["Mei"]["id"], TEXT)
+        await _settle(cs)
+        return cs.call_id
+    cid = asyncio.run(run())
+    with session_scope() as s:
+        [u] = s.scalars(select(m.Utterance).where(m.Utterance.call_id == cid)).all()
+        at = u.created_at.replace(tzinfo=timezone.utc) if u.created_at.tzinfo is None else u.created_at
+    assert abs((at - (datetime.now(timezone.utc) - timedelta(days=42))).total_seconds()) < 120

@@ -148,8 +148,70 @@ final class ExplainTests: XCTestCase {
     }
 }
 
-/// Answers every request with `reply` and records it. URLSession moves the body to a stream, so it is read here.
+/// The call banner's error and the peer tile's video, on a CallController that never connects (no network).
+@MainActor
+final class CallControllerTests: XCTestCase {
+    private func controller(errorLifetime: Duration = .seconds(60)) throws -> CallController {
+        let json = #"{"call_id":12,"room":"call-12","token":"t","url":"ws://kin.test:7880","identity":"p3","person":"p_arjun_3","name":"Arjun","lang":"en","participants":[],"invite":null}"#
+        let join = try JSONDecoder().decode(JoinWorldOut.self, from: Data(json.utf8))
+        let api = KinAPI(baseURL: URL(string: "http://kin.test")!, token: "tok", apiKey: nil)
+        return CallController(api: api, join: join, errorLifetime: errorLifetime, onEnded: { _ in }, onFailed: { _ in })
+    }
+
+    private func answer(_ status: Int, _ body: String) {
+        StubProtocol.status = status
+        StubProtocol.reply = Data(body.utf8)
+    }
+
+    override func setUp() async throws { URLProtocol.registerClass(StubProtocol.self) }
+
+    override func tearDown() async throws {
+        URLProtocol.unregisterClass(StubProtocol.self)
+        answer(200, "")
+    }
+
+    func testErrorBannerClearsWhenTheRetryWorks() async throws {
+        let call = try controller()
+        answer(409, #"{"detail":"join the call first"}"#)
+        await call.setVoice(true)
+        XCTAssertEqual(call.lastError, "Voice: join the call first")
+        answer(200, "{}")
+        await call.setVoice(true)
+        XCTAssertTrue(call.voiceOn)
+        XCTAssertNil(call.lastError, "a stale error would hide every later world.error under the KIN pill")
+    }
+
+    func testErrorBannerExpiresOnItsOwn() async throws {
+        let call = try controller(errorLifetime: .milliseconds(50))
+        answer(500, #"{"detail":"boom"}"#)
+        await call.feedback(key: "who:p1", action: .know)
+        XCTAssertEqual(call.lastError, "Feedback: boom")
+        for _ in 0..<200 where call.lastError != nil { try await Task.sleep(for: .milliseconds(10)) }
+        XCTAssertNil(call.lastError, "an error nothing retries (the simulator's camera) must not stay up")
+    }
+
+    func testMutedPeerCameraFallsBackToTheAvatar() {
+        XCTAssertTrue(showsPeerVideo(route: .peerVideo, isCamera: true, isMuted: false, haveVideo: false))
+        XCTAssertFalse(showsPeerVideo(route: .peerVideo, isCamera: true, isMuted: true, haveVideo: false),
+                       "camera off mutes the track; its last frame must not stay on screen")
+        XCTAssertTrue(showsPeerVideo(route: .peerVideo, isCamera: true, isMuted: false, haveVideo: true), "a live camera wins")
+        XCTAssertFalse(showsPeerVideo(route: .peerVideo, isCamera: false, isMuted: false, haveVideo: true))
+        XCTAssertTrue(showsPeerVideo(route: .peerVideo, isCamera: false, isMuted: false, haveVideo: false))
+        XCTAssertFalse(showsPeerVideo(route: .peerAudio, isCamera: false, isMuted: false, haveVideo: false))
+    }
+
+    func testRoomEventsHearMuteChanges() {
+        // RoomDelegate requirements are @objc optional: a near-miss signature (KIN's own `Participant` struct in place
+        // of LiveKit's class) compiles with only a warning and is never called.
+        let events = RoomEvents(onChange: {}, onData: { _ in }, onDisconnect: {})
+        XCTAssertTrue(events.responds(to: NSSelectorFromString("room:participant:trackPublication:didUpdateIsMuted:")))
+    }
+}
+
+/// Answers every request with `status` and `reply` and records it. URLSession moves the body to a stream, so it is
+/// read here.
 final class StubProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var status = 200
     nonisolated(unsafe) static var reply = Data()
     nonisolated(unsafe) static var last: URLRequest?
     nonisolated(unsafe) static var lastBody: Data?
@@ -167,7 +229,7 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
             while stream.hasBytesAvailable { let n = stream.read(&buf, maxLength: buf.count); if n <= 0 { break }; data.append(buf, count: n) }
             return data
         }
-        let resp = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+        let resp = HTTPURLResponse(url: request.url!, statusCode: Self.status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
         client?.urlProtocol(self, didReceive: resp, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Self.reply)
         client?.urlProtocolDidFinishLoading(self)

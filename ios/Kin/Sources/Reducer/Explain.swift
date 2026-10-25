@@ -39,8 +39,10 @@ func explainFailed(_ state: WorldState, term: String, message: String) -> WorldS
 }
 
 /// What the call screen shows: one card about their world (the newest that is not a bridge) and at most one bridge.
+/// A card under a finger keeps its slot; newer cards wait behind it until the touch ends.
 func slots(_ rail: [RailCard]) -> (card: RailCard?, bridge: RailCard?) {
-    (rail.first { $0.kind != "bridge" }, rail.first { $0.kind == "bridge" })
+    func pick(_ cards: [RailCard]) -> RailCard? { cards.first { $0.touched } ?? cards.first }
+    return (pick(rail.filter { $0.kind != "bridge" }), pick(rail.filter { $0.kind == "bridge" }))
 }
 
 /// Words in the card currently on screen: tinted and dotted-underlined in the caption so it is clear why it showed.

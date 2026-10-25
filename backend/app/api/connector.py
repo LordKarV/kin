@@ -12,6 +12,7 @@ from ..config import get_settings
 from ..db import models as m
 from ..db.session import get_session
 from ..memory.service import search
+from .calls import legacy_family
 from .glossary import glossary as _glossary
 from .graph import family_graph as _family_graph
 
@@ -32,8 +33,9 @@ def v1_graph(s: Session = Depends(get_session)) -> dict:
 
 @router.get("/api/v1/calls/recent", dependencies=[Depends(require_key)])
 def v1_recent(limit: int = 5, s: Session = Depends(get_session)) -> list[dict]:
-    fid = get_settings().demo_family_id
-    calls = s.scalars(select(m.Call).where(m.Call.family_id == fid).order_by(m.Call.id.desc()).limit(limit)).all()
+    fid = legacy_family(s, None).id
+    calls = s.scalars(select(m.Call).where(m.Call.family_id == fid, m.Call.mode != "world")
+                      .order_by(m.Call.id.desc()).limit(limit)).all()
     out = []
     for c in calls:
         cs = s.scalar(select(m.CallSummary).where(m.CallSummary.call_id == c.id))
@@ -45,8 +47,8 @@ def v1_recent(limit: int = 5, s: Session = Depends(get_session)) -> list[dict]:
 
 
 @router.get("/api/v1/memory/search", dependencies=[Depends(require_key)])
-def v1_search(q: str, limit: int = 8) -> dict:
-    return {"query": q, "results": search(q, get_settings().demo_family_id, limit)}
+def v1_search(q: str, limit: int = 8, s: Session = Depends(get_session)) -> dict:
+    return {"query": q, "results": search(q, legacy_family(s, None).id, limit)}
 
 
 @router.get("/api/v1/glossary", dependencies=[Depends(require_key)])

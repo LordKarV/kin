@@ -82,7 +82,8 @@ REST = [
                   "edges": [{"src": "p_arjun_3", "dst": "p_kamala_1", "relation": "child_of"}],
                   "groups": [{"id": 1, "name": "Fudan crew", "members": ["p_mei_5"]}],
                   "things": [{"id": 4, "slug": "pl_fudan_4", "kind": "place", "name": "Fudan", "owner": "p_mei_5"}],
-                  "storylines": [{"id": 3, "title": "job search", "status": "open", "states": [{"label": "applied", "at": "2026-09-02"}]}]}),
+                  "storylines": [{"id": 3, "title": "job search", "status": "open", "states": [{"label": "applied", "at": "2026-09-02"}],
+                                  "owner": "p_mei_5"}]}),
     (c.RelationsOut, {"social": [{"kind": "friend", "label": "friend"}], "kin": [{"path": "mother.brother", "label": "uncle"}]}),
     (c.PlaceIn, {"name": "Lin", "owner": "p_mei_5", "relation": "friend", "context": "climbing", "call_id": 12}),
     (c.PlaceOut, {"id": 17, "person": "p_lin_17", "name": "Lin", "render": "Mei's friend Lin"}),
@@ -114,6 +115,12 @@ REST = [
 @pytest.mark.parametrize("model,body", REST, ids=[m.__name__ for m, _ in REST])
 def test_rest_bodies_validate(model, body):
     model.model_validate(body)
+
+
+def test_world_storyline_names_its_owner():
+    out = c.WorldOut.model_validate(dict(REST)[c.WorldOut])
+    assert out.storylines[0].owner == "p_mei_5"  # the person-world screen filters by owner, not by title text
+    assert c.WorldStorylineOut(id=1, title="news", status="open").owner is None
 
 
 def test_dev_sms_from_alias():

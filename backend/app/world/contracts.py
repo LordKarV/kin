@@ -295,6 +295,7 @@ class WorldStorylineOut(BaseModel):
     title: str
     status: str
     states: list[WorldStateOut] = []
+    owner: str | None = None  # person slug; None when the owner is not visible to the viewer
 
 
 class WorldOut(BaseModel):
@@ -411,6 +412,7 @@ class CallParticipantOut(BaseModel):
 
 class RtcJoinWorldIn(BaseModel):
     call_id: int | None = None
+    invite: str | None = None  # required for a new seat in an existing call; a held seat rejoins without it
 
 
 class JoinWorldOut(BaseModel):
@@ -422,6 +424,7 @@ class JoinWorldOut(BaseModel):
     person: str
     name: str
     lang: str
+    invite: str = ""  # this call's invite code, for the share link
     participants: list[ParticipantOut] = []
 
 

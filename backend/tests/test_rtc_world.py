@@ -47,12 +47,13 @@ def test_world_join_creates_call_and_second_user_joins(client):
     assert claims["sub"] == f"p{arjun_id}" and claims["video"]["room"] == a["room"] == f"kin-call-{a['call_id']}"
     assert meta == {"person": arjun_slug, "person_id": arjun_id, "lang": "en", "name": "Arjun"}
 
-    b = client.post("/api/rtc/join", json={"call_id": a["call_id"]}, headers={"X-KIN-User": mei_tok}).json()
-    assert b["call_id"] == a["call_id"] and _claims(b["token"])["sub"] == f"p{mei_id}"
+    b = client.post("/api/rtc/join", json={"call_id": a["call_id"], "invite": a["invite"]},
+                    headers={"X-KIN-User": mei_tok}).json()
+    assert b["call_id"] == a["call_id"] and _claims(b["token"])["sub"] == f"p{mei_id}" and b["invite"] == a["invite"]
     assert b["participants"] == [{"identity": f"p{arjun_id}", "person": arjun_slug, "name": "Arjun", "lang": "en"}]
     assert client.started == [a["call_id"], a["call_id"]]
-    # rejoin keeps one row per person
-    client.post("/api/rtc/join", json={"call_id": a["call_id"]}, headers={"X-KIN-User": mei_tok})
+    # rejoin keeps one row per person, and a seat already taken needs no invite
+    assert client.post("/api/rtc/join", json={"call_id": a["call_id"]}, headers={"X-KIN-User": mei_tok}).status_code == 200
     with session_scope() as s:
         call = s.get(m.Call, a["call_id"])
         assert (call.mode, call.transport, call.participants) == ("world", "livekit", [arjun_id, mei_id])
@@ -77,6 +78,25 @@ def test_world_join_rejects_legacy_call_unknown_call_and_missing_token(client):
     assert client.post("/api/rtc/join", json={"family_id": 1, "role": "boss"}).status_code == 422
 
 
+def test_world_join_needs_the_invite_code_to_take_a_new_seat(client):
+    _, _, a_tok = _user("Arjun", "en")
+    _, _, m_tok = _user("Mei", "zh")
+    priya_id, _, p_tok = _user("Priya", "en")
+    a = client.post("/api/rtc/join", json={}, headers={"X-KIN-User": a_tok}).json()
+    assert len(a["invite"]) == 16
+    joined = client.post("/api/rtc/join", json={"call_id": a["call_id"], "invite": a["invite"]},
+                         headers={"X-KIN-User": m_tok})
+    assert joined.status_code == 200
+    # Priya was not invited: no code, a wrong code, or another call's code all look like a missing call
+    other = client.post("/api/rtc/join", json={}, headers={"X-KIN-User": p_tok}).json()
+    for invite in (None, "", "0" * 16, other["invite"], "\u00e9"):  # non-ASCII must not reach a str compare_digest
+        r = client.post("/api/rtc/join", json={"call_id": a["call_id"], "invite": invite}, headers={"X-KIN-User": p_tok})
+        assert r.status_code == 404, invite
+    with session_scope() as s:
+        seated = s.scalars(select(m.CallParticipant.person_id).where(m.CallParticipant.call_id == a["call_id"])).all()
+        assert priya_id not in seated and s.get(m.Call, a["call_id"]).participants == [p for p in seated]
+
+
 def test_participant_from_meta():
     world = json.dumps({"person": "p_mei_5", "person_id": 5, "lang": "zh", "name": "Mei"})
     assert participant_from_meta("p5", world) == ("p5", "p_mei_5", "zh", 5)
@@ -92,10 +112,11 @@ def test_join_lists_only_participants_still_present(client):
     a_id, _, a_tok = _user("Arjun", "en")
     _, _, b_tok = _user("Mei", "zh")
     _, _, c_tok = _user("Paatti", "ta")
-    call_id = client.post("/api/rtc/join", json={}, headers={"X-KIN-User": a_tok}).json()["call_id"]
-    client.post("/api/rtc/join", json={"call_id": call_id}, headers={"X-KIN-User": b_tok})
+    a = client.post("/api/rtc/join", json={}, headers={"X-KIN-User": a_tok}).json()
+    call_id, invite = a["call_id"], a["invite"]
+    client.post("/api/rtc/join", json={"call_id": call_id, "invite": invite}, headers={"X-KIN-User": b_tok})
     RoomAgent._mark_left(SimpleNamespace(call_id=call_id), f"p{a_id}")  # what _leave does for a world leg
-    c = client.post("/api/rtc/join", json={"call_id": call_id}, headers={"X-KIN-User": c_tok}).json()
+    c = client.post("/api/rtc/join", json={"call_id": call_id, "invite": invite}, headers={"X-KIN-User": c_tok}).json()
     assert [x["name"] for x in c["participants"]] == ["Mei"]
 
 

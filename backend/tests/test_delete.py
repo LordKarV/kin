@@ -57,7 +57,8 @@ def _world(s):
     group = m.Group(family_id=fam, slug="g_crag", name="crag crew", fact_id=boulder.id)
     shoes = m.Thing(family_id=fam, slug="th_shoes", kind="thing", name="climbing shoes", owner_id=arjun.id)
     s.add_all([group, shoes]); s.flush()
-    msg = m.Message(family_id=fam, author_id=arjun.id, from_number="+15125550101", received_at=T0, fact_ids=[boulder.id])
+    msg = m.Message(family_id=fam, author_id=arjun.id, from_number="+15125550101", received_at=T0, fact_ids=[boulder.id],
+                    reply="Nice, you started bouldering")
     s.add(msg); s.flush()
     s.add_all([
         m.Tie(family_id=fam, src_person=arjun.id, dst_person=mei.id, kind="friend"),
@@ -182,6 +183,9 @@ def test_delete_account_is_delete_person(db):
         privacy.delete_account(s, user)
     with session_scope() as s:
         assert _people_refs(s, w["mei"], [w["climb"]], ["went climbing with Lin"]) == []
+        # Lin was only in Mei's facts: gone now, not at the next sweep
+        assert s.get(m.Person, w["lin"]) is None
+        assert not s.scalars(select(m.Alias).where(m.Alias.person_id == w["lin"])).all()
 
 
 def test_delete_fact_only_by_owner_and_redacts_its_line(db):
@@ -201,7 +205,84 @@ def test_delete_fact_only_by_owner_and_redacts_its_line(db):
         boulder = w["facts"][0]
         privacy.delete_fact(s, boulder, w["arjun"])
     with session_scope() as s:
-        assert s.scalars(select(m.Message)).one().fact_ids == []
+        msg = s.scalars(select(m.Message)).one()
+        assert msg.fact_ids == [] and msg.reply == ""  # the ack restated the deleted news
+
+
+def _story(s, fam, owner, title, labels):
+    """A storyline owned by `owner` with one state per label, each newer one superseding the one before (apply's
+    progression). Returns (storyline id, [fact ids])."""
+    story = m.Storyline(family_id=fam, slug=f"s_{title[:4]}", owner_id=owner, title=title, keys=[["internship", "实习"]])
+    s.add(story); s.flush()
+    fids = []
+    for seq, label in enumerate(labels, start=1):
+        f = _fact(s, fam, owner, owner, label, predicate="state", storyline_id=story.id, said_at=T0 + timedelta(days=seq))
+        s.add(m.StorylineState(storyline_id=story.id, seq=seq, label=label, fact_id=f.id, at=f.said_at)); s.flush()
+        if fids:
+            old = s.get(m.Fact, fids[-1])
+            old.status, old.superseded_by = "superseded", f.id
+            for st in s.scalars(select(m.StorylineState).where(m.StorylineState.fact_id == old.id)):
+                st.status = "superseded"
+        fids.append(f.id)
+    s.flush()
+    return story.id, fids
+
+
+def test_deleting_every_fact_of_a_storyline_deletes_the_storyline(db):
+    with session_scope() as s:
+        _, arjun, _ = create_user(s, "Arjun", "en")
+        story, fids = _story(s, arjun.family_id, arjun.id, "Google internship", ["applied", "offer"])
+        kept, kept_fids = _story(s, arjun.family_id, arjun.id, "moving", ["looking"])
+        cited = m.Storyline(family_id=arjun.family_id, slug="s_cited", owner_id=arjun.id, title="cited")
+        s.add(cited); s.flush()
+        loose = _fact(s, arjun.family_id, arjun.id, arjun.id, "cited, no state", storyline_id=cited.id)
+        s.add(m.StorylineState(storyline_id=cited.id, seq=1, label="x", fact_id=kept_fids[0], at=T0)); s.flush()
+        ids = dict(arjun=arjun.id, story=story, fids=fids, kept=kept, cited=cited.id, loose=loose.id, kf=kept_fids[0])
+    with session_scope() as s:
+        privacy.delete_fact(s, ids["fids"][1], ids["arjun"])
+        assert s.get(m.Storyline, ids["story"]) is not None  # "applied" is still there
+        privacy.delete_fact(s, ids["fids"][0], ids["arjun"])
+        assert s.get(m.Storyline, ids["story"]) is None  # no title or keys left behind
+        privacy.delete_fact(s, ids["kf"], ids["arjun"])  # last state of "cited", but a fact still names it
+        assert s.get(m.Storyline, ids["cited"]) is not None and s.get(m.Fact, ids["loose"]) is not None
+        assert s.get(m.Storyline, ids["kept"]) is None
+
+
+def test_deleting_a_founding_fact_takes_its_words_out_of_the_storyline(db):
+    """The title, keys and slug came from the founding (first) state's fact: deleted means gone from them too."""
+    with session_scope() as s:
+        _, arjun, _ = create_user(s, "Arjun", "en")
+        story, fids = _story(s, arjun.family_id, arjun.id, "Google internship", ["applied", "second round", "offer"])
+        s.get(m.Storyline, story).slug = f"s_google_internship_{story}"
+        s.get(m.Fact, fids[1]).keys = [["interview"]]
+        lone, (lone_fid,) = _story(s, arjun.family_id, arjun.id, "Acme job", ["applied"])
+        ids = dict(arjun=arjun.id, story=story, fids=fids, lone=lone, lone_fid=lone_fid)
+    with session_scope() as s:
+        privacy.delete_fact(s, ids["fids"][0], ids["arjun"])
+    with session_scope() as s:
+        st = s.get(m.Storyline, ids["story"])
+        assert (st.title, st.keys, st.slug) == ("second round", [["interview"]], f"s_second_round_{ids['story']}")
+        privacy.delete_fact(s, ids["fids"][2], ids["arjun"])  # not the founding one: the title stays
+    with session_scope() as s:
+        assert s.get(m.Storyline, ids["story"]).title == "second round"
+        privacy.delete_fact(s, ids["lone_fid"], ids["arjun"])
+        assert s.get(m.Storyline, ids["lone"]) is None  # no state left
+
+
+def test_deleting_a_correction_restores_what_it_superseded(db):
+    with session_scope() as s:
+        _, arjun, _ = create_user(s, "Arjun", "en")
+        story, (applied, offer) = _story(s, arjun.family_id, arjun.id, "Google internship", ["applied", "offer"])
+        ids = dict(arjun=arjun.id, applied=applied, offer=offer)
+    with session_scope() as s:
+        assert s.get(m.Fact, ids["applied"]).status == "superseded"
+        counts = privacy.delete_fact(s, ids["offer"], ids["arjun"])
+        assert counts["facts_restored"] == 1
+    with session_scope() as s:
+        f = s.get(m.Fact, ids["applied"])
+        assert (f.status, f.superseded_by) == ("active", None)
+        st = s.scalars(select(m.StorylineState).where(m.StorylineState.fact_id == ids["applied"])).one()
+        assert st.status == "active"
 
 
 def test_sweep_expires_third_party_facts_and_orphans_but_keeps_pinned(db):
