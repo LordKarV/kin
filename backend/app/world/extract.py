@@ -102,10 +102,15 @@ facts: one claim each. subject: a person (entity ref, "speaker" for the person w
   contradicts: id of one of THIS speaker's own facts that this one contradicts, else null.
   storyline: for an ongoing thread (job search, a move, an illness), else null. existing_id from the speaker's own
   storylines, title, state_label ("applied", "second round", "offer accepted"), resolved when the thread is over.
-Facts are about people's lives: news, people and relationships, places, events, plans, ongoing storylines, lasting
-  preferences. Never a fact: remarks about this call, the app or the connection, greetings, small talk, filler,
-  reactions, passing opinions about the conversation. Skip "the UI is fire", "this call is lagging", "haha nice",
-  "can you hear me". Keep "I started bouldering", "my sister moved to Austin", "I have an interview at Meta next week".
+Facts are news worth telling someone you have not talked to in a month: life events, people and relationships,
+  places, plans that matter, ongoing storylines, lasting preferences. Merge the details of one topic into one fact,
+  list the most newsworthy first, and give at most 3 per speaker. Never a fact: remarks about this call, the app or
+  the connection, greetings, small talk, filler, reactions, passing opinions about the conversation, technical or work
+  details of a task (how a model, a bug or a feature behaves), momentary plans (grabbing a drink, heading to lunch), or
+  a line that only says someone mentioned something. Skip "the UI is fire", "this call is lagging", "haha nice",
+  "can you hear me", "the resize task needs the target aspect ratio", "plans to grab a Red Bull", "mentions Jev".
+  Keep "I started bouldering", "my sister moved to Austin", "I have an interview at Meta next week", "did an online
+  competition with two CMU students".
 Only state what the lines say. Leave out anything you are unsure about. Use "" / null / [] for none."""
 
 # Backstop for the rule above, on text_en (always English, whatever language was spoken). Narrow on purpose: a missed
@@ -118,10 +123,36 @@ _FILLER = frozenset("haha hahaha lol lmao nice cool ok okay wow yeah yes yep no 
                     "great awesome sure hmm um uh oh right good morning night see ya oops omg said says".split())
 
 
+_MENTION_RE = re.compile(r"^\s*(?:mentions|mentioned|talked about|talks about|discussed|discusses|brought up|asked about)\b",
+                         re.I)
+MAX_FACTS_PER_SPEAKER = 3  # per extraction window: KIN keeps news, not a transcript (ponytail: a count cap, not a ranker)
+
+
 def is_smalltalk(text_en: str) -> bool:
-    """A remark about the call or the app, or a line made only of greetings and reactions ("haha nice")."""
+    """A remark about the call or the app, a line made only of greetings and reactions ("haha nice"), or a short line
+    that only says something was mentioned ("Mentions Jev"); longer ones can carry news and are kept."""
     words = re.findall(r"[a-z']+", text_en.lower())
-    return bool(_META_RE.search(text_en)) or (bool(words) and all(w in _FILLER for w in words))
+    return (bool(_META_RE.search(text_en)) or (bool(words) and all(w in _FILLER for w in words))
+            or (bool(_MENTION_RE.match(text_en)) and len(words) <= 5))
+
+
+def _cap_per_speaker(facts: list[FactOut], ties: list[TieOut], refs: dict[str, EntityOut], ctx: "ValidateCtx",
+                     dropped: list[str]) -> list[FactOut]:
+    """Keep each speaker's first MAX_FACTS_PER_SPEAKER news facts (the prompt asks for most newsworthy first). Facts
+    behind a kept tie or a storyline never count and are never dropped: relationships and threads are the point."""
+    keep = {id(f) for t in ties if (f := _tie_fact(t, facts, refs, ctx)) is not None}
+    keep |= {id(f) for f in facts if f.storyline is not None}
+    count: dict[int | None, int] = {}
+    out: list[FactOut] = []
+    for f in facts:
+        if id(f) not in keep:
+            sp = ctx.speaker_of_line.get(f.lines[0]) if f.lines else None
+            count[sp] = count.get(sp, 0) + 1
+            if count[sp] > MAX_FACTS_PER_SPEAKER:
+                dropped.append(f"fact: over the {MAX_FACTS_PER_SPEAKER}-per-speaker news cap")
+                continue
+        out.append(f)
+    return out
 
 
 def build_prompt(window_lines: list[Line], participants: list[Participant], own_facts_by_speaker: dict[int, Own],
@@ -374,6 +405,7 @@ def validate(update: WorldUpdateOut, ctx: ValidateCtx) -> tuple[WorldUpdateOut, 
                 continue
             facts.append(f)
         ties.append(t if t.kind in TIE_KINDS else t.model_copy(update={"kind": "knows"}))
+    facts = _cap_per_speaker(facts, ties, refs, ctx, dropped)
     entities = _offered_entities(entities, facts, dropped, ctx)
     for r in dropped:
         log.info("extraction dropped: %s", r)
