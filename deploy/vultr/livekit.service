@@ -1,0 +1,14 @@
+[Unit]
+Description=LiveKit server for KIN calls
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=kin
+ExecStart=/usr/local/bin/livekit-server --config /etc/kin/livekit.yaml
+Restart=on-failure
+RestartSec=2
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

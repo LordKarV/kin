@@ -1,0 +1,15 @@
+[Unit]
+Description=KIN backend (FastAPI)
+After=network-online.target livekit.service
+Wants=network-online.target
+
+[Service]
+User=kin
+WorkingDirectory=/opt/kin/backend
+EnvironmentFile=/etc/kin/kin.env
+ExecStart=/opt/kin/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
