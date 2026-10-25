@@ -99,7 +99,46 @@ async def plant(d: Demo) -> None:
     await d.clock(-14)
     out = await d.json("/api/dev/sms", {"from": KARTHIK_PHONE, "body": "started bouldering at the campus gym"})
     print(f"Karthik texted KIN -> {out['reply']!r}")
+    await more(d)
     await d.clock(0)
+
+
+def _story(fact: dict, title: str, state: str) -> dict:
+    return {**fact, "storyline": {"existing_id": None, "title": title, "state_label": state, "resolved": False}}
+
+
+def _person(ref: str, name: str, native: str) -> dict:
+    return {"ref": ref, "name": name, "native": native, "forms": [name, native], "kind": "person", "existing_id": None}
+
+
+async def more(d: Demo) -> None:
+    """Lived-in context beyond the rehearsed beats, so the call can wander and KIN still has something to say:
+    things each side heard ~6-7 weeks ago (reminders now) and news each side has not told the other (bridges)."""
+    # ~7 weeks ago, on a call Paatti heard: Karthik's climbing friend Rohan, and his Adobe application.
+    await d.clock(-49)
+    await d.apply("Karthik", ["Paatti"], {"entities": [_person("rohan", "Rohan", "ரோஹன்")], "ties": [
+        {"a": "speaker", "b": "rohan", "kind": "friend", "context": "from the climbing gym"}], "facts": [
+        _fact("speaker", "tie", "Rohan is Karthik's friend from the climbing gym", ["rohan"], [])]})
+    await d.apply("Karthik", ["Paatti"], {"entities": [], "ties": [], "facts": [_story(_fact(
+        "speaker", "did", "applied for the Adobe internship", [],
+        [["adobe", "அடோப்"], ["internship", "intern", "interview", "இன்டர்ன்ஷிப்"]]), "Adobe internship", "applied")]})
+
+    # ~6 weeks ago, on a call Karthik heard: Paatti's sister Saroja in Coimbatore, and cousin Meena's engagement.
+    await d.clock(-45)
+    await d.apply("Paatti", ["Karthik"], {
+        "entities": [_person("saroja", "Saroja", "சரோஜா"), _person("meena", "Meena", "மீனா")], "ties": [], "facts": [
+            _fact("saroja", "relation", "Saroja is Paatti's younger sister; she lives in Coimbatore", [], [],
+                  "சரோஜா என் தங்கச்சி, கோயம்புத்தூர்ல இருக்கா"),
+            _story(_fact("meena", "did", "Meena, Ravi mama's daughter, got engaged", [],
+                         [["wedding", "marriage", "kalyanam", "கல்யாணம்"], ["engaged", "engagement", "நிச்சயம்"]],
+                         "ரவி மாமா பொண்ணு மீனாவுக்கு நிச்சயம் ஆயிடுச்சு"), "Meena's wedding", "engaged")]})
+
+    # ~3 weeks ago: Paatti's own news, told to nobody yet, so she gets the chip if Karthik talks about friends or music.
+    await d.clock(-20)
+    await d.apply("Paatti", [], {"entities": [], "ties": [], "facts": [_fact(
+        "speaker", "did", "joined a bhajan singing group at the temple", [],
+        [FRIEND_KEYS + ["group", "குழு"], ["sing", "singing", "song", "music", "பாட்டு", "பஜன்"]],
+        "கோவில்ல பஜன் குழுவுல சேர்ந்துட்டேன்")]})
 
 
 async def rehearse(d: Demo) -> None:
@@ -129,6 +168,11 @@ async def run(args: argparse.Namespace) -> None:
     headers = {"X-KIN-Key": KEY} if KEY else {}
     async with httpx.AsyncClient(base_url=BASE, timeout=90, headers=headers) as http:
         d = Demo(http, wait_s=args.wait)
+        if args.extend:  # add more() to a server this script already seeded; slugs follow creation order
+            d.slug = {"Karthik": "p_karthik_1", "Paatti": "p_paatti_2", "Mei": "p_mei_3"}
+            await more(d)
+            await d.clock(0)
+            return
         if args.rehearse:  # against an already seeded server, as the seeded people
             for name, flag, value in [("Karthik", "--karthik", args.karthik), ("Paatti", "--paatti", args.paatti)]:
                 d.token[name], d.slug[name] = _pair(value, flag)
@@ -144,6 +188,7 @@ async def run(args: argparse.Namespace) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--extend", action="store_true", help="add the extra lived-in context to an already seeded server")
     ap.add_argument("--rehearse", action="store_true", help="play the table call (needs --karthik and --paatti)")
     ap.add_argument("--karthik", default="", help="TOKEN:SLUG printed by the seed")
     ap.add_argument("--paatti", default="", help="TOKEN:SLUG printed by the seed")

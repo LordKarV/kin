@@ -114,7 +114,11 @@ def _entity_card(view: WorldView, kcache: KCache, listener: int, speaker: int, h
         fids = tuple(dict.fromkeys((*fids, *_render_facts(view, listener, id_, speaker))))
     key = entity_key(view, h.kind, id_)
     category = {"person": "person", "group": "group"}.get(h.kind) or ent.kind
-    payload = _glance(key=key, kind=CARD_KIND[h.kind], title=ent.name, native=getattr(ent, "lang_name", ""),
+    # The app shows `native` under the name and as the avatar letter, so an English listener got "ரோஹன்" on Rohan.
+    # ponytail: English listeners get no native form; a zh listener would still see a Tamil one (per-script match if needed)
+    lp = view.people.get(listener)
+    native = getattr(ent, "lang_name", "") if lp is not None and lp.lang not in ("", "en") else ""
+    payload = _glance(key=key, kind=CARD_KIND[h.kind], title=ent.name, native=native,
                       body=body, category=category, node_id=ent.slug, gap=gap)
     return Card(key, CARD_KIND[h.kind], {"kind": h.kind, "id": id_, "start": h.start}, fids, payload)
 

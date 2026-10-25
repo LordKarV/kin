@@ -10,4 +10,13 @@ extension KinAPI {
 
     /// Change my name. It is my person's display name, so everyone I talk to sees it (a live call keeps the old one).
     func setName(_ name: String) async throws -> MeOut { try await send("PATCH", "/api/me", MeNamePatch(name: name)) }
+
+    /// Demo builds: put the seeded world back (POST /api/dev/reset) as part 1 (friends) or 2 (grandmother).
+    func resetDemo(part: Int) async throws -> DemoResetOut { try await send("POST", "/api/dev/reset", DemoResetIn(part: part)) }
+}
+
+struct DemoResetIn: Encodable { let part: Int }
+struct DemoResetOut: Decodable { let part: Int; let name: String; let lang: String }
+
+extension KinAPI {
 }
