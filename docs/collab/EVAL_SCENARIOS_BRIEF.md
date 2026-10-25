@@ -4,8 +4,14 @@ Goal: prove KIN is not "an LLM with shared context". We need a test set of plant
 knows what, and a naive baseline to compare against. You write the data and the baseline prompt; the build session
 wires them into `backend/eval/`.
 
-Check `docs/ARCHITECTURE.md` (evaluation section) first: the build plan may already define a scenario format. If it
-does, follow that format exactly instead of the sketch below, and note any field you could not express.
+**Update (the build has now defined the format; use it instead of the sketch below):** the authoritative format is the
+Pydantic model `Scenario` in `backend/eval/common_ground/schemas.py`, and the build already wrote 39 scenarios in
+`backend/eval/common_ground/scenarios.jsonl` (read both first; do not edit them). Write YOUR additional scenarios as
+JSON Lines, one `Scenario` per line, in `eval_scenarios/scenarios_extra.jsonl`, covering what the existing 39 miss
+(mostly one-to-one calls; the existing set leans on three-person calls because it predates the one-to-one decision).
+Validate every line against the real model, read-only, using the existing backend venv (do not install anything into
+it): `cd backend && .venv/bin/python -c "import json,sys; from eval.common_ground.schemas import Scenario; [Scenario.model_validate(json.loads(l)) for l in open('../eval_scenarios/scenarios_extra.jsonl') if l.strip()]; print('ok')"`.
+The sketch below is kept only to explain the ideas; where it differs from `Scenario`, the model wins.
 
 ## What we measure
 
