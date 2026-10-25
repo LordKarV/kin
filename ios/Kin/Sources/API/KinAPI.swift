@@ -51,11 +51,11 @@ struct KinAPI: Sendable {
 
     private struct Empty: Encodable {}
 
-    private func send<Out: Decodable>(_ method: String, _ path: String, auth: Bool = true) async throws -> Out {
+    func send<Out: Decodable>(_ method: String, _ path: String, auth: Bool = true) async throws -> Out {
         try await send(method, path, Empty?.none, auth: auth)
     }
 
-    private func send<In: Encodable, Out: Decodable>(_ method: String, _ path: String, _ body: In?,
+    func send<In: Encodable, Out: Decodable>(_ method: String, _ path: String, _ body: In?,
                                                      auth: Bool = true) async throws -> Out {
         let data = try await raw(method, path, try body.map { try JSONEncoder().encode($0) }, auth: auth)
         do { return try JSONDecoder().decode(Out.self, from: data) } catch {

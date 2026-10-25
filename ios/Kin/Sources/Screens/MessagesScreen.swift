@@ -54,7 +54,7 @@ struct MessagesScreen: View {
     }
 
     /// Where SignupView should save UserOut.sms_number.
-    static let savedNumberKey = "kin.smsNumber"
+    nonisolated static let savedNumberKey = "kin.smsNumber"  // a constant key; readable from any isolation (tests, sign-up)
 
     /// backend/app/world/sms.py applies texts with source_kind "message".
     static func fromTexts(_ facts: FactsOut) -> [FactRow] { facts.aboutMe.filter { $0.sourceKind == "message" } }

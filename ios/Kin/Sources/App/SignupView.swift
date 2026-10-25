@@ -60,7 +60,20 @@ struct SignupView: View {
                 Text("Messages stay private. KIN only uses them to know what the people you call have not heard yet.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            PillButton(title: "Continue") { model.signedUp(token: out.token) }
+            PillButton(title: "Continue") {
+                Self.saveSmsNumber(out)
+                model.signedUp(token: out.token)
+            }
+        }
+    }
+
+    /// GET /api/me has no sms_number, so MessagesScreen reads the number saved here first.
+    /// The backend sends "" when no number is configured; that clears the key so the fetched value wins.
+    static func saveSmsNumber(_ out: UserOut) {
+        if let sms = out.smsNumber, !sms.isEmpty {
+            UserDefaults.standard.set(sms, forKey: MessagesScreen.savedNumberKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: MessagesScreen.savedNumberKey)
         }
     }
 

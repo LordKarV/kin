@@ -78,8 +78,8 @@ final class AppModel: ObservableObject {
     }
 
     /// `callId == nil` starts a new call. `key` is an invite's KIN key: used for this join and stored only once the
-    /// server accepted it, so a junk kin:// link cannot overwrite a working key.
-    func startCall(callId: Int? = nil, key: String? = nil) async {
+    /// server accepted it, so a junk kin:// link cannot overwrite a working key. `camera: false` is an audio call.
+    func startCall(callId: Int? = nil, key: String? = nil, camera: Bool = true) async {
         guard !joining else { return }
         if case .call = screen { return }  // one call at a time
         joining = true
@@ -101,6 +101,8 @@ final class AppModel: ObservableObject {
                 self.error = message
             })
             screen = .call(call)
+            // ponytail: CallController (4E) still reads a one-shot flag; pass `camera` to connect(camera:) once it takes one.
+            if !camera { CallController.audioOnlyNext = true }
             await call.connect()
         } catch let e as KinAPIError where e.status == 401 {
             signOut()
