@@ -9,6 +9,7 @@ The answer is `asked` evidence and a card_log row of kind "gesture", like a capt
 from __future__ import annotations
 
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from dataclasses import dataclass, replace
@@ -24,7 +25,7 @@ from . import cards as C
 from . import clock
 from . import knowledge as kn
 from .explain import VIA as TAP_VIA
-from .explain import record
+from .explain import _ask, _name_like, record
 from .live import LiveWorld, _Line
 
 log = logging.getLogger("kin.world.explain")
@@ -62,7 +63,7 @@ def explain_recent(live: LiveWorld, call_id: int, listener_person_id: int) -> li
     lines = _heard(live, L, WINDOW)
     cands = _candidates(live, L, lines)
     if not cands:
-        return []
+        return _ask_unknown(live, L, lines)
     if len(cands) == 1 or cands[0].score - cands[1].score >= MARGIN:
         return _answer(live, L, cands[0])
     pick = _choose(live, L, lines, cands)
@@ -117,6 +118,43 @@ def _candidates(live: LiveWorld, L: int, lines: list[_Line]) -> list[_Cand]:
                 score -= ASKED_PENALTY if c.key in asked else 0.0
                 best[c.key] = _Cand(c, S, mentioned, score)
         return sorted(best.values(), key=lambda c: -c.score)
+
+
+_WORD = re.compile(r"[^\W\d_]+")
+_SENTENCE_END = ".!?\u3002\uff01\uff1f"
+
+
+def _names(text: str) -> list[str]:
+    """Name-like words of a line, last first, by the tap's _name_like. ponytail: a sentence's first word is skipped
+    (capitalized anyway), so a name that opens a sentence is missed, and a script without case (zh, hi, ta) yields
+    none (every short word there would pass); its translation into the listener's language still counts. Upgrade
+    path: let the LLM pick among these spans."""
+    out = []
+    for mt in _WORD.finditer(text):
+        head, w = text[:mt.start()].rstrip(), mt.group()
+        if head and head[-1] not in _SENTENCE_END and w[0].isupper() and _name_like(w, []):
+            out.append(w)
+    return out[::-1]
+
+
+def _ask_unknown(live: LiveWorld, L: int, lines: list[_Line]) -> list[dict]:
+    """No known candidate: the tap's "Who is X?" for the newest name-like word L heard that nothing visible to L
+    matches. A match hidden from L counts as no match, as for a tap (explain.explain), so it answers like an unknown
+    name and never with that person's card."""
+    ident = f"p{L}"
+    with live._state:
+        snap = live._snap
+        if snap is None or ident not in live.parts:
+            return []
+        v, now, lang = snap.view, clock.now(), live.parts[ident][1]
+        for ln in reversed(lines):
+            read = ln.translations.get(lang) if lang != ln.lang else None
+            for text, lg in ((ln.text, ln.lang), (read or "", lang)):
+                for w in _names(text):
+                    hits = [h for h in snap.index.scan(w, lg) if h.kind in C.ENTITY_KINDS]
+                    if not any(v.visible(L, h.kind, i, ln.speaker) for h in hits for i in h.ids):
+                        return record(live, L, lang, [_ask(v, ln.speaker, w)], VIA, now)
+        return []
 
 
 def _kkey(L: int, c: C.Card) -> tuple[int, str, int] | None:

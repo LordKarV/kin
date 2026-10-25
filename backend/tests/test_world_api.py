@@ -241,6 +241,19 @@ def test_forget_third_party_and_delete_me_leave_no_rows(mock_llm):
         assert _people_refs(s, lin["id"], [], ["Fudan"]) == []
 
 
+def test_forget_someone_hidden_answers_like_a_missing_slug(mock_llm):
+    with TestClient(app) as c:
+        mei, arjun, priya = sign_up(c, "Mei", "zh"), sign_up(c, "Arjun"), sign_up(c, "Priya")
+        lin = plant_lin(c, mei, [arjun])["entities"][0]  # Priya never heard of Lin
+        hidden = c.delete(f"/api/me/world/people/{lin['slug']}", headers=priya["h"])
+        missing = c.delete("/api/me/world/people/p_nobody_x", headers=priya["h"])
+        assert (hidden.status_code, missing.status_code) == (404, 404)
+        assert hidden.json()["detail"].replace(lin["slug"], "S") == missing.json()["detail"].replace("p_nobody_x", "S")
+    with session_scope() as s:
+        assert s.get(m.Person, lin["id"]) is not None
+        assert s.scalar(select(func.count()).select_from(m.Fact).where(m.Fact.subject_id == lin["id"])) == 1
+
+
 def test_place_cannot_reach_hidden_people(mock_llm):
     with TestClient(app) as c:
         mei, arjun, priya = sign_up(c, "Mei", "zh"), sign_up(c, "Arjun"), sign_up(c, "Priya")

@@ -15,6 +15,7 @@ from app.db import models as m
 from app.db.session import session_scope
 from app.main import app
 from app.world import explain_recent as ER
+from app.world.explain import explain
 from app.world.explain_recent import explain_recent
 from tests.test_cg_cards import add_fact, add_job_story, demo, mock_world_llm, offset  # noqa: F401  (fixtures)
 from tests.test_explain import live  # noqa: F401  (fixture)
@@ -251,3 +252,35 @@ def test_api_gesture_body(live, gllm, monkeypatch):
     assert c.post(url, json={"text": None}, headers=h).status_code == 422
     assert c.post(url, json={}, headers=h).status_code == 422
     assert c.post(url, json={"text": "Zhao"}, headers=h).json()["items"][0]["kind"] == "ask"  # tap path unchanged
+
+
+def test_unknown_name_falls_back_to_the_ask_a_tap_gives(live, gllm):
+    ids, make = live
+    w = make("arjun", "dana")
+    uid = say(w, ids, "dana", "I went climbing with Rosa yesterday")
+    items = explain_recent(w, ids["call"], ids["arjun"])
+    assert [(it["kind"], it["key"], it["title"]) for it in items] == [("ask", "ask:rosa", "Rosa")]
+    assert items == explain(w, ids["call"], ids["arjun"], "Rosa", utterance_id=uid)
+    assert gllm.calls == []
+    say(w, ids, "dana", "Lin and Rosa were there")  # a known entity still wins over the ask
+    assert [it["key"] for it in explain_recent(w, ids["call"], ids["arjun"])] == [f"who:{ids['lin_slug']}"]
+    w2 = make("arjun", "dana")
+    say(w2, ids, "dana", "Hello. Thanks!")  # sentence-initial words are not names
+    assert explain_recent(w2, ids["call"], ids["arjun"]) == []
+
+
+def test_hidden_name_gets_the_same_ask_as_an_unknown_one(live, gllm):
+    ids, make = live
+    with session_scope() as s:  # only Priya heard about Zhou
+        zhou = m.Person(family_id=ids["space"], slug="p_zhou_x", display_name="Zhou")
+        s.add(zhou)
+        s.flush()
+        add_fact(s, ids["space"], zhou.id, ids["priya"], "works_at", "works at Tesla", [(ids["priya"], "said")],
+                 ids["t0"], refs=[("person", ids["priya"])])
+    w = make("arjun", "dana", "priya")  # Priya on the call: Zhou is in the view and the index, hidden from Arjun
+    say(w, ids, "dana", "I went climbing with Zhou yesterday")
+    hidden = json.dumps(explain_recent(w, ids["call"], ids["arjun"]))
+    say(w, ids, "dana", "I went climbing with Rosa yesterday")
+    unknown = json.dumps(explain_recent(w, ids["call"], ids["arjun"]))
+    assert '"kind": "ask"' in hidden and "p_zhou_x" not in hidden and "Tesla" not in hidden
+    assert hidden.replace("Zhou", "X").replace("zhou", "x") == unknown.replace("Rosa", "X").replace("rosa", "x")

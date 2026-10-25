@@ -256,7 +256,9 @@ def delete_fact(fact_id: int, user: m.User = Depends(current_user), s: Session =
 def forget(slug: str, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> DeletePersonOut:
     space_id = _space(s, user)
     pid = s.scalar(select(m.Person.id).where(m.Person.family_id == space_id, m.Person.slug == slug))
-    if pid is None:
+    view = WorldView.build(s, space_id, [user.person_id], clock.now()) if pid is not None else None
+    # someone I cannot see (the GET /api/world rule) answers like a missing slug, else the reply is an existence oracle
+    if pid is None or pid not in view.people or not view.visible(user.person_id, "person", pid):
         raise HTTPException(404, f"no person {slug!r}")
     try:
         out = privacy.forget_person(s, pid, by_person=user.person_id)
