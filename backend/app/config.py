@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     third_party_ttl_days: int = 120  # must exceed the 6-week demo gap (ARCHITECTURE D11)
     clock_offset_days: float = 0  # initial world/clock offset; /api/dev/clock changes it at runtime
     bridge_rerank: bool = False
-    dev_endpoints: bool = True
+    dev_endpoints: bool = False  # /api/dev/* (clock, plant, simulated SMS): on only for tests, eval and the demo (DEV_ENDPOINTS=1)
     sms_number: str = ""  # the KIN SMS number shown in the app
 
 

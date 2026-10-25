@@ -30,7 +30,15 @@ async def lifespan(app: FastAPI):
         if get_settings().seed_demo_family and s.scalar(select(m.Family)) is None:
             seed_demo_family(s)
         seed_languages(s)
-    yield
+    import asyncio
+
+    from .api.calls import sweep_loop
+
+    sweep_task = asyncio.create_task(sweep_loop())  # privacy sweep: third-party expiry at startup and hourly
+    try:
+        yield
+    finally:
+        sweep_task.cancel()
 
 
 app = FastAPI(title="KIN", version="0.1.0", lifespan=lifespan)

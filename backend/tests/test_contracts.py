@@ -190,8 +190,7 @@ def test_live_world_stub_returns_documented_empties():
         assert w.render("p5", "p_lin_17") is None
         assert w.roster(["p5"], "p3") == ""
         assert w.keyterms("p3") == []
-        with pytest.raises(NotImplementedError):
-            w.translator("zh")
+        assert w.translator("zh") is not None  # no world view yet: falls back to a plain translator (cards off, captions on)
         for call in (lambda: w.leave("p3"), lambda: w.feedback("p5", "who:x", "know"), w.refresh, w.close):
             assert call() is None
     finally:

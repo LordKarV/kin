@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+import asyncio
+import logging
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -8,6 +11,10 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..db import models as m
 from ..db.session import get_session
+from ..world.contracts import FeedbackIn, PauseIn, TextIn
+
+log = logging.getLogger("kin.calls")
+SWEEP_EVERY_S = 3600
 
 router = APIRouter(prefix="/api/calls", tags=["calls"])
 
@@ -61,9 +68,11 @@ def end_call(call_id: int) -> dict:
     """Mark the call ended; summarize and extract (Phase 6). Sensitive topics are reduced to a topic word."""
     from ..memory.service import end_call as _end
     try:
-        return _end(call_id)
+        out = _end(call_id)
     except ValueError as e:
         raise HTTPException(404, str(e))
+    _sweep()
+    return out
 
 
 @router.post("/{call_id}/approve")
@@ -82,3 +91,94 @@ def get_summary(call_id: int, s: Session = Depends(get_session)) -> dict:
     if cs is None:
         raise HTTPException(404, "no summary")
     return {"call_id": call_id, "summary": cs.summary, "extracted": cs.extracted, "approved": cs.approved}
+
+
+# ---- world call routes (docs/ARCHITECTURE.md 9.2, D17): pause, card feedback, typed text, voice, participants ----------
+
+def _sweep() -> None:
+    """Third-party expiry sweep (section 10); a failed sweep never fails the call that triggered it."""
+    from ..world.privacy import run_sweep
+    try:
+        run_sweep()
+    except Exception:  # noqa: BLE001
+        log.exception("third-party sweep failed")
+
+
+async def sweep_loop(every_s: float = SWEEP_EVERY_S) -> None:
+    """Startup plus hourly sweep; started (and cancelled) by the app lifespan."""
+    while True:
+        await asyncio.to_thread(_sweep)
+        await asyncio.sleep(every_s)
+
+
+def caller(call_id: int, x_kin_user: str | None = Header(default=None), s: Session = Depends(get_session)) -> int:
+    """X-KIN-User -> the caller's person id: 401 without a valid token, 404 for an unknown call, 403 for a non-participant."""
+    from ..world.users import user_by_token
+    user = user_by_token(s, x_kin_user)
+    if user is None:
+        raise HTTPException(401, "X-KIN-User token required")
+    if s.get(m.Call, call_id) is None:
+        raise HTTPException(404, "call not found")
+    part = s.scalar(select(m.CallParticipant.id).where(m.CallParticipant.call_id == call_id,
+                                                        m.CallParticipant.person_id == user.person_id))
+    if part is None:
+        raise HTTPException(403, "not a participant of this call")
+    return user.person_id
+
+
+def _live(call_id: int):
+    from ..audio.pipeline import registry
+    cs = registry.get(call_id)
+    if cs is None or cs.world is None:
+        raise HTTPException(409, "call is not live")
+    return cs
+
+
+def _side(cs, person_id: int):
+    side = cs.sides.get(f"p{person_id}")
+    if side is None:
+        raise HTTPException(409, "join the call first")
+    return side
+
+
+@router.post("/{call_id}/pause")
+async def pause(call_id: int, body: PauseIn, person_id: int = Depends(caller)) -> dict:
+    cs = _live(call_id)
+    _side(cs, person_id)  # a CallParticipant row outlives the leg: someone who left must not unpause the room
+    return await cs.set_paused(person_id, body.paused)
+
+
+@router.post("/{call_id}/feedback")
+async def feedback(call_id: int, body: FeedbackIn, person_id: int = Depends(caller)) -> dict:
+    cs = _live(call_id)
+    _side(cs, person_id)
+    await asyncio.to_thread(cs.world.feedback, f"p{person_id}", body.key, body.action)
+    return {"ok": True}
+
+
+@router.post("/{call_id}/text")
+async def typed_text(call_id: int, body: TextIn, person_id: int = Depends(caller)) -> dict:
+    cs = _live(call_id)
+    _side(cs, person_id)
+    await cs.on_text(f"p{person_id}", body.text)  # dropped inside on_text while paused
+    return {"ok": True}
+
+
+class VoiceIn(BaseModel):
+    on: bool
+
+
+@router.post("/{call_id}/voice")
+async def voice(call_id: int, body: VoiceIn, person_id: int = Depends(caller)) -> dict:
+    """Translated voice for this listener (Amendment 2): off by default, captions always."""
+    side = _side(_live(call_id), person_id)
+    side.voice_on = body.on
+    return {"on": side.voice_on}
+
+
+@router.get("/{call_id}/participants")
+def participants(call_id: int, _me: int = Depends(caller), s: Session = Depends(get_session)) -> list[dict]:
+    rows = s.execute(select(m.CallParticipant, m.Person.slug).join(m.Person, m.Person.id == m.CallParticipant.person_id)
+                     .where(m.CallParticipant.call_id == call_id).order_by(m.CallParticipant.id)).all()
+    return [{"person": slug, "identity": p.identity, "lang": p.lang, "joined_at": p.joined_at.isoformat() if p.joined_at else None,
+             "left_at": p.left_at.isoformat() if p.left_at else None} for p, slug in rows]

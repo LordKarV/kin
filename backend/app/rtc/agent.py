@@ -5,7 +5,10 @@ phone call). The agent subscribes to every person's microphone at 16 kHz and fee
 (linker, glance cards, Fade, translation, memory). What KIN produces goes only to the person it is for:
   - JSON (partials, glance cards, transcripts, enrich cards, asks) as data messages addressed to that participant;
   - the translated voice on a per-listener track named `kin-to-<identity>`, which only that listener plays.
-Participants say who they are in their token metadata: {"role": "grandparent"|"grandchild", "person": "<slug>"}.
+Participants say who they are in their token metadata: legacy {"role": "grandparent"|"grandchild", "person": "<slug>"}
+or world {"person": "<slug>", "person_id": <id>, "lang": "<code>", "name": "..."} (ARCHITECTURE 8.7).
+World legs publish their `kin-to-<identity>` track lazily on their first `audio_start` (sent only to listeners with
+voice on), so a listener with voice off (the default) never gets one. There is no client-to-agent data handler (D17: pause, feedback and text go over REST).
 Verified against livekit==1.1.21 (rtc) signatures on 2026-10-24.
 """
 from __future__ import annotations
@@ -15,9 +18,13 @@ import json
 import logging
 
 from livekit import api, rtc
+from sqlalchemy import update
 
 from ..audio.pipeline import CallSession, registry
 from ..config import get_settings
+from ..db import models as m
+from ..db.session import session_scope
+from ..world import clock
 
 log = logging.getLogger("kin.rtc")
 SAMPLE_RATE = 16000
@@ -37,6 +44,30 @@ def room_name(call_id: int) -> str:
     return f"kin-call-{call_id}"
 
 
+def participant_from_meta(identity: str, metadata_json: str | None) -> tuple[str, str, str | None, int | None] | None:
+    """(session identity, person slug, lang, person_id) from token metadata, or None when it is not a KIN participant.
+    World metadata (has person_id) keys the session by the LiveKit identity; legacy metadata keys it by role."""
+    try:
+        meta = json.loads(metadata_json or "{}")
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(meta, dict):
+        return None
+    person = meta.get("person")
+    if not isinstance(person, str) or not person:
+        return None
+    pid = meta.get("person_id")
+    if pid is not None:
+        lang = meta.get("lang")
+        if isinstance(pid, bool) or not isinstance(pid, int) or not isinstance(lang, str) or not lang:
+            return None
+        return identity, person, lang, pid
+    role = meta.get("role")
+    if role in ("grandparent", "grandchild"):
+        return role, person, None, None
+    return None
+
+
 def mint_token(room: str, identity: str, name: str, metadata: dict | None = None, agent: bool = False) -> str:
     _, key, secret = livekit_creds()
     grants = api.VideoGrants(room_join=True, room=room, can_publish=True, can_subscribe=True, can_publish_data=True, agent=agent or None)
@@ -49,19 +80,32 @@ def mint_token(room: str, identity: str, name: str, metadata: dict | None = None
 class _Leg:
     """One person in the room as a CallSession side: their data channel and their private translated-voice track."""
 
-    def __init__(self, room: rtc.Room, identity: str, role: str, person: str):
-        self.room, self.identity, self.role, self.person = room, identity, role, person
+    def __init__(self, room: rtc.Room, identity: str, key: str, person: str, lazy_track: bool = False):
+        # identity: LiveKit identity (data destination); key: CallSession side identity (role for legacy)
+        self.room, self.identity, self.key, self.person = room, identity, key, person
         self.source = rtc.AudioSource(SAMPLE_RATE, 1)
         self.track = rtc.LocalAudioTrack.create_audio_track(f"kin-to-{identity}", self.source)
+        self.published = not lazy_track  # legacy legs are published by _join before the session starts
+        self._publish_lock = asyncio.Lock()
         self.token: str | None = None
         self.mic_task: asyncio.Task | None = None
         self._pending = b""
 
+    async def ensure_track(self) -> None:
+        if not self.published:
+            async with self._publish_lock:
+                if not self.published:
+                    await self.room.local_participant.publish_track(self.track, rtc.TrackPublishOptions())
+                    self.published = True
+
     async def send_json(self, msg: dict) -> None:
+        if msg.get("type") == "audio_start":  # publish before the voice starts, so the listener can subscribe in time
+            await self.ensure_track()
         await self.room.local_participant.publish_data(json.dumps(msg, ensure_ascii=False), reliable=True,
                                                        destination_identities=[self.identity], topic=DATA_TOPIC)
 
     async def send_bytes(self, pcm16: bytes) -> None:
+        await self.ensure_track()  # no-op after audio_start; covers bytes sent without one
         buf = self._pending + pcm16
         step = FRAME_SAMPLES * 2
         cut = len(buf) - len(buf) % step
@@ -81,13 +125,13 @@ class RoomAgent:
     async def run(self) -> None:
         url, _, _ = livekit_creds()
         self.session = registry.get_or_create(self.call_id)
-        self.room.on("participant_connected", lambda p: asyncio.create_task(self._join(p)))
+        self.room.on("participant_connected", lambda p: asyncio.create_task(self._safe_join(p)))
         self.room.on("participant_disconnected", lambda p: asyncio.create_task(self._leave(p)))
         self.room.on("track_subscribed", lambda track, _pub, p: self._listen(track, p))
         await self.room.connect(url, mint_token(room_name(self.call_id), AGENT_IDENTITY, "KIN", agent=True))
         log.info("KIN agent in %s", room_name(self.call_id))
         for p in list(self.room.remote_participants.values()):
-            await self._join(p)
+            await self._safe_join(p)
         try:
             await self.done.wait()
         finally:
@@ -95,17 +139,24 @@ class RoomAgent:
             registry.drop_if_empty(self.call_id)
             log.info("KIN agent left %s", room_name(self.call_id))
 
+    async def _safe_join(self, p: rtc.RemoteParticipant) -> None:
+        try:  # one bad participant must not take the room down, and a failed join must be logged
+            await self._join(p)
+        except Exception:  # noqa: BLE001
+            log.exception("KIN join failed for %s in call %s", p.identity, self.call_id)
+
     async def _join(self, p: rtc.RemoteParticipant) -> None:
-        try:
-            meta = json.loads(p.metadata or "{}")
-        except json.JSONDecodeError:
-            meta = {}
-        role, person = meta.get("role"), meta.get("person")
-        if role not in ("grandparent", "grandchild") or not person or p.identity in self.legs:
+        parsed = participant_from_meta(p.identity, p.metadata)
+        if parsed is None or p.identity in self.legs:
             return
-        leg = _Leg(self.room, p.identity, role, person)
-        await self.room.local_participant.publish_track(leg.track, rtc.TrackPublishOptions())
-        side = await self.session.join(role, person, leg.send_json, leg.send_bytes)
+        key, person, lang, person_id = parsed
+        world = person_id is not None
+        leg = _Leg(self.room, p.identity, key, person, lazy_track=world)
+        if world:
+            side = await self.session.join(key, person, leg.send_json, leg.send_bytes, lang=lang, person_id=person_id)
+        else:
+            await self.room.local_participant.publish_track(leg.track, rtc.TrackPublishOptions())
+            side = await self.session.join(key, person, leg.send_json, leg.send_bytes)
         leg.token = side.token
         self.legs[p.identity] = leg
         for pub in p.track_publications.values():  # mic published before we arrived
@@ -127,7 +178,7 @@ class RoomAgent:
         # clock-based: count samples delivered since the start and top up exactly the deficit. A sleep-then-send
         # filler drifts behind real time (each sleep runs long) and Muse closed the stream after ~50 s of silence.
         clock = {"start": loop.time(), "sent": 0}
-        log.info("KIN hears %s (%s)", leg.identity, leg.role)
+        log.info("KIN hears %s (%s)", leg.identity, leg.key)
 
         async def keep_alive() -> None:
             while True:
@@ -136,13 +187,13 @@ class RoomAgent:
                 if owed > QUIET_AFTER_S * SAMPLE_RATE:
                     n = min(owed, SAMPLE_RATE)  # at most 1 s at once after a long stall
                     clock["sent"] += n
-                    await self.session.on_audio(leg.role, b"\0" * (n * 2))
+                    await self.session.on_audio(leg.key, b"\0" * (n * 2))
 
         filler = asyncio.create_task(keep_alive())
         try:
             async for ev in stream:
                 clock["sent"] += ev.frame.samples_per_channel
-                await self.session.on_audio(leg.role, bytes(ev.frame.data))
+                await self.session.on_audio(leg.key, bytes(ev.frame.data))
         finally:
             filler.cancel()
             await stream.aclose()
@@ -152,13 +203,26 @@ class RoomAgent:
         if leg:
             if leg.mic_task:
                 leg.mic_task.cancel()
-            await self.session.leave(leg.role, token=leg.token)
+            await self.session.leave(leg.key, token=leg.token)
+            if leg.key == leg.identity:  # world leg: mark the participant row left so later joins do not list them
+                try:
+                    await asyncio.to_thread(self._mark_left, leg.identity)
+                except Exception:  # noqa: BLE001
+                    log.exception("left_at for %s in call %s", leg.identity, self.call_id)
             try:
-                await self.room.local_participant.unpublish_track(leg.track.sid)
+                if leg.published:  # a world leg with voice off never published its track
+                    await self.room.local_participant.unpublish_track(leg.track.sid)
             except Exception as e:  # noqa: BLE001  (track already gone when the room closes)
                 log.debug("unpublish %s: %s", leg.identity, e)
         if not self.room.remote_participants:
             self.done.set()
+
+
+    def _mark_left(self, identity: str) -> None:
+        with session_scope() as s:
+            s.execute(update(m.CallParticipant).where(m.CallParticipant.call_id == self.call_id,
+                                                      m.CallParticipant.identity == identity,
+                                                      m.CallParticipant.left_at.is_(None)).values(left_at=clock.now()))
 
 
 class AgentRegistry:

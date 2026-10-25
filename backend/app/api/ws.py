@@ -35,7 +35,12 @@ async def call_ws(ws: WebSocket, call_id: int, role: str = Query(...), person: s
     async def send_bytes(b: bytes) -> None:
         await ws.send_bytes(b)
 
-    side = await session.join(role, person, send_json, send_bytes)
+    try:
+        side = await session.join(role, person, send_json, send_bytes)
+    except PermissionError as e:  # a world call needs a verified person; the legacy socket cannot provide one
+        await ws.close(code=4403, reason=str(e)[:120] or "not allowed on this call")
+        registry.drop_if_empty(call_id)
+        return
     try:
         while True:
             msg = await ws.receive()
