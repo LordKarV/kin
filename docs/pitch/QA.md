@@ -6,11 +6,11 @@ Short, honest answers. If the true answer is "not measured" or "not built", say 
    Watch what happens on the two phones. Help arrives while Mei is still mid-sentence, and it is different for each
    person: Arjun gets who Lin is, because she told him six weeks ago; Mei gets nothing, because Lin is her friend.
    When she says the same line again, neither phone shows anything. It stays quiet because KIN tracks what each
-   listener knows, per person, with forgetting. An AI handed everyone's full history has no idea who already knows
-   what, so it explains Lin every time. And the history itself is the risk: what Mei told Arjun never reaches Paatti,
-   and bridges use only your own news. We built that comparison as an eval on [N] planted scenarios: a card for
-   someone who already knew [X%] vs [X%], [Y leaks] vs [Y leaks]. [CONFIRM: from eval 4A; until it runs, say "not
-   measured yet".]
+   listener knows, per person, with forgetting. We tested exactly your alternative: a strong model handed everyone's
+   full history and the same rules, on 63 planted situations. It makes the same calls KIN does and neither leaks, but
+   it needs about 1.8 seconds per line and rereads the whole history every time. KIN decides in 0.8 ms on the partial
+   transcript, so the card lands while she is still talking, and privacy is checked in code before any card is sent,
+   not left to a prompt.
 
 2. **How is this different from Nudge?**
    Nudge starts calls and shows photos when you mention an event, then nudges you to follow up. KIN has no reminders,

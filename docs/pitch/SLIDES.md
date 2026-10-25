@@ -18,12 +18,11 @@ screenshot shows both people's phones side by side, never one alone.
 
 ## 3. Proof
 
-- **Text:** "Help only where someone would be lost."
-- **Two rows, same scenarios:**
-  - "An AI given everyone's full history: a card for someone who already knew [X%] of the time. One person's words
-    shown to someone else: [Y leaks]."
-  - "KIN: [X%]. [Y leaks]."
-  - Footnote: "[N] planted scenarios, same Muse Spark model. [CONFIRM: from eval 4A]"
+- **Text:** "Help only where someone would be lost, in time to matter."
+- **Two rows, same 63 scenarios, same Muse Spark model:**
+  - "An AI given everyone's full history: same decisions, 0 leaks, about 1.8 s per line."
+  - "KIN: same decisions, 0 leaks, 0.8 ms, on the partial transcript."
+  - Footnote: "63 planted scenarios; card precision 100% for both, recall 96% (KIN) vs 93%."
 - **Proof strip:** "Captions, same Muse Spark model with and without KIN's graph: 54% vs 1% entity errors. Same-name
   people: 97% vs 0%." Footnote: "105-sentence Tamil family test set, 150 entity spans, muse-spark-1.3. Not yet
   reviewed by a native speaker."

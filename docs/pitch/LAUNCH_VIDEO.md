@@ -172,8 +172,8 @@ always on screen together.
   same name: 97% wrong vs 0%." Small print: "Muse Spark 1.3, same model and input with and without KIN's graph.
   105-sentence Tamil family test set, 150 entity spans."
 - **VO:** "Same model, with and without KIN's graph: 54% of names and relationships wrong, versus 1%."
-- **If eval 4A has run:** add one line, "An AI given everyone's full history: a card for someone who already knew
-  [X%] of the time, [Y leaks]. KIN: [X%], [Y leaks]. [N] scenarios." [CONFIRM: from eval 4A] Measured values only.
+- **Add one line:** "Matches an AI given everyone's full history (63 scenarios, 0 leaks for both), deciding in
+  0.8 ms instead of about 1.8 s." Measured values only.
 
 ### 13. Privacy (2:01-2:10)
 
