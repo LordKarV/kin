@@ -21,9 +21,8 @@ promise, the close. Cast details are in CASTING.md; rules in RULES.md.
   so the viewer sees that each person gets something different. Only the title cards (shots 2, 3, 6) and the
   how-it-works graphic (shot 10) are full frame.
 - Everything happens during a call. No shot shows anything after a call ends: no summaries, no recaps.
-- The proof number is 54% vs 1% (backend/eval/results.md). PRODUCT.md and STORIES.md say 53%; that is a typo. The
-  comparison against an AI given everyone's full history (eval 4A) has no numbers yet, so it is not in the film unless
-  that eval runs before the edit locks.
+- The proof numbers are 54% vs 1% (backend/eval/results.md) and, against an AI given everyone's full history, the same
+  decisions and 0 leaks for both with 0.8 ms vs about 1.8 s per decision (eval/run_cg --live, 63 scenarios).
 - Never show: photos popping up on a mention, call reminders, follow-up nudges, topic lists, Wikipedia pictures, a
   family-tree archive, storyline cards. They belong to other kinds of apps and blur what KIN is.
 - Words to keep out of the VO and on-screen text: "remember", "memory", "notes", "recall", "context". Say "she told

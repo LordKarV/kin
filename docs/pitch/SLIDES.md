@@ -28,7 +28,6 @@ screenshot shows both people's phones side by side, never one alone.
   reviewed by a native speaker."
 - **Visual:** Arjun's and Mei's phones side by side during the same line: his with the Lin card, hers with captions
   only.
-- If the eval 4A numbers are not in by judging, drop the two rows and keep the proof strip and the visual.
 
 ## 4. Private by design
 
