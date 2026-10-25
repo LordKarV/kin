@@ -1,4 +1,4 @@
-"""Demo endpoint: generic vs grounded side by side on one utterance (plan §10 step 3)."""
+"""Compare endpoint: generic vs grounded translation side by side on one utterance."""
 from __future__ import annotations
 
 import asyncio

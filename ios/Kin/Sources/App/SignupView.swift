@@ -55,7 +55,7 @@ struct SignupView: View {
                 ErrorText(message: model.serverAddressError)
                 Button("Reload languages") { Task { await loadLanguages() } }.padding(.top, 4)
                 #if DEBUG
-                // The demo driver prints kin://signin links; pasting one signs this phone in as that person.
+                // A kin://signin link signs this phone in as that person (debug builds).
                 KinField(label: "Sign-in link (debug)", text: $signinLink, keyboard: .URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -93,23 +93,18 @@ struct SignupView: View {
         }
     }
 
-    /// A build-time demo default (project.yml KIN_DEFAULT_*, via Info.plist). nil when empty or left unexpanded.
+    /// A build-time default (project.yml KIN_DEFAULT_SERVER, via Info.plist). nil when empty or left unexpanded.
     static func buildDefault(_ key: String) -> String? {
         let raw = (Bundle.main.object(forInfoDictionaryKey: key) as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let raw, !raw.isEmpty, !raw.contains("$(") else { return nil }
         return raw
     }
 
-    /// A demo phone opens pre-filled so the user only taps Sign up. Runs once per sign-up screen.
+    /// A build made for a server (KIN_DEFAULT_SERVER) opens with it filled in. Runs once per sign-up screen.
     private func applyBuildDefaults() {
         guard !defaultsApplied else { return }
         defaultsApplied = true
         if let server = Self.buildDefault("KINDefaultServer") { model.baseURLString = server }
-        if let n = Self.buildDefault("KINDefaultName"), name.isEmpty { name = n }
-        if let l = Self.buildDefault("KINDefaultLang") { lang = l }  // loadLanguages keeps it when the server lists it
-        #if DEBUG
-        if let link = Self.buildDefault("KINDefaultSignin"), signinLink.isEmpty { signinLink = link }
-        #endif
     }
 
     private var canSubmit: Bool {
@@ -144,7 +139,7 @@ struct SignupView: View {
 
     private func submit() async {
         #if DEBUG
-        if !trimmedLink.isEmpty { return signInWithLink() }  // a demo phone built with KIN_DEFAULT_SIGNIN
+        if !trimmedLink.isEmpty { return signInWithLink() }  // a pasted sign-in link
         #endif
         busy = true
         defer { busy = false }

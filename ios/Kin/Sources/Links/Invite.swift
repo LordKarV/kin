@@ -51,8 +51,8 @@ struct Invite: Equatable, Sendable {
 }
 
 #if DEBUG
-/// `kin://signin?token=T[&server=URL][&key=K]`, printed by scripts/demo_common_ground.py so a phone can become one of
-/// the driver's people. Debug builds only: in a release build a link that swaps the signed-in account is account
+/// `kin://signin?token=T[&server=URL][&key=K]`, from POST /api/dev/signin, so a phone can sign in as that person.
+/// Debug builds only: in a release build a link that swaps the signed-in account is account
 /// fixation.
 struct SignInLink: Equatable, Sendable {
     let token: String

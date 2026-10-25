@@ -29,7 +29,7 @@ class ASRSession(Protocol):
 
 
 class MockASR:
-    """No real recognition: audio is swallowed; tests and the typed-input demo path bypass ASR entirely."""
+    """No real recognition: audio is swallowed; the typed-input path bypasses ASR entirely."""
 
     def __init__(self, *_, **__):
         self._q: asyncio.Queue[ASREvent | None] = asyncio.Queue()

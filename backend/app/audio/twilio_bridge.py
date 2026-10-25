@@ -7,7 +7,7 @@ VERIFIED 2026-10-24 (twilio.com/docs/voice/twiml/connect/conversationrelay + web
   App → relay: text{token,last,lang,interruptible} · play · sendDigits · language{ttsLanguage,transcriptionLanguage} · end
 Relay does STT (Deepgram nova-3) and TTS (ElevenLabs) itself; KIN supplies grounded text. Two legs = two independent
 relay sessions (or one relay leg + one laptop WebSocket) bridged through CallSession, as in Twilio's own
-human-to-human translation tutorial. VERIFY the heritage code `ta-IN` in the Relay voice-configuration page before the demo."""
+human-to-human translation tutorial. Check each language's locale in the Relay voice-configuration page before use."""
 from __future__ import annotations
 
 from xml.sax.saxutils import quoteattr

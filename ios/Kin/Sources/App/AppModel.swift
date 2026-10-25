@@ -105,8 +105,8 @@ final class AppModel: ObservableObject {
     }
 
     #if DEBUG
-    /// Become one of the demo driver's people. The token is checked with GET /api/me first, so a bad link leaves the
-    /// current account, server and key alone.
+    /// Sign in as the person in a kin://signin link. The token is checked with GET /api/me first, so a bad link leaves
+    /// the current account, server and key alone.
     func signIn(_ link: SignInLink) {
         if case .call = screen {
             error = "Hang up first to sign in as someone else."

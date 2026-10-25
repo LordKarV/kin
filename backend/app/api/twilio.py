@@ -32,7 +32,7 @@ def _heritage_locale() -> str:
     from ..graph.kin_tables import load_table
     from ..mt.translate import get_translator
     try:
-        return load_table(get_translator(s.demo_family_id).g.heritage_lang).locale
+        return load_table(get_translator(s.sample_family_id).g.heritage_lang).locale
     except Exception:  # noqa: BLE001
         return "ta-IN"
 

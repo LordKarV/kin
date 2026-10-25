@@ -23,7 +23,7 @@ import httpx
 
 log = logging.getLogger("kin.cards.images")
 SUMMARY_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
-USER_AGENT = os.environ.get("WIKI_USER_AGENT", "KIN-family-interpreter/0.1 (HackTX 2026 hackathon demo; python-httpx)")  # add a contact via env
+USER_AGENT = os.environ.get("WIKI_USER_AGENT", "KIN/0.1 (python-httpx)")  # add a contact via env
 TIMEOUT_S = 6.0
 MISS_TTL_S = 24 * 3600  # retry a failed/missing title after a day
 CACHE_PATH = Path(__file__).resolve().parents[2] / "media" / "pictures" / "cache.json"

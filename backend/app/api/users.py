@@ -103,7 +103,7 @@ def circle(view: WorldView, me: int, pid: int) -> str | None:
 def sign_up(body: UserIn, background: BackgroundTasks, s: Session = Depends(get_session)) -> UserOut:
     phone = body.phone
     if phone is not None and not get_settings().dev_endpoints:
-        # First come would win someone else's number: outside the demo a phone links by texting "KIN <code>".
+        # First come would win someone else's number: a phone links by texting "KIN <code>".
         log.info("sign-up phone not linked: texting the code from GET /api/me/phone-code links it")
         phone = None
     try:

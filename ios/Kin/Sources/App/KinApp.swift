@@ -28,13 +28,9 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            #if DEBUG
-            if CallDemo.isRequested { CallDemo.view() } else { screen }
-            #else
             screen
-            #endif
         }
-        .preferredColorScheme(isTabs || demoFollowsSystem ? nil : .dark)
+        .preferredColorScheme(isTabs ? nil : .dark)
         .onChange(of: scenePhase, initial: true) { _, phase in
             model.scene(active: phase == .active ? true : phase == .background ? false : nil)
         }
@@ -60,14 +56,6 @@ extension RootView {
         }
     }
 
-    /// Demo app screens render in the system appearance like the real tabs.
-    var demoFollowsSystem: Bool {
-        #if DEBUG
-        return CallDemo.isRequested && ["people", "world", "messages"].contains(CallDemo.requestedState)
-        #else
-        return false
-        #endif
-    }
 }
 
 struct EndedView: View {

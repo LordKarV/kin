@@ -316,7 +316,7 @@ struct PausedNote: View {
     }
 }
 
-/// Typed input: KIN treats it like speech (demo insurance when the mic or ASR fails). Behind the keyboard control.
+/// Typed input: KIN treats it like speech (a fallback when the mic or speech recognition fails). Behind the keyboard control.
 struct TypeBar: View {
     let onSend: (String) -> Void
     @State private var text = ""
@@ -386,73 +386,3 @@ struct CallControls: View {
             .background(lit ? Color.white : K.Call.control, in: Circle())
     }
 }
-
-#if DEBUG
-/// Debug launch hooks for simulator screenshots, without networking. `-demoCallScreen` shows the call screen;
-/// `-demoState <name>` picks the state (see `view()`), including the People, person-world and Messages screens.
-@MainActor
-enum CallDemo {
-    static var isRequested: Bool {
-        let args = ProcessInfo.processInfo.arguments
-        return args.contains("-demoCallScreen") || args.contains("-demoState")
-    }
-    static var requestedState: String { UserDefaults.standard.string(forKey: "demoState") ?? "whoBridge" }
-
-    static let joined = #"{"type":"joined","call_id":12,"identity":"p3","person":"p_arjun_3","name":"Arjun","lang":"en","participants":[{"identity":"p5","person":"p_mei_5","name":"Mei","lang":"zh"}],"kin":{"on":true,"paused_by":null}}"#
-    static let hello = #"{"type":"transcript","call_id":12,"utterance_id":90,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"最近怎么样？我这周忙死了","src_lang":"zh","target_lang":"en","translation":"How have you been? This week has been crazy."}"#
-    static let linLine = #"{"type":"transcript","call_id":12,"utterance_id":91,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"我和林终于去莫干山攀岩了","src_lang":"zh","target_lang":"en","translation":"Lin and I finally went climbing at Moganshan.","grounded_spans":[{"source":"林","rendered":"Mei's friend Lin (from the Fudan climbing wall)","node_id":"p_lin_17"}]}"#
-    static let linCard = #"{"type":"glance","speaker":"p5","items":[{"key":"who:p_lin_17","kind":"who","title":"Lin","native":"林","body":"Mei's friend from the Fudan climbing wall, first mentioned Sep 14","category":"person","node_id":"p_lin_17","gap":"reminder"}]}"#
-    static let bridge = #"{"type":"glance","speaker":"p5","items":[{"key":"bridge:41","kind":"bridge","title":"You haven't told Mei","body":"started bouldering","target":"p_mei_5","private":true}]}"#
-    static let byteDance = #"{"type":"transcript","call_id":12,"utterance_id":95,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"字节那边还没消息，好紧张","src_lang":"zh","target_lang":"en","translation":"Still no news from ByteDance. I'm so nervous."}"#
-    static let story = #"{"type":"glance","speaker":"p5","items":[{"key":"story:3","kind":"storyline","title":"Mei's job search","storyline_id":3,"states":[{"label":"applied","at":"2026-09-02","known":true},{"label":"second round","at":"2026-10-10","known":false}]}]}"#
-    static let paattiJoined = #"{"type":"joined","call_id":14,"identity":"p3","person":"p_arjun_3","name":"Arjun","lang":"en","participants":[{"identity":"p2","person":"p_paatti_2","name":"Paatti","lang":"ta"}],"kin":{"on":true,"paused_by":null}}"#
-    static let raviLine = #"{"type":"transcript","call_id":14,"utterance_id":201,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"ரவி நேத்து அடையாறுலேர்ந்து போன் பண்ணான்","src_lang":"ta","target_lang":"en","translation":"Ravi mama called yesterday from Adyar."}"#
-    static let thinLine = #"{"type":"transcript","call_id":14,"utterance_id":202,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"ரொம்ப இளைச்சுட்ட, சரியா சாப்பிடுறியா?","src_lang":"ta","target_lang":"en","translation":"You've gotten so thin. Are you eating properly?"}"#
-    static let thinMeaning = #"{"type":"enrich","utterance_id":202,"pragmatics_cards":[{"kind":"cultural","source":"ரொம்ப இளைச்சுட்ட","literal":"You've gotten so thin","meaning":"She's worried you aren't eating well. It's care, not criticism."}]}"#
-    static let tripLine = #"{"type":"transcript","call_id":12,"utterance_id":97,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"那次旅行太疯狂了，她差点从岩壁上掉下来","src_lang":"zh","target_lang":"en","translation":"That trip was insane. She almost fell off the wall."}"#
-    /// What POST /api/calls/12/explain {"text": null, "recent": true} returns after the trip line: Lin, gap null.
-    static let linRecent = #"{"items":[{"key":"who:p_lin_17","kind":"who","title":"Lin","native":"林","body":"Mei's friend from the Fudan climbing wall, first mentioned Sep 14","category":"person","node_id":"p_lin_17"}]}"#
-    static let xiaoWangLine = #"{"type":"transcript","call_id":12,"utterance_id":96,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"小王也跟我们一起去了","src_lang":"zh","target_lang":"en","translation":"Xiao Wang came with us too."}"#
-    /// What POST /api/calls/12/explain returns for "Xiao Wang", a name KIN has never heard: one ask item.
-    static let xiaoWangAsk = #"{"items":[{"key":"ask:xiao wang","kind":"ask","title":"Xiao Wang","term":"Xiao Wang","guess":"Xiao Wang","suggestions":[{"owner":"p_mei_5","relation":"friend","label":"Mei's friend"},{"owner":"p_mei_5","relation":"classmate","label":"Mei's classmate"}]}]}"#
-
-    static func messages(_ state: String) -> [String] {
-        switch state {
-        case "who": return [joined, hello, linLine, linCard]
-        case "storyline": return [joined, linLine, byteDance, story]
-        case "meaning": return [paattiJoined, raviLine, thinLine, thinMeaning]
-        case "paused": return [joined, hello]
-        case "explain": return [joined, linLine, linCard, xiaoWangLine]
-        case "gesture": return [joined, linLine, tripLine]
-        default: return [joined, hello, linLine, linCard, bridge]
-        }
-    }
-
-    static func state(_ name: String = "whoBridge", now: Date = .now) -> WorldState {
-        var s = messages(name).reduce(WorldState()) { reduce($0, KinWorldMsg.decode(Data($1.utf8)), me: "p3", now: now) }
-        if name == "explain", let started = explainStarted(s, term: "Xiao Wang"),
-           let out = try? JSONDecoder().decode(ExplainOut.self, from: Data(xiaoWangAsk.utf8)) {
-            s = explained(started, term: "Xiao Wang", items: out.items, now: now)
-        }
-        if name == "gesture", let started = explainStarted(s, term: recentAsk),
-           let out = try? JSONDecoder().decode(ExplainOut.self, from: Data(linRecent.utf8)) {
-            s = recentExplained(started, items: out.items, now: now)
-        }
-        return s
-    }
-
-    @ViewBuilder static func view() -> some View {
-        let name = requestedState
-        if let screen = ScreensDemo.view(name) {
-            screen
-        } else {
-            let paatti = name == "meaning"
-            let paused = name == "paused"
-            CallScreen(world: state(name), peers: [Tile(id: paatti ? "p2" : "p5", name: paatti ? "Paatti" : "Mei", track: nil)],
-                       me: Tile(id: "p3", name: "Arjun", track: nil), myPerson: "p_arjun_3", myLang: "en",
-                       kinOn: !paused, pausedBy: paused ? PausedBy(person: "p_mei_5", name: "Mei") : nil,
-                       micOn: true, cameraOn: true, voiceOn: false, invite: nil, error: nil, actions: CallActions())
-        }
-    }
-}
-#endif

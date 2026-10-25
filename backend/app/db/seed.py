@@ -1,4 +1,4 @@
-"""The demo family: the Krishnans, a family split between Madurai, Chennai, Coimbatore, Singapore and Austin.
+"""The sample family used by the evaluation: the Krishnans, a family split between Madurai, Chennai, Coimbatore, Singapore and Austin.
 
 Fictional but realistic. Two people share the first name Ravi (the "Ravi problem"):
   - Ravi mama        = Priya's younger brother  = Arjun's maternal uncle (Mom's brother), Chennai
@@ -102,8 +102,8 @@ CUES = {
 }
 
 
-def seed_demo_family(session: Session) -> m.Family:
-    """Create (or return the existing) demo family. Idempotent by family name."""
+def seed_sample_family(session: Session) -> m.Family:
+    """Create (or return the existing) sample family. Idempotent by family name."""
     fam = session.scalar(select(m.Family).where(m.Family.name == FAMILY_NAME))
     if fam is None:
         fam = m.Family(name=FAMILY_NAME, heritage_lang="ta")
@@ -134,7 +134,7 @@ def seed_demo_family(session: Session) -> m.Family:
 
     seed_languages(session)
 
-    # consent record for the demo grandparent (voice clone uses a teammate's voice in the demo; see plan §9)
+    # consent record for the sample grandparent's cloned voice
     kamala = by_slug["p_kamala"]
     if session.scalar(select(m.Consent).where(m.Consent.person_id == kamala.id)) is None:
         session.add(m.Consent(person_id=kamala.id, voice_clone=False, memory=True))

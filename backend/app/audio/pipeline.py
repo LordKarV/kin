@@ -669,7 +669,7 @@ class CallRegistry:
         if call_id not in self._calls:
             with session_scope() as s:
                 call = s.get(m.Call, call_id)
-                family_id = call.family_id if call else get_settings().demo_family_id
+                family_id = call.family_id if call else get_settings().sample_family_id
                 world = call is not None and call.mode == "world"
             cs = CallSession(call_id=call_id, family_id=family_id, translator=get_translator(family_id), tts=get_tts())
             if world:  # Fade is the optional legacy mode; world calls run LiveWorld instead (8.1)

@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     from sqlalchemy import select
 
     from .db import models as m
-    from .db.seed import seed_demo_family
+    from .db.seed import seed_sample_family
     from .db.session import init_db, session_scope
 
     from .security import check_startup
@@ -46,9 +46,9 @@ async def lifespan(app: FastAPI):
     init_db()
     from .db.seed import seed_languages
 
-    with session_scope() as s:  # reference data (languages, kin tables) always; a demo family only when asked for
-        if get_settings().seed_demo_family and s.scalar(select(m.Family)) is None:
-            seed_demo_family(s)
+    with session_scope() as s:  # reference data (languages, kin tables) always; the sample family only when asked for
+        if get_settings().seed_sample_family and s.scalar(select(m.Family)) is None:
+            seed_sample_family(s)
         seed_languages(s)
     import asyncio
 

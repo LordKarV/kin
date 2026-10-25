@@ -19,15 +19,10 @@ class LearnerText(BaseModel):
 
 def _family() -> int:
     """Fade is a legacy-family mode: the world space answers 404 like a missing family (D2), and every learner slug
-    and utterance is looked up inside the demo family only."""
+    and utterance is looked up inside the sample family only."""
     with session_scope() as s:
         return legacy_family(s, None).id
 
-
-class Sim(BaseModel):
-    learner: str = "p_arjun"
-    weeks: int = 1
-    per_week: int = 3
 
 
 @router.get("/mastery")
@@ -53,8 +48,3 @@ def policy(body: LearnerText) -> dict:
 @router.post("/reset")
 def reset(body: LearnerText) -> dict:
     return {"deleted": service.reset(body.learner, _family())}
-
-
-@router.post("/simulate")
-def simulate(body: Sim) -> dict:
-    return service.simulate(body.learner, body.weeks, body.per_week, _family())

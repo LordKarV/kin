@@ -6,7 +6,7 @@ Every scenario gets a fresh temp SQLite world written row by row (link_kin and t
 world/apply.py), knowledge folded from its `evidence` with knowledge.update, then the probe is driven through the real
 LiveWorld (join, on_partial, on_final, on_translated). KIN's side never reaches the LLM: LLM.structured raises, so
 localization and extraction fail closed and are counted. `--live` adds the naive shared-context baseline
-(eval_scenarios/naive_baseline_prompt.md): one Muse call per scenario through app/llm.py, scored by the same code.
+(eval_scenarios/naive_baseline_prompt.txt): one Muse call per scenario through app/llm.py, scored by the same code.
 
 Exits 1 when any KIN hard-fail counter is above 0 or an on_partial p95 is above 10 ms.
 """
@@ -48,9 +48,9 @@ log = logging.getLogger("kin.eval.cg")
 ROOT = Path(__file__).resolve().parents[1]  # backend/
 REPO = ROOT.parent
 DEFAULT_OUT = ROOT / "eval" / "common_ground" / "results.md"
-NAIVE_PROMPT = REPO / "eval_scenarios" / "naive_baseline_prompt.md"
+NAIVE_PROMPT = REPO / "eval_scenarios" / "naive_baseline_prompt.txt"
 LEXICONS = ROOT / "app" / "cards" / "lexicons"
-ANCHOR = datetime(2026, 9, 14, 12, tzinfo=timezone.utc)  # day 0, noon UTC (eval_scenarios/README.md conventions)
+ANCHOR = datetime(2026, 9, 14, 12, tzinfo=timezone.utc)  # day 0, noon UTC 
 SWEEP = [round(0.20 + 0.05 * i, 2) for i in range(7)]
 P95_LIMIT_MS = 10.0
 CATS = ("entity", "bridge", "storyline", "ask", "term")
@@ -432,7 +432,7 @@ VERB_ITEM = {"heard": "heard {x}", "said": "said {x} themself", "authored": "wro
 
 
 def render_user_message(s: dict, lexicons: Path = LEXICONS) -> str:
-    """Copied from eval_scenarios/naive_baseline_prompt.md (reference implementation); only the paths changed."""
+    """Copied from eval_scenarios/naive_baseline_prompt.txt (reference implementation); only the paths changed."""
     people = {p["key"]: p for p in s["people"]}
     groups = {g["key"]: g for g in s.get("groups", [])}
     facts = {f["key"]: f for f in s.get("facts", [])}
@@ -737,7 +737,7 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("eval/results.md belongs to run_eval; pick another --out")
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     os.environ["BRIDGE_RERANK"] = "0"  # score the default engine (D8); the rerank would call the LLM
-    os.environ["SEED_DEMO_FAMILY"] = "0"
+    os.environ["SEED_SAMPLE_FAMILY"] = "0"
     if not a.live:
         os.environ["MODEL_API_KEY"] = "offline-eval-dummy"
     config.get_settings.cache_clear()
@@ -781,7 +781,7 @@ def main(argv: list[str] | None = None) -> int:
             f"KIN made 0 network calls: {_blocked.calls} structured LLM calls (localization, extraction) were "
             "blocked and failed closed.",
             "Naive shared-context = one Muse call per scenario with the full plain-text history "
-            "(eval_scenarios/naive_baseline_prompt.md)" + ("." if a.live else "; not run (pass --live).")]
+            "(eval_scenarios/naive_baseline_prompt.txt)" + ("." if a.live else "; not run (pass --live).")]
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(report(sets, sweep, lat, meta, kin_all.misses + [x for _t, _n, _k, nv in sets[:1 + bool(extra)]
                                                                      if nv for x in nv.misses]), encoding="utf-8")

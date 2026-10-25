@@ -1,4 +1,4 @@
-"""Mastery bookkeeping: exposures (weak), verifications (strong), the passthrough policy, and the demo simulation."""
+"""Mastery bookkeeping: exposures (weak), verifications (strong), the passthrough policy."""
 from __future__ import annotations
 
 import re
@@ -129,36 +129,3 @@ def passthrough_tokens(learner: str, text: str, family_id: int | None = None, kn
         if tok not in out:
             out.append(tok)
     return out
-
-
-# ---- demo simulation ----------------------------------------------------------
-# A fixed, documented history: words Paatti uses on every call. Week w exposes each word `per_week` times and
-# verifies it once per week from week 2 (the grandchild starts answering without asking for a repeat).
-DEMO_VOCAB = ["நேத்து", "இன்னைக்கு", "நல்லா", "ரொம்ப", "சாப்பிட்டியா", "எப்போ", "போன்", "பண்ணான்", "வர்ற", "வெயில்", "மழை", "தூங்கு", "படி", "சந்தோஷம்", "கவனமா"]
-DEMO_SENTENCE = "இன்னைக்கு ரொம்ப வெயில், நீ நல்லா சாப்பிட்டியா? உன் மாமா நேத்து போன் பண்ணான், எப்போ வர்ற?"
-
-
-def simulate(learner: str, weeks: int, per_week: int = 3, family_id: int | None = None) -> dict:
-    """Replay `weeks` of recorded-style exposures/verifications through the REAL BKT, in memory, from a clean slate.
-    Never writes the learner's real mastery rows. Returns per-word trajectories (week 0..weeks), the resulting
-    mastery table, and what the fixed demo sentence would pass through."""
-    weeks = max(0, min(12, int(weeks)))
-    vocab = [(w, lemma(w)) for w in DEMO_VOCAB]
-    state = {lm: {"p": DEFAULT.p_init, "exp": 0, "ver": 0} for _w, lm in vocab}
-    traj: dict[str, list[float]] = {lm: [DEFAULT.p_init] for _w, lm in vocab}
-    pace = {lm: 1.0 - 0.06 * i for i, (_w, lm) in enumerate(vocab)}  # greetings first, so curves are staggered
-    for wk in range(1, weeks + 1):
-        for _w, lm in vocab:
-            st = state[lm]
-            for _ in range(max(1, round(per_week * pace[lm]))):
-                st["p"] = bkt.expose(st["p"]); st["exp"] += 1
-            if wk >= 2 and (wk * pace[lm]) >= 1.5:
-                st["p"] = bkt.update(st["p"], correct=True); st["ver"] += 1
-            traj[lm].append(round(st["p"], 4))
-    known = {lm for lm, st in state.items() if st["p"] >= MASTERY_THRESHOLD}
-    pt = passthrough_tokens(learner, DEMO_SENTENCE, family_id, known=known)
-    return {"learner": learner, "weeks": weeks, "simulated": True, "sentence": DEMO_SENTENCE, "passthrough": pt,
-            "trajectories": [{"lemma": lm, "lemma_surface": w, "curve": traj[lm], "mastered": lm in known} for w, lm in vocab],
-            "mastery": [{"lemma": lm, "surface": w, "p_known": round(state[lm]["p"], 4), "n_exposures": state[lm]["exp"], "n_verified": state[lm]["ver"], "mastered": lm in known} for w, lm in vocab],
-            "note": "Simulation of accumulated history: a documented exposure pattern replayed through the real BKT in memory. Your real mastery is untouched.",
-            "at": datetime.now(timezone.utc).isoformat()}

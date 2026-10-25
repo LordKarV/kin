@@ -54,7 +54,7 @@ Same Muse Spark model (muse-spark-1.3) on both sides of every comparison:
 | Private texts shown to the wrong person, same test | 0 | 2 |
 | Median time to decide on a card, same test | 2.0 to 2.7 ms | 3.7 to 4.4 s |
 
-Reports: `backend/eval/results.md` and `backend/eval/common_ground/results_live*.md`.
+Reproduce with the commands under Evaluation; each run writes its report next to the eval code.
 
 ## Run it locally
 
@@ -65,8 +65,8 @@ livekit-server --dev    # LiveKit on ws://localhost:7880
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Every setting is an environment variable (see `backend/app/config.py` and `.env.example`). Dev routes
-(`/api/dev/*`, used to plant demo history) are off unless the server runs with `DEV_ENDPOINTS=1`.
+Every setting is an environment variable (see `backend/app/config.py` and `.env.example`). Development routes
+(`/api/dev/*`) are off unless the server runs with `DEV_ENDPOINTS=1`.
 
 The iOS app is in `ios/` (SwiftUI, LiveKit Swift 2.17.0). Generate the project and point it at a server with build
 settings, so nothing is hardcoded:
@@ -77,34 +77,38 @@ xcodebuild -project Kin.xcodeproj -scheme Kin -destination 'generic/platform=iOS
   KIN_DEFAULT_SERVER=http://<server>:8000 build
 ```
 
-`KIN_DEFAULT_NAME`, `KIN_DEFAULT_LANG` and `KIN_DEFAULT_SIGNIN` pre-fill a demo phone the same way. The server can
-also be typed under Sign up > Server.
+The server can also be typed under Sign up > Server.
 
-## Demo
-
-`scripts/seed_demo.py` plants two months of history for two demo worlds: part 1, two friends speaking English; part 2,
-a grandson and his grandmother, who speaks Tamil. Every card shown changes what KIN thinks each person knows, so save
-a snapshot right after seeding and restore it between runs:
-
-```bash
-cd backend && KIN_BASE='http://127.0.0.1:8000' .venv/bin/python ../scripts/seed_demo.py --part 1
-.venv/bin/python ../scripts/demo_snapshot.py save       # after seeding
-.venv/bin/python ../scripts/demo_snapshot.py restore    # between runs, with no call live
-```
-
-The in-app reset (People > gear > Demo) swaps in `kin.demo-part1.db` or `kin.demo-part2.db`, saved next to the
-server's database.
-
-The live script is in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
 
 ## Deploy on Vultr
 
-One VM runs the backend and LiveKit, reachable from any network. Step by step:
-[deploy/vultr/README.md](deploy/vultr/README.md).
+One Vultr VM runs the backend and LiveKit, reachable from any network.
 
-```bash
-deploy/vultr/deploy.sh root@<server-ip>
-```
+1. **Create the server.** Cloud Compute, Ubuntu 24.04 LTS, 2 vCPU and 4 GB, in the region closest to your users.
+   Add your SSH key, deploy, and note the IPv4 address.
+2. **Copy your secrets once.** The deploy script never sends `.env`:
+
+   ```bash
+   ssh root@<ip> 'mkdir -p /opt/kin' && scp .env root@<ip>:/opt/kin/.env
+   ```
+
+3. **Deploy, and redeploy after every change:**
+
+   ```bash
+   deploy/vultr/deploy.sh root@<ip>
+   ```
+
+   It copies `backend/`, `scripts/` and `deploy/` (no databases, no `.env`), runs `setup.sh`, restarts both services
+   and checks `http://<ip>:8000/health`. On the first run `setup.sh` installs Python and LiveKit, opens the firewall
+   (22, 8000, 7880-7881/tcp, 50000-60000/udp) and generates LiveKit keys and a `KIN_API_KEY` into
+   `/etc/kin/kin.env`, which override `.env`. The database lives at `/opt/kin/data/kin.db`.
+4. **Connect the app.** Read the key with `ssh root@<ip> grep KIN_API_KEY /etc/kin/kin.env`, then either type
+   `http://<ip>:8000` and the key under Sign up > Server, or build the app with `KIN_DEFAULT_SERVER=http://<ip>:8000`.
+5. **Logs:** `ssh root@<ip> journalctl -u kin-backend -u livekit -f`.
+
+Traffic is plain HTTP and `ws://` to the IP until you add a domain. With one, put Caddy in front for HTTPS and
+`wss://`, and set `LIVEKIT_URL` to the `wss://` host. A Twilio number can point its SMS webhook at
+`http://<ip>:8000/twilio/sms` once `TWILIO_*` and `SMS_NUMBER` are set.
 
 ## Evaluation
 
@@ -119,8 +123,8 @@ cd backend && python -m eval.run_cg --live     # common-ground decisions vs one 
 | --- | --- |
 | `backend/` | FastAPI server: calls, speech, the common-ground engine, captions, texts, privacy |
 | `ios/` | The KIN iPhone app (SwiftUI) |
-| `deploy/vultr/` | Server setup, deploy script and systemd units |
-| `scripts/` | Demo seeding and snapshots, kinship-table builder |
+| `deploy/vultr/` | Vultr server setup, deploy script and systemd units |
+| `scripts/` | Kinship-table builder |
 | `backend/eval/`, `eval_scenarios/` | Evaluation harness and its test data |
-| `design/` | Design source, brand assets and mockups |
-| `overlay/`, `frontend/`, `mobile/` | Earlier clients (desktop call overlay, web UI, React Native), kept for reference |
+| `design/brand/` | App icon, launch screen and brand assets |
+| `overlay/`, `mobile/` | Earlier clients (desktop call overlay, React Native), kept for reference |

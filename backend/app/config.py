@@ -57,14 +57,14 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{_HERE / 'kin.db'}"  # absolute so scripts from any cwd share one DB
     embeddings_provider: str = "none"
     kin_api_key: str = "change-me"
-    demo_family_id: int = 1
-    seed_demo_family: bool = False  # nothing pre-seeded: families are built by the user (setup + cards). Tests/eval opt in.
+    sample_family_id: int = 1
+    seed_sample_family: bool = False  # nothing pre-seeded: families are built by the user (setup + cards). The evaluation opts in.
 
     # World (common-ground engine)
-    third_party_ttl_days: int = 120  # must exceed the 6-week demo gap (ARCHITECTURE D11)
+    third_party_ttl_days: int = 120  # third-party facts expire after this many days unless pinned
     clock_offset_days: float = 0  # initial world/clock offset; /api/dev/clock changes it at runtime
     bridge_rerank: bool = False
-    dev_endpoints: bool = False  # /api/dev/* (clock, plant, simulated SMS): on only for tests, eval and the demo (DEV_ENDPOINTS=1)
+    dev_endpoints: bool = False  # /api/dev/* (clock, plant, simulated SMS): local development only (DEV_ENDPOINTS=1)
     sms_number: str = ""  # the KIN SMS number shown in the app
 
 

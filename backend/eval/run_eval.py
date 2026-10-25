@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.config import get_settings
-from app.db.seed import seed_demo_family
+from app.db.seed import seed_sample_family
 from app.db.session import init_db, session_scope
 from app.graph.kinship import FamilyGraph
 from app.mt.translate import Translator
@@ -144,7 +144,7 @@ def main(argv=None) -> int:
 
     init_db()
     with session_scope() as s:
-        fam = seed_demo_family(s)
+        fam = seed_sample_family(s)
         graph = FamilyGraph.from_session(s, fam.id)
     tr = Translator(graph)
     g_items, i_items = load_items(args.limit)

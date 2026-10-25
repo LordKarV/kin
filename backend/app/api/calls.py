@@ -32,7 +32,7 @@ class NewCall(BaseModel):
 def legacy_family(s: Session, family_id: int | None) -> m.Family:
     """The family a pre-world route may touch. The world space answers like a missing family (D2): the legacy routes
     carry no X-KIN-User, so they must never read or write the space."""
-    fam = s.get(m.Family, family_id or get_settings().demo_family_id)
+    fam = s.get(m.Family, family_id or get_settings().sample_family_id)
     if fam is None or fam.kind == "space":
         raise HTTPException(404, "no family yet: set one up with POST /api/family/setup")
     return fam
