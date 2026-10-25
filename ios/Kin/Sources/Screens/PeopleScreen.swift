@@ -25,12 +25,13 @@ struct PeopleScreen: View {
     @State private var confirm: ConfirmDelete?
     @State private var requests: [ConnectRequestOut] = []
     @State private var adding = false
+    @State private var settings = false
 
     var body: some View {
         PeopleList(contacts: contacts, error: error, myLang: myLang, joining: model.joining,
                    requests: requests, onAnswer: answer, onAdd: { adding = true },
                    onCall: { Task { await model.startCall() } }, onRing: { model.call($0, video: true) },
-                   onSignOut: { model.signOut() },
+                   onSignOut: { model.signOut() }, onSettings: { settings = true },
                    onDeleteAccount: {
                        confirm = ConfirmDelete(title: "Delete your account and everything KIN holds about you?",
                                                button: "Delete my account") { Task { await model.deleteAccount() } }
@@ -42,6 +43,7 @@ struct PeopleScreen: View {
         .refreshable { await load() }
         .onChange(of: model.contactsVersion) { Task { await load() } }
         .sheet(isPresented: $adding) { AddPersonSheet(api: model.api) { Task { await load() } } }
+        .sheet(isPresented: $settings) { SettingsSheet(model: model) { Task { await load() } } }
         .confirmDelete($confirm)
     }
 
@@ -80,6 +82,7 @@ struct PeopleList<Destination: View>: View {
     let onCall: () -> Void  // a new call with an invite to share
     var onRing: (ContactOut) -> Void = { _ in }  // ring this person
     var onSignOut: () -> Void = {}
+    var onSettings: () -> Void = {}  // language, name, sign out (SettingsSheet)
     var onDeleteAccount: () -> Void = {}
     let retry: () -> Void
     @ViewBuilder let destination: (ContactOut) -> Destination
@@ -113,6 +116,9 @@ struct PeopleList<Destination: View>: View {
         .navigationTitle("People")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { Button("Add person", action: onAdd) }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onSettings) { CircleIcon(symbol: "gearshape") }.accessibilityLabel("Settings")
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Start a call", systemImage: "video.badge.plus", action: onCall)

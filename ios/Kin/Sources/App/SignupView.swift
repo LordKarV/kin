@@ -9,6 +9,7 @@ struct SignupView: View {
     @State private var busy = false
     @State private var error: String?
     @State private var done: UserOut?
+    @State private var defaultsApplied = false
     #if DEBUG
     @State private var signinLink = ""
     #endif
@@ -21,7 +22,10 @@ struct SignupView: View {
             }
             .padding(24)
         }
-        .task { await loadLanguages() }
+        .task {
+            applyBuildDefaults()  // before the language list, so it loads from the default server
+            await loadLanguages()
+        }
     }
 
     private var form: some View {
@@ -43,7 +47,7 @@ struct SignupView: View {
             PillButton(title: model.pendingInvite == nil ? "Sign up" : "Sign up and join", busy: busy) {
                 Task { await submit() }
             }
-            .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || languages.isEmpty)
+            .disabled(!canSubmit)
             DisclosureGroup("Server") {
                 KinField(label: "KIN server", text: $model.baseURLString, keyboard: .URL)
                     .textInputAutocapitalization(.never)
@@ -55,14 +59,8 @@ struct SignupView: View {
                 KinField(label: "Sign-in link (debug)", text: $signinLink, keyboard: .URL)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                Button("Sign in with link") {
-                    guard let url = URL(string: signinLink.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-                        error = "That is not a link."
-                        return
-                    }
-                    model.open(url)
-                }
-                .disabled(signinLink.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button("Sign in with link") { signInWithLink() }
+                    .disabled(trimmedLink.isEmpty)
                 #endif
             }
             .tint(Theme.accent)
@@ -95,6 +93,44 @@ struct SignupView: View {
         }
     }
 
+    /// A build-time demo default (project.yml KIN_DEFAULT_*, via Info.plist). nil when empty or left unexpanded.
+    static func buildDefault(_ key: String) -> String? {
+        let raw = (Bundle.main.object(forInfoDictionaryKey: key) as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let raw, !raw.isEmpty, !raw.contains("$(") else { return nil }
+        return raw
+    }
+
+    /// A demo phone opens pre-filled so the user only taps Sign up. Runs once per sign-up screen.
+    private func applyBuildDefaults() {
+        guard !defaultsApplied else { return }
+        defaultsApplied = true
+        if let server = Self.buildDefault("KINDefaultServer") { model.baseURLString = server }
+        if let n = Self.buildDefault("KINDefaultName"), name.isEmpty { name = n }
+        if let l = Self.buildDefault("KINDefaultLang") { lang = l }  // loadLanguages keeps it when the server lists it
+        #if DEBUG
+        if let link = Self.buildDefault("KINDefaultSignin"), signinLink.isEmpty { signinLink = link }
+        #endif
+    }
+
+    private var canSubmit: Bool {
+        #if DEBUG
+        if !trimmedLink.isEmpty { return true }  // signs in with the link: no name or language list needed
+        #endif
+        return !name.trimmingCharacters(in: .whitespaces).isEmpty && !languages.isEmpty
+    }
+
+    #if DEBUG
+    private var trimmedLink: String { signinLink.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    private func signInWithLink() {
+        guard let url = URL(string: trimmedLink) else {
+            error = "That is not a link."
+            return
+        }
+        model.open(url)
+    }
+    #endif
+
     static func label(_ l: LanguageOut) -> String { Locale.current.localizedString(forLanguageCode: l.code) ?? l.name }
 
     private func loadLanguages() async {
@@ -107,6 +143,9 @@ struct SignupView: View {
     }
 
     private func submit() async {
+        #if DEBUG
+        if !trimmedLink.isEmpty { return signInWithLink() }  // a demo phone built with KIN_DEFAULT_SIGNIN
+        #endif
         busy = true
         defer { busy = false }
         let p = phone.trimmingCharacters(in: .whitespaces)
