@@ -16,7 +16,7 @@ public enum Sample {
     {"key":"who:p_lin_17","kind":"who","title":"Lin","native":"林","body":"Mei's friend from the Fudan climbing wall","category":"person","node_id":"p_lin_17","gap":"new"}
     """#)
     public static let boulderBridge: GlanceItem = decode(#"""
-    {"key":"bridge:41","kind":"bridge","title":"You haven't told Mei","body":"started bouldering","target":"p_mei_5","private":true}
+    {"key":"bridge:41","kind":"bridge","title":"Mei hasn't heard yet","body":"you started bouldering","target":"p_mei_5","private":true}
     """#)
     // Story 3
     public static let jobStory: GlanceItem = decode(#"""
@@ -74,5 +74,41 @@ public enum Sample {
     """#)
     public static let jessNew: GlanceItem = decode(#"""
     {"key":"who:p_jess_22","kind":"who","title":"Jess","native":"","body":"Priya's roommate at Georgia Tech","category":"person","node_id":"p_jess_22","gap":"new"}
+    """#)
+
+    // Film shot 7: Mei's own phone. Arjun's English arrives as a Chinese caption; Mei gets no card.
+    public static let arjunBoulderForMei: Transcript = decode(#"""
+    {"call_id":12,"utterance_id":92,"speaker":"p_arjun_3","speaker_identity":"p3","src_text":"Oh, I actually started bouldering!","src_lang":"en","target_lang":"zh","translation":"哦，我其实开始玩抱石了！"}
+    """#)
+    public static let arjunHowLinForMei: Transcript = decode(#"""
+    {"call_id":12,"utterance_id":93,"speaker":"p_arjun_3","speaker_identity":"p3","src_text":"Wait, how was Moganshan?","src_lang":"en","target_lang":"zh","translation":"等等，莫干山怎么样？"}
+    """#)
+    // Film shot 10: the two Ravis, each named with who he is to Arjun.
+    public static let paattiRaviMamaGrounded: Transcript = decode(#"""
+    {"call_id":14,"utterance_id":201,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"ரவி நேத்து அடையாறுலேர்ந்து போன் பண்ணான்","src_lang":"ta","target_lang":"en","translation":"Ravi mama (Mom's younger brother) called yesterday from Adyar."}
+    """#)
+    public static let paattiRaviPeriyappa: Transcript = decode(#"""
+    {"call_id":14,"utterance_id":203,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"ரவி கோவையில புது கடை திறந்திருக்காரு","src_lang":"ta","target_lang":"en","translation":"Ravi periyappa (Dad's elder brother) opened a new shop in Kovai.",
+     "grounded_spans":[{"source":"ரவி","rendered":"your uncle Ravi periyappa (Dad's elder brother)","node_id":"p_ravi_periyappa_9"}]}
+    """#)
+    public static let paattiFriends: Transcript = decode(#"""
+    {"call_id":14,"utterance_id":215,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"உன் ஃப்ரெண்ட்ஸ் எல்லாம் எப்படி இருக்காங்க?","src_lang":"ta","target_lang":"en","translation":"How are all your friends doing?"}
+    """#)
+    public static let hikeBridge: GlanceItem = decode(#"""
+    {"key":"bridge:38","kind":"bridge","title":"Paatti hasn't heard yet","body":"you went hiking with Mei when she visited","target":"p_paatti_2","private":true}
+    """#)
+
+    // On-demand context (POST /api/calls/{id}/explain). Arjun heard about Lin 25 days ago, so KIN thought he
+    // remembered and pushed nothing; he taps "Lin" and gets her card.
+    public static let linExplained: GlanceItem = decode(#"""
+    {"key":"who:p_lin_17","kind":"who","title":"Lin","native":"林","body":"Mei's friend from the Fudan climbing wall, first mentioned Sep 14","category":"person","node_id":"p_lin_17","gap":null}
+    """#)
+    public static let meiXiaoWang: Transcript = decode(#"""
+    {"call_id":12,"utterance_id":96,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"小王也跟我们一起去了","src_lang":"zh","target_lang":"en","translation":"Xiao Wang came with us too."}
+    """#)
+    // Tapping a name KIN has never heard returns a single ask item.
+    public static let xiaoWangAsk: GlanceItem = decode(#"""
+    {"key":"ask:xiao wang","kind":"ask","title":"Xiao Wang","term":"Xiao Wang","guess":"Xiao Wang",
+     "suggestions":[{"owner":"p_mei_5","relation":"friend","label":"Mei's friend"},{"owner":"p_mei_5","relation":"classmate","label":"Mei's classmate"}]}
     """#)
 }

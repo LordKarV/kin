@@ -1,6 +1,7 @@
 # KIN iOS design notes
 
-Mockups: `design/KinMockups/` (SwiftUI package). Screens: `design/screens/*.png` (26 states, plus `_contact-sheet.png`).
+Mockups: `design/KinMockups/` (SwiftUI package). Screens: `design/screens/*.png` (40 states, plus `_contact-sheet.png`).
+Brand: `design/brand/` (app icon, launch screen, launch film cards).
 Every component takes the real wire types from `ios/Kin/Sources/Contracts/Contracts.swift` (mirrored at commit dc5bc87),
 and all sample data is the exact JSON of ARCHITECTURE section 9, decoded through those types. If the server shape
 changes, the mockups stop compiling or decoding, which is intended.
@@ -61,8 +62,9 @@ UI (it is reserved for the app icon), because gradients on functional surfaces a
 
 ### Type
 
-System font (SF Pro). On iOS every style is a Dynamic Type text style, so everything scales with the user's setting;
-the sizes below are the iOS defaults. Sentence case everywhere.
+System font (SF Pro). Display styles (largeTitle, title, title2, title3) use SF Pro Rounded, which reads friendlier at
+large sizes without looking childish; everything you read at length stays SF Pro. On iOS every style is a Dynamic Type
+text style, so everything scales with the user's setting; the sizes below are the iOS defaults. Sentence case everywhere.
 
 | Style | Size, weight | Use |
 |---|---|---|
@@ -113,11 +115,11 @@ says the page is built only from your calls with this person and that she has he
 show small under the last line you can read.
 
 **"Who's that?" card (call-03).** "Lin 林 / Mei's friend from the Fudan climbing wall / First mentioned Sep 14". A
-reminder is marked "Reminder" with a clock icon; a new person is marked "New to you". The avatar uses the person's own
+reminder is marked "Mentioned before" with a clock icon; a new person is marked "New to you". The avatar uses the person's own
 script (林) so cross-script names are visible at a glance.
 
-**Bridge chip (call-04).** Right side, your blue, two lines: "You haven't told Mei" and "Started bouldering". A white
-"Only you see this" tag sits on its edge so the privacy is explicit, not implied. It reads like a note from yourself,
+**Bridge chip (call-04).** Right side, your blue, two lines: "Mei hasn't heard yet" and "You started bouldering". A
+white "Only you see this" tag sits on its edge so the privacy is explicit, not implied. It reads like a note from yourself,
 not an AI interruption: no avatar, no sparkle, no "Suggestion" label.
 
 **Storyline card (call-05).** "Catching up: Mei's job search", a two-node timeline. States you already knew are quiet;
@@ -136,9 +138,9 @@ still work ("Jess: Priya's roommate at Georgia Tech").
 **Voice toggle (call-10).** Off by default, next to the captions, written out ("Voice off" / "Voice on") with an icon.
 On means a translated voice for this listener only.
 
-**Edge states (call-11 to 14).** Paused (who paused, Resume, and what pausing means), weak connection, the other person
-joined without KIN, and the first call ("KIN on, learning" plus one line explaining that it learns as you talk). Each is
-one short line under the KIN pill, never a modal.
+**Edge states (call-11 to 14).** Paused (in the pill and one quiet line in the caption area; see "Round 3"), weak
+connection, the other person joined without KIN, and the first call ("KIN on, learning" plus one line explaining that
+it learns as you talk). Each is one short line under the KIN pill, never a modal.
 
 **Paatti's view, in Tamil (call-15).** Same app for everyone: her captions and cards arrive in Tamil, and the chrome
 strings around them come from `KinStrings.ta`. When Arjun mentions Mei, Paatti's card says who Mei is to him using only
@@ -192,3 +194,124 @@ bottom.
   landscape.
 - Mobbin references were not used yet (the connector needs the user's account). Next pass: compare the call screen,
   captions and card patterns against Mobbin's FaceTime, Messenger, WhatsApp and Live Captions references.
+
+## Round 2: the remaining states
+
+Added for the iOS shell's real screens (signup, home, call, ended) and the launch film shot list
+(`docs/pitch/LAUNCH_VIDEO.md`):
+
+| Screen | File | Why |
+|---|---|---|
+| Waiting for the other person | call-17-waiting-invite | The shell starts a call, then shares an invite. One obvious action: Share invite (plus Copy) |
+| Mei's own phone, Chinese captions | call-18-mei-view-chinese | Film shot 7: Arjun's English as a Chinese caption, no card on her side |
+| Next day, no card | call-19-next-day-silence | Film shot 8: the same sentence, captions only |
+| The two Ravis | call-20-two-ravis | Film shot 10: each Ravi named for who he is to Arjun |
+| Paatti asks about friends | call-21-paatti-hike-bridge | Film shot 10: "Paatti hasn't heard yet / You went hiking with Mei when she visited" |
+| Paused by me | call-22-paused-by-me | Film shot 12 |
+| Joining from an invite | app-11-invited-signup | The shell's "Sign up and join" path: who invited you, name, languages, Join |
+| Welcome and SMS number | app-12-welcome-sms | The shell's post-sign-up screen, with "Maybe later is fine too" |
+| Adding a relative | app-13-add-relative | Film state S6 (placing Ravi mama): relation from the kinship table plus the word the family uses |
+| Call ended | app-14-call-ended | What KIN picked up from this call, to confirm or correct. No ratings, no "call again soon" |
+| Delete confirmation | app-15-delete-confirm | Film shot 12. Calm, specific, and "Keep my account" is as easy to hit as Delete |
+
+## Warmth review
+
+The question for every screen: would a nervous first-time user, or a grandmother, feel watched, judged or rushed? Five
+places read harsh and were changed.
+
+| Where | Before | After | Why |
+|---|---|---|---|
+| Bridge chip | "You haven't told Mei" | "Mei hasn't heard yet" / "You started bouldering" | The old line reads like a scolding. The new one is an opportunity, about her, not your failure |
+| Who card | "Reminder" | "Mentioned before" | Clinical, like a to-do app. The new label just states a fact |
+| Pause | "KIN is paused for this call. No captions or cards, and nothing is transcribed or remembered until someone resumes." | "KIN is taking a break. Nothing is captioned or saved right now. Either of you can resume whenever you like." | Same facts, without the legal tone; a cup icon instead of a pause icon |
+| Contradiction | "Unclear" with a warning triangle, "Two calls disagree", "Fix this" | "Not sure" with a question mark, "You heard both... Which is right?", and three answers (Beijing, Shanghai, Not sure yet) | Nobody did anything wrong; asking is friendlier than a warning, and answering is one tap |
+| Banners | "Weak connection. Captions may lag." / "Mei joined from a link without KIN. Only you get captions." | "The connection is a little slow, so captions may lag." / "Mei joined without KIN, so captions are just for you." | Plain sentences instead of system messages |
+
+Also softened: setup copy ("gets to know the people in your life"; "only speaks up when it would really help"), the SMS
+reply ("Got it, thanks! Noted that you started bouldering."), the delete button (red text on a pale red fill instead of
+a solid red slab), and the first-call banner icon (a wave instead of a sparkle, which reads as "AI").
+
+Voice and tone rules for any new copy:
+- Talk like a thoughtful friend: plain words, second person, short sentences.
+- Never blame or guilt anyone ("you haven't", "you forgot", "you missed"). Frame gaps as something to share or ask.
+- No urgency and no engagement pressure (no streaks, no "call again soon", no counts of days apart).
+- Errors say what happened and what to do next, without "invalid", "failed" or "error".
+- KIN never sounds like it is watching: "KIN picked up" and "you heard", not "KIN detected" or "KIN recorded".
+
+Proposed copy changes on the build side (not in my folders):
+- Bridge card from the engine: `title` "{name} hasn't heard yet" and `body` phrased in the second person ("you started
+  bouldering"), instead of "You haven't told {name}" and "started bouldering".
+- iOS shell alerts: "That link is not a KIN invite." could become "This link doesn't open a KIN call. Ask for a new
+  invite."; "Please sign up again." could become "Your sign-in expired. Sign up again in a few seconds.";
+  "Hang up first to join another call." is fine.
+- The shell forces dark mode (`preferredColorScheme(.dark)`). The design supports both; the call screen is always dark.
+
+## Brand: icon, launch screen, film cards
+
+The mark is two overlapping circles: two people's worlds. The overlap, the common ground, is warm amber; the worlds are
+translucent white on Meta blue. It stays readable from 1024 down to the 40 point Spotlight size (see
+`design/brand/previews/app-icon-sheet.png`). Colors: blue #2A8BFF to #0058D6, amber #FFC94D to #FFA826. The wordmark is
+"KIN" in SF Pro Rounded Bold next to the icon tile.
+
+`design/brand/Assets.xcassets` is ready to copy into `ios/Kin/Resources/` (the build session owns `ios/`):
+- `AppIcon.appiconset`: one 1024 PNG per iOS 18 appearance (light, dark, tinted). The light icon has no alpha channel,
+  as the App Store requires. XcodeGen apps use the `AppIcon` name by default; if not, set
+  `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`.
+- `LaunchBackground.colorset` (#F0F2F5 light, #18191A dark) and `LaunchMark.imageset` (the icon tile, 112 points). In
+  `ios/project.yml`, replace `UILaunchScreen: {}` with `UILaunchScreen: {UIColorName: LaunchBackground, UIImageName:
+  LaunchMark}`. Previews: `design/brand/previews/launch-screen-light.png` and `-dark.png`. No text on the launch screen,
+  per the HIG.
+- `AccentColor.colorset`: #0064E0 light, #47A5FA dark.
+
+Launch film cards in `design/brand/film/` (1920 by 1080, for the shot list in `docs/pitch/LAUNCH_VIDEO.md`):
+
+| File | Shot |
+|---|---|
+| 02a-whos-lin, 02b-six-weeks-ago | 2, the problem (white SF Pro on black, one line each) |
+| 03-reveal | 3, wordmark and "Common ground for people who live apart." |
+| 06-six-weeks-later | 6, with "Time advanced with a dev clock for this demo." |
+| 11-proof | 11, 54% vs 1% bars and "97% wrong vs 0%" for same-name pairs, numbers from `backend/eval/results.md` |
+| 13-close | 13, wordmark, tagline, credits line and repo URL |
+| overlay-september, overlay-next-day, overlay-no-card | Lower thirds and the "No card." overlay, transparent PNGs |
+
+Render them again with `.build/debug/KinRender --brand ../brand` after any change.
+
+## Round 3: on-demand context and a tiny pause
+
+From the 2026-10-25 additions to PRODUCT.md and the design brief (`POST /api/calls/{id}/explain`, ARCHITECTURE
+amendment 5).
+
+### Tap a word for context (call-23 to 25)
+
+KIN's push cards will sometimes miss: it thought Arjun remembered Lin (he heard about her 25 days ago, p 0.40, so no
+card). On-demand context is the safety net.
+
+- **Three word treatments in a caption, strongest first.** A word that triggered a card: tinted and dotted-underlined.
+  A word KIN recognizes (a name, place or term in the listener's own grounded or linker spans): a faint 1 point solid
+  underline at 32 percent white, quiet enough that captions never look like a page of links. Every other word: plain.
+- **Any word is tappable,** not only underlined ones. Tapping an unrecognized word sends that word plus its neighbors
+  (two-word names like "Xiao Wang") to `explain`; the server's matcher finds the span.
+- **Tapping** puts a soft highlight behind the word while the request runs, then the answer appears in the usual card
+  slot, replacing any card there. The card says "You asked" (with a tap icon) instead of "New to you" or "Mentioned
+  before", so it is obviously a response to you and not KIN interrupting.
+- **Nothing known yet** returns the "Who is X?" card, with one extra line: "KIN doesn't know Xiao Wang yet. Add them,
+  and next time it can tell you." Relations are social ones from the speaker's world ("Mei's friend", "Mei's
+  classmate"), plus "Someone else" and "Not now".
+- **Not a name or term** (empty `items`): the highlight fades and nothing else happens. No error, no toast.
+- **Discoverability:** a one-time tip above the captions on the first call: "Tap a name to see who it is". It goes away
+  after the first tap or the first dismiss and never returns.
+- **No gestures** (tilt, shake, long press): phones move too much during calls, and a tap is the most learnable action.
+- **Privacy:** the tap and its answer are private to the person tapping; the other person sees nothing change.
+- **Implementation hint for SwiftUI:** build the caption as an `AttributedString`, give tappable runs a `.link` like
+  `kin://explain?text=Lin&u=91`, style them with `underlineStyle` instead of the default link color, and handle the
+  tap with an `OpenURLAction` in the environment. VoiceOver reads links in `Text` as separate elements, so the names in
+  a caption become individually reachable without extra work.
+
+### Pause stays tiny (call-11, call-22)
+
+- One tap on the pause button inside the "KIN on" pill. No confirmation and no separate screen.
+- Both people's pills change at once: "KIN paused · Resume" for the person who paused, "Paused by Mei · Resume" for the
+  other. Either of them can resume with one tap.
+- The caption area shows one quiet line, "KIN is taking a break. Nothing is captioned or saved.", and nothing else.
+- The point is consent in the moment (Mei about to talk about her mom's surgery, Paatti about Saroja's health), so the
+  control has to be instant and the state impossible to miss, but it must not turn the call into a settings screen.

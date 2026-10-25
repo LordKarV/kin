@@ -5,6 +5,7 @@ import SwiftUI
 public struct CallScreen: View {
     public enum Slot {
         case gap(GlanceItem), meaning(PragmaticsCard), story(GlanceItem), ask(GlanceItem)
+        case tappedGap(GlanceItem), tappedAsk(GlanceItem)     // answers to tapping a word in the caption
     }
     public struct Model {
         public var remoteName: String
@@ -16,6 +17,9 @@ public struct CallScreen: View {
         public var current: Caption? = nil
         public var partial: String? = nil
         public var highlights: [String] = []
+        public var tappable: [String] = []
+        public var pressed: String? = nil
+        public var tip = false
         public var slot: Slot? = nil
         public var bridge: GlanceItem? = nil
         public var banner: (symbol: String, text: String, tint: Color)? = nil
@@ -65,8 +69,9 @@ public struct CallScreen: View {
             } else {
                 if let bridge = m.bridge { HStack { Spacer(minLength: 48); BridgeChip(bridge) }.padding(.top, 9) }
                 if let slot = m.slot { slotView(slot) }
+                if m.tip { HStack { CaptionTip(); Spacer() } }
                 LiveCaptions(speakerName: m.remoteName, route: m.route, previous: m.slot == nil ? m.previous : nil, current: m.current,
-                             partial: m.partial, highlights: m.highlights, voiceOn: m.voiceOn)
+                             partial: m.partial, highlights: m.highlights, tappable: m.tappable, pressed: m.pressed, voiceOn: m.voiceOn)
                     .padding(.top, 4)
             }
             CallControls(muted: m.muted).padding(.top, 12)
@@ -80,19 +85,19 @@ public struct CallScreen: View {
         case .meaning(let c): MeaningCard(c)
         case .story(let i): StorylineCard(i)
         case .ask(let i): AskCard(i, speakerName: m.remoteName)
+        case .tappedGap(let i): GapCard(i, viaTap: true)
+        case .tappedAsk(let i): AskCard(i, speakerName: m.remoteName, viaTap: true)
         }
     }
 
+    /// Pause stays tiny: the pill says who paused and holds Resume; the caption area just says it is quiet.
     private var pausedNote: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "pause.circle.fill").font(.system(size: 22)).foregroundStyle(K.Call.text2)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("KIN is paused for this call").font(KinFont.headline).foregroundStyle(K.Call.text)
-                Text("No captions or cards, and nothing is transcribed or remembered until someone resumes.")
-                    .font(KinFont.subhead).foregroundStyle(K.Call.text2).fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
+        HStack(spacing: 8) {
+            Image(systemName: "cup.and.saucer.fill").font(.system(size: 14))
+            Text("KIN is taking a break. Nothing is captioned or saved.")
         }
+        .font(KinFont.subhead).foregroundStyle(K.Call.text2)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 4)
     }
 }

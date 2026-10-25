@@ -52,11 +52,18 @@ public struct PersonWorldScreen: View {
                         HStack {
                             Text("Where her parents live").font(KinFont.headline).foregroundStyle(K.text)
                             Spacer()
-                            Tag("Unclear", symbol: "exclamationmark.triangle.fill", tint: K.warning, fill: K.raised)
+                            Tag("Not sure", symbol: "questionmark.circle.fill", tint: K.text2, fill: K.raised)
                         }
-                        Text("Two calls disagree: moved to Beijing (Sep 20), still in Shanghai (Oct 4).")
+                        Text("You heard both: moved to Beijing (Sep 20) and still in Shanghai (Oct 4). Which is right?")
                             .font(KinFont.subhead).foregroundStyle(K.text2).fixedSize(horizontal: false, vertical: true)
-                        Text("Fix this").font(KinFont.subheadEmph).foregroundStyle(K.link)
+                        HStack(spacing: 8) {
+                            ForEach(["Beijing", "Shanghai", "Not sure yet"], id: \.self) { a in
+                                Text(a).font(KinFont.footnoteEmph).foregroundStyle(a == "Not sure yet" ? K.text2 : K.link)
+                                    .padding(.horizontal, 12).frame(height: 32)
+                                    .background(a == "Not sure yet" ? K.raised : K.primarySoft, in: Capsule())
+                            }
+                        }
+                        .padding(.top, 2)
                     }
                     .padding(14)
                 }

@@ -46,16 +46,53 @@ public enum CallStates {
     public static var paused: CallScreen.Model { var m = mei(); m.kin = .pausedBy("Mei"); return m }
     public static var poorConnection: CallScreen.Model {
         var m = mei(); m.current = Caption(Sample.meiHello)
-        m.banner = ("wifi.exclamationmark", "Weak connection. Captions may lag.", Color(hex: 0xF7B928)); return m
+        m.banner = ("wifi", "The connection is a little slow, so captions may lag.", Color(hex: 0xF7B928)); return m
     }
     public static var peerWithoutKin: CallScreen.Model {
         var m = mei(); m.current = Caption(Sample.meiHello)
-        m.banner = ("info.circle.fill", "Mei joined from a link without KIN. Only you get captions.", .white); return m
+        m.banner = ("person.crop.circle.badge.questionmark", "Mei joined without KIN, so captions are just for you.", .white); return m
     }
     public static var firstCall: CallScreen.Model {
         var m = mei(); m.kin = .learning; m.current = Caption(Sample.meiHello)
-        m.banner = ("sparkle.magnifyingglass", "First call with Mei. KIN learns who people are as you talk.", .white); return m
+        m.banner = ("hand.wave.fill", "Your first call with Mei. KIN gets to know who's who as you talk.", .white); return m
     }
+}
+
+public extension CallStates {
+    /// Film shot 7, Mei's phone: Arjun's line as a Chinese caption, and no card (it is her own world).
+    static var meiView: CallScreen.Model {
+        var m = CallScreen.Model(remoteName: "Arjun", remote: .arjun); m.me = .mei; m.route = ("英语", "中文")
+        m.previous = Caption(Sample.arjunHowLinForMei); m.current = Caption(Sample.arjunBoulderForMei); return m
+    }
+    /// Film shot 8: the same sentence the next day. Captions only; KIN stays quiet.
+    static var nextDay: CallScreen.Model { var m = mei(); m.current = Caption(Sample.meiLin); return m }
+    /// Film shot 10: the two Ravis, each named for who he is to Arjun.
+    static var paattiTwoRavis: CallScreen.Model {
+        var m = paatti(); m.previous = Caption(Sample.paattiRaviMamaGrounded); m.current = Caption(Sample.paattiRaviPeriyappa)
+        m.highlights = ["Ravi periyappa"]; return m
+    }
+    /// Film shot 10: she asks about his friends, and his own news about Mei becomes a private chip.
+    static var paattiHikeBridge: CallScreen.Model {
+        var m = paatti(); m.previous = Caption(Sample.paattiRaviPeriyappa); m.current = Caption(Sample.paattiFriends)
+        m.bridge = Sample.hikeBridge; return m
+    }
+    /// On-demand context, 1 of 3: recognized words are quietly tappable; the first call shows a one-time tip.
+    static var tappableCaption: CallScreen.Model {
+        var m = mei(); m.previous = Caption(Sample.meiHello); m.current = Caption(Sample.meiLin)
+        m.tappable = ["Lin", "Moganshan"]; m.tip = true; return m
+    }
+    /// 2 of 3: KIN thought Arjun remembered Lin (heard 25 days ago) and pushed nothing. He taps "Lin".
+    static var tapResult: CallScreen.Model {
+        var m = mei(); m.current = Caption(Sample.meiLin); m.tappable = ["Lin", "Moganshan"]; m.pressed = "Lin"
+        m.slot = .tappedGap(Sample.linExplained); return m
+    }
+    /// 3 of 3: he taps a name KIN has never heard, and gets the "Who is X?" card.
+    static var tapUnknown: CallScreen.Model {
+        var m = mei(); m.previous = Caption(Sample.meiLin); m.current = Caption(Sample.meiXiaoWang); m.pressed = "Xiao Wang"
+        m.slot = .tappedAsk(Sample.xiaoWangAsk); return m
+    }
+    /// Film shot 12: you paused KIN yourself.
+    static var pausedByMe: CallScreen.Model { var m = mei(); m.kin = .pausedByMe; return m }
 }
 
 /// Story 9 from Paatti's side: same app, her language. Arjun's line arrives as a Tamil caption, and a card explains
