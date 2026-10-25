@@ -7,8 +7,9 @@ Short, honest answers. If the true answer is "not measured" or "not built", say 
    person: Arjun gets who Lin is, because she told him six weeks ago; Mei gets nothing, because Lin is her friend.
    When she says the same line again, neither phone shows anything. It stays quiet because KIN tracks what each
    listener knows, per person, with forgetting. We tested exactly your alternative: a strong model handed everyone's
-   full history and the same rules, on 63 planted situations. It makes the same calls KIN does and neither leaks, but
-   it needs about 1.8 seconds per line and rereads the whole history every time. KIN decides in 0.8 ms on the partial
+   full history and the same rules, on 63 planted situations. With a few weeks of history it makes the same calls KIN
+   does, at about 1.8 seconds per line. With three months of calls and texts it missed 5 of 27 cards and showed
+   Arjun's private texted news to two other people, at about 4 seconds per line; KIN stayed at 26 of 27 with no leaks. KIN decides in 0.8 ms on the partial
    transcript, so the card lands while she is still talking, and privacy is checked in code before any card is sent,
    not left to a prompt.
 

@@ -16,7 +16,7 @@ venue wifi or the call fails, play the film from shot 7 and keep talking over it
 | 1:00-1:12 | demo | "Say it once more." (Judge repeats.) Say nothing for two seconds. Then: "Nothing. On either phone." | Both phones: captions only, no new card |
 | 1:12-1:25 | demo | To the judge: "Mei, I actually started bouldering." Point at phone A as the chip goes. "Now she's heard it." | Phone A: the chip is gone. Phone B: captions only |
 | 1:25-1:48 | film | "Same app with my grandmother, in Tamil. She mentions two uncles, both named Ravi, and each caption names the right one. When I say Mei and I went hiking, Paatti's phone tells her who Mei is to me, in Tamil. Never anything Mei told me." | Film shot 11, both phones split-screen, 20 s |
-| 1:48-2:15 | 3 | "We tested the obvious alternative: an AI given everyone's full history. Across 63 planted situations it makes the same calls KIN does, and neither ever leaks. But it needs about two seconds per line. KIN decides in under a millisecond, while she's still mid-sentence, which is what makes it work live. For captions, the same Muse Spark model without KIN's graph gets 54% of names and relationships wrong on our 105-sentence Tamil family test set. With KIN, 1%. Muse Voice Transcribe gives us live speech with Tamil-English code-switching. Where AI isn't needed we don't use it: matching cards on partial transcripts takes under a millisecond." | Slide 3 |
+| 1:48-2:15 | 3 | "We tested the obvious alternative: an AI given everyone's full history. With a few weeks of history it makes the same calls KIN does. Give it three months of calls and texts and it misses one card in five, and it showed Arjun's private texted news to two other people. KIN gets the same answers at three months, never leaks, and decides in two milliseconds instead of four seconds, while she's still mid-sentence. For captions, the same Muse Spark model without KIN's graph gets 54% of names and relationships wrong on our 105-sentence Tamil family test set. With KIN, 1%. Muse Voice Transcribe gives us live speech with Tamil-English code-switching. Where AI isn't needed we don't use it: matching cards on partial transcripts takes under a millisecond." | Slide 3 |
 | 2:15-2:33 | 4 | "Privacy is built into the engine. Everyone on the call sees KIN is on, and anyone can pause it. Audio isn't kept. Bridges only use your own news, never what someone told you, and every card is checked against what that listener is allowed to see before it's sent. Delete means gone." | Slide 4 |
 | 2:33-2:48 | 5 | "Built this weekend on Muse Spark and Muse Voice Transcribe, with LiveKit for the calls, ElevenLabs for an optional voice, Twilio for texts, and a SwiftUI app. We wrote the code with Claude Code." | Slide 5 |
 | 2:48-3:00 | 6 | "Meta asked for AI that identifies common interests that could spark a connection. KIN does that from your own life, one call at a time. Thank you." | Slide 6 |
@@ -31,9 +31,12 @@ venue wifi or the call fails, play the film from shot 7 and keep talking over it
 - [VERIFY] Beat 3: saying the news on the call records that Mei heard it (live.py `_told`), but that path sends no
   retract to phone A, so the chip may stay until it times out. Either build the retract before judging, or tap the
   chip's dismiss as you say the line and do not claim it cleared on its own.
-- Slide 3 numbers are measured (eval/run_cg --live, 63 scenarios, 2026-10-25): gap precision 100% for both, gap
-  recall 96% KIN vs 93% full-history AI, 0 privacy leaks for both, decision p50 0.8 ms vs about 1.8 s. Do not claim
-  KIN is more accurate. If a long-history run shows a gap, update this line with that run only.
+- Slide 3 numbers are measured with `eval/run_cg --live` on 63 planted scenarios (2026-10-25; results in
+  backend/eval/common_ground/results_live*.md). Short history: both 100% precision, recall 96% KIN vs 93%, 0 leaks
+  for both, 0.8 ms vs about 1.8 s. With 3 months of synthetic history (`--pad-months 3`): KIN 26 of 27 cards, 0
+  leaks, 2 ms; full-history AI 22 of 27, 3 irrelevant bridges, Arjun's SMS-only internship shown as a storyline card
+  to Mei and Priya, 4.2 s median. If asked: one run, small n (27 expected cards), synthetic filler history, and one
+  baseline call timed out (on a scenario that expects no card). Say "in our test", not "always".
 - Say 54%, not 53%. If asked what it measures: grounded translation on the Tamil test set, not the common-ground
   engine.
 - Captions take about 3 s (p50 3.0 s). Never say translation is instant. "Under a millisecond" is only the card

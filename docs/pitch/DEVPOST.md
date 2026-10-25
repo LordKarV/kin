@@ -130,7 +130,7 @@ native-speaker review yet.
 
 ## What's next
 
-- Publish the common-ground eval (39 planted scenarios are written): how often a card appears exactly when someone is
+- Grow the common-ground eval (63 planted scenarios today; results in backend/eval/common_ground/results_live*.md): how often a card appears exactly when someone is
   missing something, and how often one person's words reach someone else, for KIN and for an AI given everyone's full
   history.
 - Native-speaker review of the Tamil test set and of the 24 draft kinship tables, then evals beyond Tamil, starting

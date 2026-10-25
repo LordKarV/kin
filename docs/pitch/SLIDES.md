@@ -19,10 +19,12 @@ screenshot shows both people's phones side by side, never one alone.
 ## 3. Proof
 
 - **Text:** "Help only where someone would be lost, in time to matter."
-- **Two rows, same 63 scenarios, same Muse Spark model:**
-  - "An AI given everyone's full history: same decisions, 0 leaks, about 1.8 s per line."
-  - "KIN: same decisions, 0 leaks, 0.8 ms, on the partial transcript."
-  - Footnote: "63 planted scenarios; card precision 100% for both, recall 96% (KIN) vs 93%."
+- **Two rows, after three months of calls and texts, same Muse Spark model:**
+  - "An AI given everyone's full history: missed 5 of 27 cards. Showed private texted news to 2 people. 4 s a
+    decision."
+  - "KIN: 26 of 27. No leaks. 2 ms, on the partial transcript."
+  - Footnote: "63 planted scenarios with 3 months of synthetic history, one run. With a few weeks of history both
+    make the same calls; KIN decides 2,000x faster."
 - **Proof strip:** "Captions, same Muse Spark model with and without KIN's graph: 54% vs 1% entity errors. Same-name
   people: 97% vs 0%." Footnote: "105-sentence Tamil family test set, 150 entity spans, muse-spark-1.3. Not yet
   reviewed by a native speaker."

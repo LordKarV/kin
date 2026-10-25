@@ -21,8 +21,9 @@ promise, the close. Cast details are in CASTING.md; rules in RULES.md.
   so the viewer sees that each person gets something different. Only the title cards (shots 2, 3, 6) and the
   how-it-works graphic (shot 10) are full frame.
 - Everything happens during a call. No shot shows anything after a call ends: no summaries, no recaps.
-- The proof numbers are 54% vs 1% (backend/eval/results.md) and, against an AI given everyone's full history, the same
-  decisions and 0 leaks for both with 0.8 ms vs about 1.8 s per decision (eval/run_cg --live, 63 scenarios).
+- The proof numbers are 54% vs 1% (backend/eval/results.md) and, against an AI given everyone's full history after three
+  months of calls and texts: 22 of 27 cards and private texted news shown to 2 people, vs KIN's 26 of 27 and no
+  leaks, 4 s vs 2 ms per decision (eval/run_cg --live --pad-months 3, 63 scenarios, one run).
 - Never show: photos popping up on a mention, call reminders, follow-up nudges, topic lists, Wikipedia pictures, a
   family-tree archive, storyline cards. They belong to other kinds of apps and blur what KIN is.
 - Words to keep out of the VO and on-screen text: "remember", "memory", "notes", "recall", "context". Say "she told
@@ -171,8 +172,8 @@ always on screen together.
   same name: 97% wrong vs 0%." Small print: "Muse Spark 1.3, same model and input with and without KIN's graph.
   105-sentence Tamil family test set, 150 entity spans."
 - **VO:** "Same model, with and without KIN's graph: 54% of names and relationships wrong, versus 1%."
-- **Add one line:** "Matches an AI given everyone's full history (63 scenarios, 0 leaks for both), deciding in
-  0.8 ms instead of about 1.8 s." Measured values only.
+- **Add one line:** "After three months of calls, an AI given everyone's full history missed 1 card in 5 and
+  showed private news to 2 people. KIN: no leaks, 2 ms." Measured values only.
 
 ### 13. Privacy (2:01-2:10)
 
