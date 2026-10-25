@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.23", "anyio>=4"]
-livekit = ["livekit-agents>=1.0"]
+livekit = ["livekit==1.1.21", "livekit-api==1.2.2"]  # KIN call app: app/rtc/agent.py (rtc SDK, not livekit-agents)
 embeddings = ["sentence-transformers>=3.0"]
 
 [tool.pytest.ini_options]

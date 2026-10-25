@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class GroundedSpan(BaseModel):
@@ -26,3 +26,25 @@ class TranslationOut(BaseModel):
     pragmatics_cards: list[PragmaticsCard]
     passthrough_kept: list[str]   # heritage-language tokens left untranslated (Fade)
     confidence: float
+
+
+# Call A (hot path): what is spoken plus its grounding. The API emits strict-schema keys in ALPHABETICAL order
+# (VERIFIED live 2026-10-24), so `a_translation` is named to come first. Comments, not docstrings: a docstring lands in the schema.
+class SpeechOut(BaseModel):
+    a_translation: str
+    confidence: float
+    grounded_spans: list[GroundedSpan]
+    passthrough_kept: list[str]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_single_call_shape(cls, v):
+        # ponytail: accepts the old one-call reply ({"translation": ...}) so existing mocked providers keep working
+        if isinstance(v, dict) and "a_translation" not in v and "translation" in v:
+            return {**v, "a_translation": v["translation"]}
+        return v
+
+
+# Call B (enrichment, off the hot path): pragmatics cards only.
+class CardsOut(BaseModel):
+    pragmatics_cards: list[PragmaticsCard]

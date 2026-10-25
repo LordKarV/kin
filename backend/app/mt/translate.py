@@ -1,13 +1,16 @@
 """Grounded translation: family-graph context + linked entities → Muse Spark structured output.
 
-The family roster is the stable prefix of the system prompt (automatic prefix caching on Meta Model API);
-only the per-utterance user message changes. A linker-only fallback keeps the call alive if the model fails.
+Two calls per utterance, run in parallel on the same cached prefix (system prompt = RULES + roster, byte-identical):
+  A (hot path)   spoken translation + grounded spans, minimal effort, tail-hedged; returned as soon as it lands.
+  B (enrichment) pragmatics cards only; handed back as a Future so callers can attach the cards later.
+Task-specific instructions live at the end of the user message. A linker-only fallback keeps the call alive if A fails.
 """
 from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
+from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 
 from ..graph.kinship import FamilyGraph
@@ -15,9 +18,20 @@ from ..graph.linker import Linker, Span
 from ..graph.kin_tables import load_table
 from ..llm import LLM, StructuredOutputError, get_llm
 from .pragmatics import filter_cards
-from .schemas import GroundedSpan, TranslationOut
+from .schemas import CardsOut, GroundedSpan, PragmaticsCard, SpeechOut, TranslationOut
 
 log = logging.getLogger("kin.mt")
+
+# Measured live 2026-10-24 (docs/DECISIONS.md): latency ≈ 0.3 s + ~3 ms per reasoning token, so effort is the lever.
+SPEECH_EFFORT = "minimal"   # call A
+CARDS_EFFORT = "minimal"    # call B
+SPEECH_HEDGE_S = 2.0        # duplicate call A if nothing by then
+_CARDS_POOL = ThreadPoolExecutor(max_workers=8, thread_name_prefix="kin-cards")
+
+SPEECH_TASK = ("\nTask: output the spoken translation (a_translation), grounded_spans, passthrough_kept and confidence. "
+               "Pragmatics cards are made by a separate call: here just translate an idiom's meaning naturally.")
+CARDS_TASK = ("\nTask: output ONLY pragmatics_cards for this utterance, per rule 3. "
+              "Most utterances need none: then return an empty list.")
 
 LANG_NAMES = {"ta": "Tamil", "te": "Telugu", "hi": "Hindi", "es": "Spanish", "vi": "Vietnamese", "ml": "Malayalam", "kn": "Kannada"}
 
@@ -26,7 +40,7 @@ Rules:
 1. Render every linked kin term or name as the SPECIFIC person and their relation to the LISTENER. Never flatten a kin term to a generic English word ("uncle", "aunt", "grandma") when a linked family member exists. If two people share a name, say which one.
 2. Keep every passthrough token in the source language verbatim (the listener already knows these words).
 3. Emit a pragmatics card ONLY when a literal translation would lose meaning: idiom, proverb, honorific/register shift, or a cultural practice. Plain sentences get no card. A card needs source, literal, meaning, why_it_matters.
-4. Output JSON matching the schema. The `translation` is spoken aloud: natural, brief English; use the family's own short forms ("Ravi mama", "your sister Divya") in speech and put the full disambiguation in grounded_spans.rendered, e.g. "your uncle Ravi mama (Mom's younger brother)". grounded_spans.node_id must be one of the ids in the roster.
+4. Output JSON matching the schema. The spoken translation field is spoken aloud: natural, brief English; use the family's own short forms ("Ravi mama", "your sister Divya") in speech and put the full disambiguation in grounded_spans.rendered, e.g. "your uncle Ravi mama (Mom's younger brother)". grounded_spans.node_id must be one of the ids in the roster.
 5. Dish, place and event names stay as the family says them (rasam stays "rasam", never "soup"); add a 2-4 word gloss the first time if helpful.
 6. Health, money or conflict content: translate faithfully, add nothing."""
 
@@ -42,6 +56,7 @@ class TranslateResult:
     latencies: dict = field(default_factory=dict)
     error: str | None = None
     generic: bool = False
+    cards: Future | None = None  # call B still running: resolves to (cards, b_ms); see Translator.with_cards
 
     def as_dict(self) -> dict:
         return {"translation": self.result.translation, "grounded_spans": [s.model_dump() for s in self.result.grounded_spans],
@@ -117,6 +132,12 @@ class Translator:
     # ---- translation ---------------------------------------------------------
     def translate(self, text: str, speaker: str, listener: str, history=(), passthrough=(), reasoning_effort: str | None = None,
                   target_lang: str = "en") -> TranslateResult:
+        """A and B together (API, eval, buddy). Live calls use translate_speech and attach cards when B lands."""
+        return self.with_cards(self.translate_speech(text, speaker, listener, history, passthrough, reasoning_effort, target_lang))
+
+    def translate_speech(self, text: str, speaker: str, listener: str, history=(), passthrough=(), reasoning_effort: str | None = None,
+                         target_lang: str = "en") -> TranslateResult:
+        """Call A, with call B started in parallel and returned unresolved in `.cards`. reasoning_effort overrides both."""
         t0 = time.perf_counter()
         ctx = [src for _who, src, _tr in history]
         spans = self.linker.link(text, speaker, listener, context=ctx)
@@ -128,18 +149,39 @@ class Translator:
         if target_lang != "en":
             tl = LANG_NAMES.get(target_lang, target_lang)
             user += f"\nTarget language: {tl}. The listener speaks {tl}; translate INTO {tl} (natural spoken {tl}, Tamil script), keeping names and kin terms the family uses."
+        cache_key = f"kin-{self.g.family_id}-{listener}"
+        cards = _CARDS_POOL.submit(self._cards, system, user + CARDS_TASK, text, reasoning_effort or CARDS_EFFORT, cache_key)
         t1 = time.perf_counter()
         error = None
         try:
-            out = self.llm.structured(TranslationOut, system=system, user=user, reasoning_effort=reasoning_effort, max_completion_tokens=3000)
-            out.pragmatics_cards = filter_cards(out.pragmatics_cards, text)
-            out.grounded_spans = self._reconcile(out.grounded_spans, spans, listener)
+            a = self.llm.structured(SpeechOut, system=system, user=user + SPEECH_TASK, reasoning_effort=reasoning_effort or SPEECH_EFFORT,
+                                    max_completion_tokens=3000, prompt_cache_key=cache_key, hedge_after_s=SPEECH_HEDGE_S)
+            out = TranslationOut(translation=a.a_translation, grounded_spans=self._reconcile(a.grounded_spans, spans, listener),
+                                 pragmatics_cards=[], passthrough_kept=a.passthrough_kept, confidence=a.confidence)
         except Exception as e:  # StructuredOutputError, API errors, timeouts → linker-only fallback keeps the call alive
             log.warning("grounded translation failed (%s); using linker-only fallback", e)
             error = f"{type(e).__name__}: {e}"
             out = self.fallback(text, spans)
-        t_mt = (time.perf_counter() - t1) * 1000
-        return TranslateResult(out, spans, safe_pt, {"link_ms": round(t_link, 1), "mt_ms": round(t_mt, 1), "total_ms": round((time.perf_counter() - t0) * 1000, 1)}, error)
+        a_ms = round((time.perf_counter() - t1) * 1000, 1)
+        lat = {"link_ms": round(t_link, 1), "a_ms": a_ms, "mt_ms": a_ms, "total_ms": round((time.perf_counter() - t0) * 1000, 1)}
+        return TranslateResult(out, spans, safe_pt, lat, error, cards=cards)
+
+    def _cards(self, system: str, user: str, text: str, effort: str, cache_key: str) -> tuple[list[PragmaticsCard], float]:
+        t0 = time.perf_counter()
+        out = self.llm.structured(CardsOut, system=system, user=user, reasoning_effort=effort, max_completion_tokens=3000, prompt_cache_key=cache_key)
+        return filter_cards(out.pragmatics_cards, text), round((time.perf_counter() - t0) * 1000, 1)
+
+    @staticmethod
+    def with_cards(res: TranslateResult) -> TranslateResult:
+        """Block until call B lands and fold its cards in. A failed B means no cards, never a failed turn."""
+        if res.cards is None:
+            return res
+        try:
+            cards, b_ms = res.cards.result()
+        except Exception as e:  # noqa: BLE001  (enrichment is optional; A's result stands)
+            log.warning("pragmatics cards call failed (%s); returning the translation without cards", e)
+            return replace(res, cards=None, latencies={**res.latencies, "b_error": f"{type(e).__name__}: {e}"[:200]})
+        return replace(res, result=res.result.model_copy(update={"pragmatics_cards": cards}), cards=None, latencies={**res.latencies, "b_ms": b_ms})
 
     @staticmethod
     def generic_user_prompt(text: str, speaker_name: str | None = None, listener_name: str | None = None, context: list[str] = ()) -> str:

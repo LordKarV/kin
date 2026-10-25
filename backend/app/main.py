@@ -57,7 +57,7 @@ async def api_key_gate(request, call_next):
 
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-from .api import buddy, calls, family_build, connector, fade, glossary, graph, languages, latency, translate, twilio, ws  # noqa: E402
+from .api import buddy, calls, rtc, cards, family_build, connector, fade, glossary, graph, languages, latency, translate, twilio, ws  # noqa: E402
 from .audio.glossary_audio import media_dir  # noqa: E402
 
 app.include_router(calls.router)
@@ -67,9 +67,11 @@ app.include_router(fade.router)
 app.include_router(connector.router)
 app.include_router(twilio.router)
 app.include_router(buddy.router)
+app.include_router(rtc.router)
 app.include_router(family_build.router)
 app.include_router(latency.router)
 app.include_router(languages.router)
+app.include_router(cards.router)
 app.mount("/media", StaticFiles(directory=str(media_dir())), name="media")
 app.include_router(translate.router)
 app.include_router(ws.router)

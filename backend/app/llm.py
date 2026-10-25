@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import logging
 import time
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import Any, Iterable, Type, TypeVar
 
 import httpx
@@ -22,6 +24,9 @@ log = logging.getLogger("kin.llm")
 T = TypeVar("T", bound=BaseModel)
 
 # Parameters Meta Model API rejects with HTTP 400 (never send them).
+# Runs hedged requests; the losing request finishes in the background and is dropped (bounded by the client timeout).
+_HEDGE_POOL = ThreadPoolExecutor(max_workers=16, thread_name_prefix="kin-llm-hedge")
+
 _REJECTED = {"stop", "logit_bias", "prediction", "web_search_options", "modalities", "audio", "verbosity", "logprobs", "max_output_tokens"}
 
 
@@ -80,8 +85,14 @@ class LLM:
         history: Iterable[dict[str, str]] = (),
         reasoning_effort: str | None = None,
         max_completion_tokens: int = 3000,
+        prompt_cache_key: str = "kin",
+        hedge_after_s: float | None = None,
     ) -> T:
-        """One structured completion, validated with Pydantic. Raises StructuredOutputError on bad JSON."""
+        """One structured completion, validated with Pydantic. Raises StructuredOutputError on bad JSON.
+
+        prompt_cache_key: one key per shared prompt prefix (automatic prefix caching).
+        hedge_after_s: if no reply by then, fire ONE duplicate (backup key if configured) and take the first success.
+        """
         messages = [{"role": "developer", "content": system}, *history, {"role": "user", "content": user}]
         schema = to_strict_schema(schema_model.model_json_schema())
         kwargs: dict[str, Any] = dict(
@@ -90,11 +101,11 @@ class LLM:
             response_format={"type": "json_schema", "json_schema": {"name": schema_model.__name__, "strict": True, "schema": schema}},
             reasoning_effort=reasoning_effort or self.reasoning_effort,
             max_completion_tokens=max_completion_tokens,
-            prompt_cache_key="kin",
+            prompt_cache_key=prompt_cache_key,
         )
         assert not (_REJECTED & kwargs.keys())
         t0 = time.perf_counter()
-        content, finish = self._complete(kwargs)
+        content, finish = self._hedged(kwargs, hedge_after_s) if hedge_after_s else self._complete(kwargs)
         self.last_latency_ms = (time.perf_counter() - t0) * 1000
         if finish == "length":
             # VERIFIED live 2026-10-24: Muse Spark's reasoning tokens count against max_completion_tokens (medium effort ≈ 1000-1200)
@@ -118,16 +129,33 @@ class LLM:
 
     # -- internals ----------------------------------------------------------
 
-    def _complete(self, kwargs: dict[str, Any]) -> tuple[str, str | None]:
+    def _hedged(self, kwargs: dict[str, Any], after_s: float) -> tuple[str, str | None]:
+        """Tail hedge: latency is dominated by reasoning tokens and varies 2x run to run, so a late reply is better raced than waited on."""
+        first = _HEDGE_POOL.submit(self._complete, kwargs)
+        try:
+            return first.result(timeout=after_s)
+        except FuturesTimeout:
+            pass
+        log.info("LLM hedge: no reply after %.1f s; firing one duplicate request", after_s)
+        pending = {first, _HEDGE_POOL.submit(self._complete, kwargs, self._clients[-1:])}
+        while pending:
+            done, pending = wait(pending, return_when=FIRST_COMPLETED)
+            winners = [f for f in done if f.exception() is None]
+            if winners:
+                return winners[0].result()
+        raise next(iter(done)).exception()  # both failed: surface the last error
+
+    def _complete(self, kwargs: dict[str, Any], clients: list[OpenAI] | None = None) -> tuple[str, str | None]:
+        clients = clients or self._clients
         last: Exception | None = None
-        for i, client in enumerate(self._clients):
+        for i, client in enumerate(clients):
             try:
                 resp = client.chat.completions.create(**kwargs)
                 ch = resp.choices[0]
                 return ch.message.content or "", ch.finish_reason
             except (openai.RateLimitError, openai.AuthenticationError, openai.PermissionDeniedError) as e:
                 last = e
-                if i + 1 < len(self._clients):
+                if i + 1 < len(clients):
                     log.warning("LLM key %d failed (%s); failing over to backup key", i, type(e).__name__)
                     continue
                 raise

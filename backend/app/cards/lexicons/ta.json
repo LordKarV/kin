@@ -1,0 +1,2735 @@
+{
+ "lang": "ta",
+ "language": "Tamil",
+ "verified": false,
+ "source": "muse-spark (muse-spark-1.3, effort low)",
+ "generated_at": "2026-10-25T02:22:51+00:00",
+ "notes": "Muse Spark draft; not reviewed by a speaker.",
+ "entries": [
+  {
+   "key": "pongal_dish",
+   "forms": [
+    "பொங்கல்",
+    "pongal",
+    "ponggal",
+    "பொங்கலை",
+    "pongalai"
+   ],
+   "translate_as": "ven pongal, savoury rice-lentil porridge",
+   "category": "food",
+   "note": "Comfort rice-lentil dish grandparents make for breakfast and festivals.",
+   "wiki_title": "Pongal (dish)"
+  },
+  {
+   "key": "sweet_pongal",
+   "forms": [
+    "சர்க்கரைப் பொங்கல்",
+    "sarkarai pongal",
+    "chakkara pongal",
+    "சர்க்கரை பொங்கலை",
+    "sarkarai pongalai"
+   ],
+   "translate_as": "sweet pongal with jaggery",
+   "category": "food",
+   "note": "Sweet jaggery rice for Pongal festival and temple offering.",
+   "wiki_title": "Pongal (dish)"
+  },
+  {
+   "key": "sambar",
+   "forms": [
+    "சாம்பார்",
+    "sambar",
+    "saambaar",
+    "சாம்பாரை",
+    "sambarai"
+   ],
+   "translate_as": "sambar, lentil stew",
+   "category": "food",
+   "note": "Everyday lentil-vegetable stew eaten with rice and tiffin.",
+   "wiki_title": "Sambar (dish)"
+  },
+  {
+   "key": "rasam",
+   "forms": [
+    "ரசம்",
+    "rasam",
+    "rasam",
+    "ரசத்தை",
+    "rasathai"
+   ],
+   "translate_as": "rasam, pepper-tamarind soup",
+   "category": "food",
+   "note": "Peppery tamarind soup for colds and daily rice meal.",
+   "wiki_title": "Rasam"
+  },
+  {
+   "key": "kuzhambu",
+   "forms": [
+    "குழம்பு",
+    "kuzhambu",
+    "kulambu",
+    "kozhambhu",
+    "குழம்பை",
+    "kuzhambai"
+   ],
+   "translate_as": "curry for rice",
+   "category": "food",
+   "note": "Generic word for curry poured over rice at lunch.",
+   "wiki_title": "Kulambu"
+  },
+  {
+   "key": "vatha_kuzhambu",
+   "forms": [
+    "வத்தக்குழம்பு",
+    "vatha kuzhambu",
+    "vathakuzhambu",
+    "வத்தக்குழம்பை",
+    "vathakuzhambai"
+   ],
+   "translate_as": "vatha kuzhambu, tamarind curry",
+   "category": "food",
+   "note": "Tangy tamarind curry that keeps for days and aids digestion.",
+   "wiki_title": "Vatha Kulambu"
+  },
+  {
+   "key": "curd_rice",
+   "forms": [
+    "தயிர் சாதம்",
+    "thayir sadham",
+    "tayir sadam",
+    "curd rice",
+    "தயிர் சாதத்தை",
+    "thayir sadhathai"
+   ],
+   "translate_as": "curd rice",
+   "category": "food",
+   "note": "Cooling yogurt-rice that ends every meal and calms stomach.",
+   "wiki_title": "Curd rice"
+  },
+  {
+   "key": "idli",
+   "forms": [
+    "இட்லி",
+    "idli",
+    "idly",
+    "idli",
+    "இட்லியை",
+    "idliyai"
+   ],
+   "translate_as": "idli, steamed rice cake",
+   "category": "food",
+   "note": "Soft steamed breakfast cake grandparents call light food.",
+   "wiki_title": "Idli"
+  },
+  {
+   "key": "dosa",
+   "forms": [
+    "தோசை",
+    "dosai",
+    "dosa",
+    "thosai",
+    "தோசையை",
+    "dosaiyai"
+   ],
+   "translate_as": "dosa",
+   "category": "food",
+   "note": "Crisp rice crepe every child is offered with chutney.",
+   "wiki_title": "Dosa (food)"
+  },
+  {
+   "key": "vada",
+   "forms": [
+    "வடை",
+    "vadai",
+    "vada",
+    "வடையை",
+    "vadaiyai"
+   ],
+   "translate_as": "vada, lentil fritter",
+   "category": "food",
+   "note": "Crunchy lentil doughnut for snacks and festival plates.",
+   "wiki_title": "Vada (food)"
+  },
+  {
+   "key": "adai",
+   "forms": [
+    "அடை",
+    "adai",
+    "adaai",
+    "அடையை",
+    "adaiyai"
+   ],
+   "translate_as": "adai, lentil pancake",
+   "category": "food",
+   "note": "Thick lentil dosa grandparents make for protein and fullness.",
+   "wiki_title": "Adai (food)"
+  },
+  {
+   "key": "appam",
+   "forms": [
+    "ஆப்பம்",
+    "aappam",
+    "appam",
+    "ஆப்பத்தை",
+    "aappathai"
+   ],
+   "translate_as": "appam, fermented rice pancake",
+   "category": "food",
+   "note": "Lacy fermented pancake for coconut milk and special mornings.",
+   "wiki_title": "Appam"
+  },
+  {
+   "key": "idiyappam",
+   "forms": [
+    "இடியாப்பம்",
+    "idiyappam",
+    "idiyappam",
+    "இடியாப்பத்தை",
+    "idiyappathai"
+   ],
+   "translate_as": "idiyappam, string hoppers",
+   "category": "food",
+   "note": "String-hopper nests served with coconut milk or kurma.",
+   "wiki_title": "Idiyappam"
+  },
+  {
+   "key": "puttu",
+   "forms": [
+    "புட்டு",
+    "puttu",
+    "pittu",
+    "புட்டை",
+    "puttai"
+   ],
+   "translate_as": "puttu, steamed rice flour",
+   "category": "food",
+   "note": "Steamed rice-coconut cylinders eaten with banana and sugar.",
+   "wiki_title": "Puttu"
+  },
+  {
+   "key": "upma",
+   "forms": [
+    "உப்புமா",
+    "uppuma",
+    "upma",
+    "உப்புமாவை",
+    "uppumaavai"
+   ],
+   "translate_as": "upma, semolina porridge",
+   "category": "food",
+   "note": "Quick semolina breakfast made when guests arrive suddenly.",
+   "wiki_title": "Upma"
+  },
+  {
+   "key": "paniyaram",
+   "forms": [
+    "பணியாரம்",
+    "paniyaram",
+    "kuzhi paniyaram",
+    "paddu",
+    "பணியாரத்தை",
+    "paniyarathai"
+   ],
+   "translate_as": "paniyaram, batter dumplings",
+   "category": "food",
+   "note": "Leftover dosa batter balls that kids eat as snacks.",
+   "wiki_title": "Paddu"
+  },
+  {
+   "key": "puliyodharai",
+   "forms": [
+    "புளியோதரை",
+    "puliyodharai",
+    "puliyotharai",
+    "pulihora",
+    "புளியோதரையை",
+    "puliyodharaiyai"
+   ],
+   "translate_as": "tamarind rice",
+   "category": "food",
+   "note": "Temple tamarind rice packed for travel and prasadam.",
+   "wiki_title": "Pulihora"
+  },
+  {
+   "key": "lemon_rice",
+   "forms": [
+    "எலுமிச்சை சாதம்",
+    "elumichai sadham",
+    "elumicham sadam",
+    "lemon rice",
+    "எலுமிச்சை சாதத்தை",
+    "elumichai sadhathai"
+   ],
+   "translate_as": "lemon rice",
+   "category": "food",
+   "note": "Lunchbox rice with lemon and peanuts for picnics.",
+   "wiki_title": "Lemon rice"
+  },
+  {
+   "key": "biryani",
+   "forms": [
+    "பிரியாணி",
+    "biryani",
+    "biriyani",
+    "briyani",
+    "பிரியாணியை",
+    "biryaniyai"
+   ],
+   "translate_as": "biryani",
+   "category": "food",
+   "note": "Festive spiced rice for weddings and Sunday chicken.",
+   "wiki_title": "Biryani"
+  },
+  {
+   "key": "kootu",
+   "forms": [
+    "கூட்டு",
+    "kootu",
+    "koottu",
+    "கூட்டை",
+    "koottai"
+   ],
+   "translate_as": "kootu, lentil-vegetable stew",
+   "category": "food",
+   "note": "Mild lentil-vegetable mash that balances spicy meals.",
+   "wiki_title": "Koottu"
+  },
+  {
+   "key": "poriyal",
+   "forms": [
+    "பொரியல்",
+    "poriyal",
+    "porial",
+    "பொரியலை",
+    "poriyalai"
+   ],
+   "translate_as": "poriyal, vegetable stir-fry",
+   "category": "food",
+   "note": "Daily stir-fried vegetable with coconut for rice.",
+   "wiki_title": "Poriyal"
+  },
+  {
+   "key": "avial",
+   "forms": [
+    "அவியல்",
+    "avial",
+    "aviyal",
+    "அவியலை",
+    "aviyalai"
+   ],
+   "translate_as": "avial, mixed vegetables in coconut",
+   "category": "food",
+   "note": "Mixed-vegetable coconut curry for feasts and Onam.",
+   "wiki_title": "Avial"
+  },
+  {
+   "key": "keerai",
+   "forms": [
+    "கீரை",
+    "keerai",
+    "keeray",
+    "கீரையை",
+    "keeraiyai"
+   ],
+   "translate_as": "greens, leafy vegetables",
+   "category": "food",
+   "note": "Leafy greens elders insist on for strength and iron.",
+   "wiki_title": "Leaf vegetable"
+  },
+  {
+   "key": "drumstick_veg",
+   "forms": [
+    "முருங்கைக்காய்",
+    "murungaikkai",
+    "murungakkai",
+    "drumstick",
+    "முருங்கைக்காயை",
+    "murungaikkaiyai"
+   ],
+   "translate_as": "drumstick, moringa pod",
+   "category": "food",
+   "note": "Long moringa pod in sambar that you suck for pulp.",
+   "wiki_title": "Moringa oleifera"
+  },
+  {
+   "key": "chicken_kuzhambu",
+   "forms": [
+    "கோழிக் குழம்பு",
+    "kozhi kuzhambu",
+    "koli kulambu",
+    "chicken curry",
+    "கோழிக் குழம்பை",
+    "kozhi kuzhambai"
+   ],
+   "translate_as": "chicken curry",
+   "category": "food",
+   "note": "Sunday chicken curry that means family is together.",
+   "wiki_title": "Chicken curry"
+  },
+  {
+   "key": "fish_kuzhambu",
+   "forms": [
+    "மீன் குழம்பு",
+    "meen kuzhambu",
+    "meen kulambu",
+    "மீன் குழம்பை",
+    "meen kuzhambai"
+   ],
+   "translate_as": "fish curry",
+   "category": "food",
+   "note": "Tangy fish curry that tastes better the next day.",
+   "wiki_title": "Fish curry"
+  },
+  {
+   "key": "murukku",
+   "forms": [
+    "முறுக்கு",
+    "murukku",
+    "murukku",
+    "murruku",
+    "முறுக்கை",
+    "murukkai"
+   ],
+   "translate_as": "murukku, rice-lentil spiral",
+   "category": "food",
+   "note": "Crunchy Diwali spiral grandparents store in tins.",
+   "wiki_title": "Murukku"
+  },
+  {
+   "key": "thattai",
+   "forms": [
+    "தட்டை",
+    "thattai",
+    "thattai",
+    "தட்டையை",
+    "thattaiyai"
+   ],
+   "translate_as": "thattai, flat rice cracker",
+   "category": "food",
+   "note": "Flat crisp rice cracker made for Krishna Jayanthi.",
+   "wiki_title": "Thattai (Indian food)"
+  },
+  {
+   "key": "mixture_snack",
+   "forms": [
+    "மிக்சர்",
+    "mixture",
+    "mixer",
+    "micchar",
+    "மிக்சரை",
+    "mixtureai"
+   ],
+   "translate_as": "mixture, savory snack mix",
+   "category": "food",
+   "note": "Tea-time savory mix always offered to visitors.",
+   "wiki_title": "Bombay mix"
+  },
+  {
+   "key": "sundal",
+   "forms": [
+    "சுண்டல்",
+    "sundal",
+    "sundal",
+    "chundal",
+    "சுண்டலை",
+    "sundalai"
+   ],
+   "translate_as": "sundal, spiced chickpeas",
+   "category": "food",
+   "note": "Boiled chickpea snack given as temple prasadam.",
+   "wiki_title": ""
+  },
+  {
+   "key": "seedai",
+   "forms": [
+    "சீடை",
+    "seedai",
+    "seadai",
+    "cheedai",
+    "சீடையை",
+    "seedaiyai"
+   ],
+   "translate_as": "seedai, fried rice balls",
+   "category": "food",
+   "note": "Tiny festival balls that must not burst when fried.",
+   "wiki_title": "Seedai"
+  },
+  {
+   "key": "kozhukattai",
+   "forms": [
+    "கொழுக்கட்டை",
+    "kozhukattai",
+    "kolukattai",
+    "kozhukkattai",
+    "கொழுக்கட்டையை",
+    "kozhukattaiyai"
+   ],
+   "translate_as": "kozhukattai, sweet dumpling",
+   "category": "food",
+   "note": "Coconut-jaggery dumpling for Vinayagar Chaturthi prayer.",
+   "wiki_title": "Kozhukkatta"
+  },
+  {
+   "key": "athirasam",
+   "forms": [
+    "அதிரசம்",
+    "adhirasam",
+    "athirasam",
+    "adirasam",
+    "அதிரசத்தை",
+    "adhirasathai"
+   ],
+   "translate_as": "athirasam, jaggery doughnut",
+   "category": "food",
+   "note": "Jaggery doughnut saved for Diwali and weddings.",
+   "wiki_title": "Athirasam"
+  },
+  {
+   "key": "laddu",
+   "forms": [
+    "லட்டு",
+    "laddu",
+    "ladoo",
+    "laddu",
+    "லட்டுவை",
+    "ladduvai"
+   ],
+   "translate_as": "laddu",
+   "category": "food",
+   "note": "Round sweet ball for good news and temple boxes.",
+   "wiki_title": "Laddu"
+  },
+  {
+   "key": "jangiri",
+   "forms": [
+    "ஜாங்கிரி",
+    "jangiri",
+    "jaangiri",
+    "jangri",
+    "ஜாங்கிரியை",
+    "jangiriyai"
+   ],
+   "translate_as": "jangiri, saffron swirl sweet",
+   "category": "food",
+   "note": "Orange swirl sweet bought for celebrations.",
+   "wiki_title": "Imarti"
+  },
+  {
+   "key": "mysore_pak",
+   "forms": [
+    "மைசூர் பாக்",
+    "mysore pak",
+    "mysur pak",
+    "maisur pak",
+    "மைசூர் பாக்கை",
+    "mysore pakkai"
+   ],
+   "translate_as": "Mysore pak, ghee fudge",
+   "category": "food",
+   "note": "Melting ghee-chickpea fudge every grandchild begs for.",
+   "wiki_title": "Mysore pak"
+  },
+  {
+   "key": "halwa",
+   "forms": [
+    "அல்வா",
+    "alwa",
+    "halwa",
+    "halva",
+    "அல்வாவை",
+    "alwaavai"
+   ],
+   "translate_as": "halwa, wheat sweet",
+   "category": "food",
+   "note": "Soft wheat sweet stirred with ghee for guests.",
+   "wiki_title": "Halva"
+  },
+  {
+   "key": "kesari",
+   "forms": [
+    "கேசரி",
+    "kesari",
+    "kesari",
+    "kesari bath",
+    "கேசரியை",
+    "kesariyai"
+   ],
+   "translate_as": "kesari, saffron semolina sweet",
+   "category": "food",
+   "note": "Orange semolina sweet made in minutes for unexpected joy.",
+   "wiki_title": "Kesari bat"
+  },
+  {
+   "key": "payasam",
+   "forms": [
+    "பாயசம்",
+    "payasam",
+    "paayasam",
+    "payasam",
+    "பாயசத்தை",
+    "payasathai"
+   ],
+   "translate_as": "payasam, sweet milk pudding",
+   "category": "food",
+   "note": "Milky festival pudding served first on banana leaf.",
+   "wiki_title": "Kheer"
+  },
+  {
+   "key": "filter_coffee",
+   "forms": [
+    "பில்டர் காபி",
+    "filter kaapi",
+    "filter coffee",
+    "philthar kaapi",
+    "பில்டர் காபியை",
+    "filter kaapiyai"
+   ],
+   "translate_as": "filter coffee",
+   "category": "food",
+   "note": "Morning ritual coffee frothed in dabara-tumbler.",
+   "wiki_title": "Indian filter coffee"
+  },
+  {
+   "key": "sukku_coffee",
+   "forms": [
+    "சுக்குக் காபி",
+    "sukku kaapi",
+    "sukku coffee",
+    "chukku kaapi",
+    "சுக்குக் காபியை",
+    "sukku kaapiyai"
+   ],
+   "translate_as": "dry-ginger coffee",
+   "category": "food",
+   "note": "Dry-ginger healing drink for cold and rainy days.",
+   "wiki_title": ""
+  },
+  {
+   "key": "buttermilk_mor",
+   "forms": [
+    "மோர்",
+    "mor",
+    "more",
+    "moar",
+    "மோரை",
+    "morai"
+   ],
+   "translate_as": "spiced buttermilk",
+   "category": "food",
+   "note": "Thin spiced buttermilk to cool summer afternoons.",
+   "wiki_title": "Buttermilk"
+  },
+  {
+   "key": "ghee_ney",
+   "forms": [
+    "நெய்",
+    "ney",
+    "nei",
+    "ghee",
+    "நெய்யை",
+    "neyyai"
+   ],
+   "translate_as": "ghee",
+   "category": "food",
+   "note": "Clarified butter drizzled for blessing and flavour.",
+   "wiki_title": "Ghee"
+  },
+  {
+   "key": "curd_thayir",
+   "forms": [
+    "தயிர்",
+    "thayir",
+    "tayir",
+    "curd",
+    "தயிரை",
+    "thayirai"
+   ],
+   "translate_as": "curd, yogurt",
+   "category": "food",
+   "note": "Homemade yogurt set daily and never bought lightly.",
+   "wiki_title": "Curd"
+  },
+  {
+   "key": "tamarind_puli",
+   "forms": [
+    "புளி",
+    "puli",
+    "puli",
+    "புளியை",
+    "puliyai"
+   ],
+   "translate_as": "tamarind",
+   "category": "food",
+   "note": "Sour base of rasam and kuzhambu that defines taste.",
+   "wiki_title": "Tamarind"
+  },
+  {
+   "key": "coconut_thengai",
+   "forms": [
+    "தேங்காய்",
+    "thengai",
+    "tengai",
+    "thenkai",
+    "தேங்காயை",
+    "thengaiyai"
+   ],
+   "translate_as": "coconut",
+   "category": "food",
+   "note": "Grated fresh for chutney and every curry.",
+   "wiki_title": "Coconut"
+  },
+  {
+   "key": "palm_jaggery",
+   "forms": [
+    "கருப்பட்டி",
+    "karupatti",
+    "karuppatti",
+    "palm jaggery",
+    "கருப்பட்டியை",
+    "karupattiyai"
+   ],
+   "translate_as": "palm jaggery",
+   "category": "food",
+   "note": "Dark palm sugar elders call healthier than white sugar.",
+   "wiki_title": "Jaggery"
+  },
+  {
+   "key": "pickle_oorugai",
+   "forms": [
+    "ஊறுகாய்",
+    "oorugai",
+    "urugai",
+    "oorukai",
+    "ஊறுகாயை",
+    "oorugaiyai"
+   ],
+   "translate_as": "pickle",
+   "category": "food",
+   "note": "Salty mango-lemon pickle that makes curd rice exciting.",
+   "wiki_title": "South Asian pickles"
+  },
+  {
+   "key": "appalam",
+   "forms": [
+    "அப்பளம்",
+    "appalam",
+    "appalalam",
+    "papad",
+    "அப்பளத்தை",
+    "appalathai"
+   ],
+   "translate_as": "appalam, lentil crisp",
+   "category": "food",
+   "note": "Crisp lentil wafer crushed over rice for crunch.",
+   "wiki_title": "Papadam"
+  },
+  {
+   "key": "banana_fruit",
+   "forms": [
+    "வாழைப்பழம்",
+    "vazhaippazham",
+    "vaazhaipazham",
+    "vazhai pazham",
+    "வாழைப்பழத்தை",
+    "vazhaippazhathai"
+   ],
+   "translate_as": "banana",
+   "category": "food",
+   "note": "Blessed fruit offered to gods and given to children.",
+   "wiki_title": "Banana"
+  },
+  {
+   "key": "mango_fruit",
+   "forms": [
+    "மாம்பழம்",
+    "maampazham",
+    "mambazham",
+    "maambalam",
+    "மாம்பழத்தை",
+    "maampazhathai"
+   ],
+   "translate_as": "mango",
+   "category": "food",
+   "note": "Summer king fruit awaited all year with joy.",
+   "wiki_title": "Mango"
+  },
+  {
+   "key": "jackfruit",
+   "forms": [
+    "பலாப்பழம்",
+    "palapazham",
+    "pala pazham",
+    "palaapazham",
+    "பலாப்பழத்தை",
+    "palapazhathai"
+   ],
+   "translate_as": "jackfruit",
+   "category": "food",
+   "note": "Big summer fruit shared with neighbours when ripe.",
+   "wiki_title": "Jackfruit"
+  },
+  {
+   "key": "pongal_festival",
+   "forms": [
+    "பொங்கல்",
+    "Pongal",
+    "Ponggal",
+    "Pongal festival",
+    "பொங்கலுக்கு",
+    "Pongalukku"
+   ],
+   "translate_as": "Pongal harvest festival",
+   "category": "festival",
+   "note": "Harvest thanksgiving at home the grandchild will hear about every January.",
+   "wiki_title": "Pongal (festival)"
+  },
+  {
+   "key": "mattu_pongal",
+   "forms": [
+    "மாட்டுப் பொங்கல்",
+    "Mattu Pongal",
+    "Maattu Pongal",
+    "மாட்டுப்பொங்கலுக்கு",
+    "Mattu Pongalukku"
+   ],
+   "translate_as": "cattle-honouring Pongal day",
+   "category": "festival",
+   "note": "Day for honouring cows and cattle after Pongal.",
+   "wiki_title": "Pongal (festival)"
+  },
+  {
+   "key": "kaanum_pongal",
+   "forms": [
+    "காணும் பொங்கல்",
+    "Kaanum Pongal",
+    "Kanum Pongal",
+    "காணும்பொங்கலில்",
+    "Kanum Pongalil"
+   ],
+   "translate_as": "Kaanum Pongal family day",
+   "category": "festival",
+   "note": "Family visiting and outing day closing Pongal.",
+   "wiki_title": "Pongal (festival)"
+  },
+  {
+   "key": "deepavali",
+   "forms": [
+    "தீபாவளி",
+    "Deepavali",
+    "Diwali",
+    "Deepawali",
+    "தீபாவளிக்கு",
+    "Deepavalikku"
+   ],
+   "translate_as": "Deepavali",
+   "category": "festival",
+   "note": "Festival of lights with new clothes, sweets and crackers.",
+   "wiki_title": "Diwali"
+  },
+  {
+   "key": "puthandu",
+   "forms": [
+    "புத்தாண்டு",
+    "Puthandu",
+    "Tamil Puthandu",
+    "Varusha Pirappu",
+    "புத்தாண்டுக்கு",
+    "Puthandukku"
+   ],
+   "translate_as": "Tamil New Year",
+   "category": "festival",
+   "note": "Tamil New Year day in mid-April elders bless for.",
+   "wiki_title": "Tamil New Year"
+  },
+  {
+   "key": "aadi_perukku",
+   "forms": [
+    "ஆடிப்பெருக்கு",
+    "Aadi Perukku",
+    "Aadiperukku",
+    "ஆடிப்பெருக்கில்",
+    "Aadi Perukkil"
+   ],
+   "translate_as": "Aadi river festival",
+   "category": "festival",
+   "note": "River-worship day for rain and fertility in Aadi month.",
+   "wiki_title": "Aadi Perukku"
+  },
+  {
+   "key": "aadi_pooram",
+   "forms": [
+    "ஆடிப்பூரம்",
+    "Aadi Pooram",
+    "Aadipooram",
+    "ஆடிப்பூரத்தில்",
+    "Aadi Poorathil"
+   ],
+   "translate_as": "Aadi Pooram",
+   "category": "festival",
+   "note": "Goddess Andal birthday celebrated in Amman temples.",
+   "wiki_title": ""
+  },
+  {
+   "key": "navarathri",
+   "forms": [
+    "நவராத்திரி",
+    "Navarathri",
+    "Navratri",
+    "Navarathiri",
+    "நவராத்திரிக்கு",
+    "Navarathrikku"
+   ],
+   "translate_as": "Navaratri",
+   "category": "festival",
+   "note": "Nine nights of goddess worship with doll display at home.",
+   "wiki_title": "Navaratri"
+  },
+  {
+   "key": "saraswati_puja",
+   "forms": [
+    "சரஸ்வதி பூஜை",
+    "Saraswati Puja",
+    "Saraswathi Poojai",
+    "சரஸ்வதி பூஜையில்",
+    "Saraswathi Poojaiyil"
+   ],
+   "translate_as": "Saraswati worship",
+   "category": "festival",
+   "note": "Day children place books for blessing for learning.",
+   "wiki_title": "Saraswati Puja"
+  },
+  {
+   "key": "vijayadashami",
+   "forms": [
+    "விஜயதசமி",
+    "Vijayadashami",
+    "Vijaya Dasami",
+    "Dussehra",
+    "விஜயதசமிக்கு",
+    "Vijayadashamikku"
+   ],
+   "translate_as": "Vijayadashami",
+   "category": "festival",
+   "note": "Victory day when children start learning letters.",
+   "wiki_title": "Vijayadashami"
+  },
+  {
+   "key": "vinayagar_chaturthi",
+   "forms": [
+    "விநாயகர் சதுர்த்தி",
+    "Vinayagar Chaturthi",
+    "Vinayakar Chathurthi",
+    "Pillayar Chaturthi",
+    "விநாயகர் சதுர்த்திக்கு",
+    "Vinayagar Chathurthikku"
+   ],
+   "translate_as": "Vinayagar Chaturthi",
+   "category": "festival",
+   "note": "Birthday of Lord Pillayar with clay idol at home.",
+   "wiki_title": "Ganesh Chaturthi"
+  },
+  {
+   "key": "karthigai_deepam",
+   "forms": [
+    "கார்த்திகை தீபம்",
+    "Karthigai Deepam",
+    "Karthikai Deepam",
+    "Thirukarthigai",
+    "கார்த்திகை தீபத்தில்",
+    "Karthigai Deepathil"
+   ],
+   "translate_as": "Karthigai festival of lamps",
+   "category": "festival",
+   "note": "Festival of oil lamps lighting the whole house.",
+   "wiki_title": "Karthikai Deepam"
+  },
+  {
+   "key": "thaipusam",
+   "forms": [
+    "தைப்பூசம்",
+    "Thaipusam",
+    "Thai Poosam",
+    "தைப்பூசத்தில்",
+    "Thaipusathil"
+   ],
+   "translate_as": "Thaipusam",
+   "category": "festival",
+   "note": "Murugan vow festival with kavadi and temple walk.",
+   "wiki_title": "Thaipusam"
+  },
+  {
+   "key": "panguni_uthiram",
+   "forms": [
+    "பங்குனி உத்திரம்",
+    "Panguni Uthiram",
+    "Panguni Uttiram",
+    "பங்குனி உத்திரத்தில்",
+    "Panguni Uthirathil"
+   ],
+   "translate_as": "Panguni Uthiram",
+   "category": "festival",
+   "note": "Temple wedding day of gods, good for marriages.",
+   "wiki_title": "Panguni Uthiram"
+  },
+  {
+   "key": "maha_shivaratri",
+   "forms": [
+    "மகா சிவராத்திரி",
+    "Maha Shivaratri",
+    "Maha Sivarathiri",
+    "Shivaratri",
+    "சிவராத்திரியில்",
+    "Sivarathiriyil"
+   ],
+   "translate_as": "Maha Shivaratri",
+   "category": "festival",
+   "note": "Night fast and vigil for Lord Shiva.",
+   "wiki_title": "Maha Shivaratri"
+  },
+  {
+   "key": "krishna_jayanthi",
+   "forms": [
+    "கிருஷ்ண ஜெயந்தி",
+    "Krishna Jayanthi",
+    "Krishna Jayanti",
+    "Gokulashtami",
+    "கிருஷ்ண ஜெயந்திக்கு",
+    "Krishna Jayanthikku"
+   ],
+   "translate_as": "Krishna's birthday",
+   "category": "festival",
+   "note": "Krishna birthday with footprints and sweets at home.",
+   "wiki_title": "Krishna Janmashtami"
+  },
+  {
+   "key": "vaikunta_ekadasi",
+   "forms": [
+    "வைகுண்ட ஏகாதசி",
+    "Vaikunta Ekadasi",
+    "Vaikunda Ekadashi",
+    "வைகுண்ட ஏகாதசியில்",
+    "Vaikunta Ekadasiyil"
+   ],
+   "translate_as": "Vaikunta Ekadasi",
+   "category": "festival",
+   "note": "Perumal temple gate-opening day for heaven entry.",
+   "wiki_title": "Vaikuntha Ekadashi"
+  },
+  {
+   "key": "thiruvathirai",
+   "forms": [
+    "திருவாதிரை",
+    "Thiruvathirai",
+    "Thiruvathira",
+    "Arudra Darisanam",
+    "திருவாதிரையில்",
+    "Thiruvathiraiyil"
+   ],
+   "translate_as": "Thiruvathirai",
+   "category": "festival",
+   "note": "Shiva-Nataraja day with kali porridge offering.",
+   "wiki_title": "Thiruvathira"
+  },
+  {
+   "key": "purattasi_sani",
+   "forms": [
+    "புரட்டாசி சனி",
+    "Purattasi Sani",
+    "Purattasi Saturday",
+    "புரட்டாசி சனிக்கிழமை",
+    "Purattasi Sanikizhamai"
+   ],
+   "translate_as": "Purattasi Saturdays",
+   "category": "festival",
+   "note": "Saturdays for Perumal vows and strict veg food.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aavani_avittam",
+   "forms": [
+    "ஆவணி அவிட்டம்",
+    "Aavani Avittam",
+    "Avani Avittam",
+    "Upakarma",
+    "ஆவணி அவிட்டத்தில்",
+    "Aavani Avittathil"
+   ],
+   "translate_as": "Avani Avittam thread rite",
+   "category": "festival",
+   "note": "Sacred-thread changing day for Brahmin men and boys.",
+   "wiki_title": "Upakarma"
+  },
+  {
+   "key": "chithirai_thiruvizha",
+   "forms": [
+    "சித்திரைத் திருவிழா",
+    "Chithirai Thiruvizha",
+    "Chitrai Festival",
+    "சித்திரைத் திருவிழாவில்",
+    "Chithirai Thiruvizhavil"
+   ],
+   "translate_as": "Chithirai temple festival",
+   "category": "festival",
+   "note": "Big Madurai temple car festival in Chithirai month.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aadi_velli",
+   "forms": [
+    "ஆடி வெள்ளி",
+    "Aadi Velli",
+    "Aadi Friday",
+    "ஆடி வெள்ளிக்கிழமை",
+    "Aadi Vellikizhamai"
+   ],
+   "translate_as": "Aadi Fridays",
+   "category": "festival",
+   "note": "Fridays for goddess worship and pongal offering.",
+   "wiki_title": ""
+  },
+  {
+   "key": "karadaiyan_nonbu",
+   "forms": [
+    "கரடையான் நோன்பு",
+    "Karadaiyan Nonbu",
+    "Karadayan Nombu",
+    "கரடையான் நோன்பில்",
+    "Karadaiyan Nonbil"
+   ],
+   "translate_as": "Karadaiyan fasting vow",
+   "category": "festival",
+   "note": "Married women's fast for husband's long life.",
+   "wiki_title": "Karadaiyan Nombu"
+  },
+  {
+   "key": "varalakshmi_nonbu",
+   "forms": [
+    "வரலக்ஷ்மி நோன்பு",
+    "Varalakshmi Nonbu",
+    "Varalakshmi Nombu",
+    "Varalakshmi Viratham",
+    "வரலக்ஷ்மி நோன்பில்",
+    "Varalakshmi Nonbil"
+   ],
+   "translate_as": "Varalakshmi vow",
+   "category": "festival",
+   "note": "Women's Lakshmi vow for family welfare.",
+   "wiki_title": "Varalakshmi Vratam"
+  },
+  {
+   "key": "abhishekam",
+   "forms": [
+    "அபிஷேகம்",
+    "Abhishekam",
+    "Abishekam",
+    "அபிஷேகத்தில்",
+    "Abhishekathil"
+   ],
+   "translate_as": "ritual bathing of deity",
+   "category": "ritual",
+   "note": "Ceremonial bathing of the deity elders sponsor.",
+   "wiki_title": "Abhisheka"
+  },
+  {
+   "key": "archanai",
+   "forms": [
+    "அர்ச்சனை",
+    "Archanai",
+    "Archana",
+    "Archanai",
+    "அர்ச்சனைக்கு",
+    "Archanaikku"
+   ],
+   "translate_as": "name-offering prayer",
+   "category": "ritual",
+   "note": "Paid name-chant prayer done for you at temple.",
+   "wiki_title": "Puja (Hinduism)"
+  },
+  {
+   "key": "aarathi",
+   "forms": [
+    "ஆரத்தி",
+    "Aarathi",
+    "Aarti",
+    "Deepa Aradhanai",
+    "ஆரத்திக்காட்டு",
+    "Aarathi Kaattu"
+   ],
+   "translate_as": "lamp-waving blessing",
+   "category": "ritual",
+   "note": "Waving lamp to bless and ward off evil.",
+   "wiki_title": "Aarti"
+  },
+  {
+   "key": "prasadam",
+   "forms": [
+    "பிரசாதம்",
+    "Prasadham",
+    "Prasadam",
+    "Prasada",
+    "பிரசாதத்தை",
+    "Prasadhathai"
+   ],
+   "translate_as": "blessed offering",
+   "category": "ritual",
+   "note": "Blessed temple food you must accept respectfully.",
+   "wiki_title": "Prasada"
+  },
+  {
+   "key": "kolam",
+   "forms": [
+    "கோலம்",
+    "Kolam",
+    "Koalam",
+    "Rangoli",
+    "கோலத்தில்",
+    "Kolathil"
+   ],
+   "translate_as": "doorstep floor art",
+   "category": "ritual",
+   "note": "Daily rice-flour doorway art for welcome and protection.",
+   "wiki_title": "Kolam"
+  },
+  {
+   "key": "vilakku_puja",
+   "forms": [
+    "விளக்கு பூஜை",
+    "Vilakku Puja",
+    "Vilakku Poojai",
+    "Deepa Puja",
+    "விளக்கு பூஜையில்",
+    "Vilakku Poojaiyil"
+   ],
+   "translate_as": "lamp worship",
+   "category": "ritual",
+   "note": "Women's lamp worship for family goddess blessing.",
+   "wiki_title": ""
+  },
+  {
+   "key": "seemantham",
+   "forms": [
+    "சீமந்தம்",
+    "Seemantham",
+    "Seemandham",
+    "Valaikappu function",
+    "சீமந்தத்தில்",
+    "Seemanthathil"
+   ],
+   "translate_as": "baby-shower rite",
+   "category": "ritual",
+   "note": "Pregnancy blessing ceremony for safe delivery.",
+   "wiki_title": "Simantonnayana"
+  },
+  {
+   "key": "valakappu",
+   "forms": [
+    "வளைகாப்பு",
+    "Valakappu",
+    "Valaikappu",
+    "வளைகாப்பில்",
+    "Valakappil"
+   ],
+   "translate_as": "bangle ceremony",
+   "category": "ritual",
+   "note": "Bangle ceremony protecting mother and unborn child.",
+   "wiki_title": ""
+  },
+  {
+   "key": "peyar_soottal",
+   "forms": [
+    "பெயர் சூட்டல்",
+    "Peyar Soottal",
+    "Per Soottal",
+    "Namakaranam",
+    "பெயர் சூட்டினார்கள்",
+    "Peyar Soottinargal"
+   ],
+   "translate_as": "naming ceremony",
+   "category": "ritual",
+   "note": "Formal naming of newborn whispered by elder.",
+   "wiki_title": "Namakarana"
+  },
+  {
+   "key": "annaprasana_ritual",
+   "forms": [
+    "சோறு ஊட்டல்",
+    "Soru Oottal",
+    "Choru Oottal",
+    "Annaprasana",
+    "சோறு ஊட்டினார்கள்",
+    "Soru Oottinargal"
+   ],
+   "translate_as": "first-feeding rite",
+   "category": "ritual",
+   "note": "Baby's first rice feeding celebrated with family.",
+   "wiki_title": "Annaprashana"
+  },
+  {
+   "key": "kaadhu_kutthal",
+   "forms": [
+    "காது குத்தல்",
+    "Kaadhu Kutthal",
+    "Kadhukutthal",
+    "Kaatthu Kutthal",
+    "காது குத்தினார்கள்",
+    "Kaadhu Kuthinargal"
+   ],
+   "translate_as": "ear-piercing rite",
+   "category": "ritual",
+   "note": "Child's ear-piercing done in temple for health.",
+   "wiki_title": "Karnavedha"
+  },
+  {
+   "key": "mottai_adaithal",
+   "forms": [
+    "மொட்டை அடித்தல்",
+    "Mottai Adithal",
+    "Mottai",
+    "Mudikanikkai",
+    "மொட்டை அடித்தார்கள்",
+    "Mottai Adithargal"
+   ],
+   "translate_as": "tonsure offering",
+   "category": "ritual",
+   "note": "Tonsure offering of child's hair to god.",
+   "wiki_title": "Tonsure"
+  },
+  {
+   "key": "ayush_homam",
+   "forms": [
+    "ஆயுஷ் ஹோமம்",
+    "Ayush Homam",
+    "Ayush Hom",
+    "Ayul Homam",
+    "ஆயுஷ் ஹோமத்தில்",
+    "Ayush Homathil"
+   ],
+   "translate_as": "long-life fire rite",
+   "category": "ritual",
+   "note": "First-birthday fire prayer for long life.",
+   "wiki_title": "Homa (ritual)"
+  },
+  {
+   "key": "upanayanam_poonool",
+   "forms": [
+    "பூணூல்",
+    "Poonool",
+    "Upanayanam",
+    "Yajnopaveetham",
+    "பூணூல் போட்டார்கள்",
+    "Poonool Pottargal"
+   ],
+   "translate_as": "sacred-thread ceremony",
+   "category": "ritual",
+   "note": "Sacred-thread initiation marking a boy's learning stage.",
+   "wiki_title": "Upanayana"
+  },
+  {
+   "key": "nichayathartham",
+   "forms": [
+    "நிச்ಚயதார்த்தம்",
+    "Nichayathartham",
+    "Nichayadartham",
+    "Nischayam",
+    "நிಚ்ಚயதார்த்தத்தில்",
+    "Nichayatharthathil"
+   ],
+   "translate_as": "engagement",
+   "category": "ritual",
+   "note": "Formal engagement fixing the wedding promise.",
+   "wiki_title": ""
+  },
+  {
+   "key": "thirumangalyam_thali",
+   "forms": [
+    "தாலி",
+    "Thali",
+    "Tali",
+    "Thirumangalyam",
+    "தாலிக்கட்டினார்கள்",
+    "Thali Kattinargal"
+   ],
+   "translate_as": "wedding pendant",
+   "category": "ritual",
+   "note": "Sacred wedding pendant tied by groom, never removed lightly.",
+   "wiki_title": "Mangala sutra"
+  },
+  {
+   "key": "nalangu",
+   "forms": [
+    "நலங்கு",
+    "Nalangu",
+    "Nalungu",
+    "நலங்கில்",
+    "Nalangil"
+   ],
+   "translate_as": "wedding games rite",
+   "category": "ritual",
+   "note": "Playful wedding games blessing the couple's union.",
+   "wiki_title": ""
+  },
+  {
+   "key": "oonjal",
+   "forms": [
+    "ஊஞ்ಚல்",
+    "Oonjal",
+    "Unjal",
+    "Oonjal Attal",
+    "ஊஞ்ಚலில்",
+    "Oonjallil"
+   ],
+   "translate_as": "wedding swing rite",
+   "category": "ritual",
+   "note": "Swinging the couple on decorated swing for harmony.",
+   "wiki_title": ""
+  },
+  {
+   "key": "manjal_neerattu_vizha",
+   "forms": [
+    "மஞ்ಚள் நீராட்டு விழா",
+    "Manjal Neerattu Vizha",
+    "Sadangu",
+    "Puberty function",
+    "மஞ்ಚள் நீராட்டினார்கள்",
+    "Manjal Neerattinargal"
+   ],
+   "translate_as": "puberty ceremony",
+   "category": "ritual",
+   "note": "Coming-of-age celebration for a girl at puberty.",
+   "wiki_title": "Ritu Kala Samskara"
+  },
+  {
+   "key": "grahapravesam",
+   "forms": [
+    "கிருகப்பிரவேசம்",
+    "Grahapravesam",
+    "Graha Pravesam",
+    "Puthu Veedu Puja",
+    "கிருகப்பிரவேசத்தில்",
+    "Grahapravesathil"
+   ],
+   "translate_as": "housewarming rite",
+   "category": "ritual",
+   "note": "Housewarming prayer before first living in new home.",
+   "wiki_title": "Griha Pravesh"
+  },
+  {
+   "key": "karumathi_thivasam",
+   "forms": [
+    "கருமாதி",
+    "Karumathi",
+    "Kariyam",
+    "Thivasam",
+    "கருமாதியில்",
+    "Karumathiyil"
+   ],
+   "translate_as": "funeral and memorial rites",
+   "category": "ritual",
+   "note": "Death rites and yearly remembrance for ancestors.",
+   "wiki_title": "Antyesti"
+  },
+  {
+   "key": "oor_native_village",
+   "forms": [
+    "ஊர்",
+    "oor",
+    "ur",
+    "oour",
+    "ஊரு",
+    "ஊரில்",
+    "ooril",
+    "oorukku"
+   ],
+   "translate_as": "native village / hometown",
+   "category": "place",
+   "note": "Means ancestral home village, not just any town.",
+   "wiki_title": ""
+  },
+  {
+   "key": "madurai",
+   "forms": [
+    "மதுரை",
+    "Mathurai",
+    "Madhurai",
+    "Madurai",
+    "மதுரையில்",
+    "Mathuraiyil"
+   ],
+   "translate_as": "Madurai",
+   "category": "place",
+   "note": "Temple city grandparents cite with pride and devotion.",
+   "wiki_title": "Madurai"
+  },
+  {
+   "key": "rameswaram",
+   "forms": [
+    "ராமேஸ்வரம்",
+    "Rameswaram",
+    "Rameshwaram",
+    "Raamaesvaram",
+    "ராமேஸ்வரத்தில்",
+    "Rameswarathil"
+   ],
+   "translate_as": "Rameswaram",
+   "category": "place",
+   "note": "Holy pilgrimage island for ancestors and rituals.",
+   "wiki_title": "Rameswaram"
+  },
+  {
+   "key": "thanjavur",
+   "forms": [
+    "தஞ்சாவூர்",
+    "Thanjavur",
+    "Tanjavur",
+    "Thanjavoor",
+    "தஞ்சாவூரில்",
+    "Thanjavuril"
+   ],
+   "translate_as": "Thanjavur",
+   "category": "place",
+   "note": "Historic Chola capital with the big temple.",
+   "wiki_title": "Thanjavur"
+  },
+  {
+   "key": "chidambaram",
+   "forms": [
+    "சிதம்பரம்",
+    "Chidambaram",
+    "Sithambaram",
+    "Chithambaram",
+    "சிதம்பரத்தில்",
+    "Chidambarathil"
+   ],
+   "translate_as": "Chidambaram",
+   "category": "place",
+   "note": "Famous Shiva temple of cosmic dance.",
+   "wiki_title": "Chidambaram"
+  },
+  {
+   "key": "palani",
+   "forms": [
+    "பழனி",
+    "Palani",
+    "Pazhani",
+    "Pazani",
+    "பழனியில்",
+    "Palaniyil"
+   ],
+   "translate_as": "Palani",
+   "category": "place",
+   "note": "Hill Murugan temple of vows and tonsure.",
+   "wiki_title": "Palani"
+  },
+  {
+   "key": "tiruvannamalai",
+   "forms": [
+    "திருவண்ணாமலை",
+    "Thiruvannamalai",
+    "Tiruvannamalai",
+    "Thiruvannaamalai",
+    "திருவண்ணாமலையில்",
+    "Thiruvannamalaiyil"
+   ],
+   "translate_as": "Tiruvannamalai",
+   "category": "place",
+   "note": "Holy fire hill and full-moon walk.",
+   "wiki_title": "Tiruvannamalai"
+  },
+  {
+   "key": "kanyakumari",
+   "forms": [
+    "கன்னியாகுமரி",
+    "Kanniyakumari",
+    "Kanyakumari",
+    "Cape Comorin",
+    "கன்னியாகுமரியில்",
+    "Kanyakumariyil"
+   ],
+   "translate_as": "Kanyakumari",
+   "category": "place",
+   "note": "Southern tip where three seas meet.",
+   "wiki_title": "Kanyakumari"
+  },
+  {
+   "key": "mylapore",
+   "forms": [
+    "மயிலாப்பூர்",
+    "Mylapore",
+    "Mylappur",
+    "Mayilappur",
+    "மயிலாப்பூரில்",
+    "Mylaporeil"
+   ],
+   "translate_as": "Mylapore",
+   "category": "place",
+   "note": "Old Chennai temple neighbourhood of tradition.",
+   "wiki_title": "Mylapore"
+  },
+  {
+   "key": "t_nagar",
+   "forms": [
+    "தி.நகர்",
+    "Thi Nagar",
+    "T Nagar",
+    "T. Nagar",
+    "தி.நகரில்",
+    "T Nagaril"
+   ],
+   "translate_as": "T. Nagar",
+   "category": "place",
+   "note": "Chennai shopping district for silk and jewellery.",
+   "wiki_title": "T. Nagar"
+  },
+  {
+   "key": "koyambedu_market",
+   "forms": [
+    "கோயம்பேடு",
+    "Koyambedu",
+    "Koyambeedu",
+    "Kooyampedu",
+    "கோயம்பேட்டில்",
+    "Koyambettil"
+   ],
+   "translate_as": "Koyambedu market",
+   "category": "place",
+   "note": "Chennai giant wholesale vegetable market.",
+   "wiki_title": "Koyambedu Wholesale Market Complex"
+  },
+  {
+   "key": "srirangam",
+   "forms": [
+    "ஸ்ரீரங்கம்",
+    "Srirangam",
+    "Sreerangam",
+    "Thiruvarangam",
+    "ஸ்ரீரங்கத்தில்",
+    "Srirangathil"
+   ],
+   "translate_as": "Srirangam",
+   "category": "place",
+   "note": "Vast Vishnu temple island of pilgrimage.",
+   "wiki_title": "Srirangam"
+  },
+  {
+   "key": "kumbakonam",
+   "forms": [
+    "கும்பகோணம்",
+    "Kumbakonam",
+    "Kumbakkonam",
+    "Kumbakonam",
+    "கும்பகோணத்தில்",
+    "Kumbakonathil"
+   ],
+   "translate_as": "Kumbakonam",
+   "category": "place",
+   "note": "Temple town of degree coffee and rituals.",
+   "wiki_title": "Kumbakonam"
+  },
+  {
+   "key": "marina_beach",
+   "forms": [
+    "மெரினா",
+    "Merina",
+    "Marina",
+    "Mareena",
+    "மெரினாவில்",
+    "Marinavil"
+   ],
+   "translate_as": "Marina Beach",
+   "category": "place",
+   "note": "Chennai beach of evening family walks.",
+   "wiki_title": "Marina Beach"
+  },
+  {
+   "key": "jaffna",
+   "forms": [
+    "யாழ்ப்பாணம்",
+    "Yazhppanam",
+    "Jaffna",
+    "Yaalppaanam",
+    "யாழ்ப்பாணத்தில்",
+    "Yazhppanathil"
+   ],
+   "translate_as": "Jaffna",
+   "category": "place",
+   "note": "Tamil cultural heartland in Sri Lanka.",
+   "wiki_title": "Jaffna"
+  },
+  {
+   "key": "sandhai_market",
+   "forms": [
+    "சந்தை",
+    "Santhai",
+    "Sandhai",
+    "Chanthai",
+    "சந்தையில்",
+    "சந்தைக்கு",
+    "Santhaiyil",
+    "Santhaikku"
+   ],
+   "translate_as": "weekly market",
+   "category": "place",
+   "note": "Weekly open bazaar for haggling and gossip.",
+   "wiki_title": "Bazaar"
+  },
+  {
+   "key": "velinadu_abroad",
+   "forms": [
+    "வெளிநாடு",
+    "Velinaadu",
+    "Velinadu",
+    "Velinaatu",
+    "வெளிநாட்டில்",
+    "வெளிநாட்டுக்கு",
+    "Velinaattil",
+    "Velinaattukku"
+   ],
+   "translate_as": "foreign country / abroad",
+   "category": "place",
+   "note": "Abroad as land of jobs and separation.",
+   "wiki_title": ""
+  },
+  {
+   "key": "veshti_dhoti",
+   "forms": [
+    "வேட்டி",
+    "Vetti",
+    "Veshti",
+    "Veshtti",
+    "வேட்டியை",
+    "வேட்டிகள்",
+    "Vettiyai",
+    "Vettigal"
+   ],
+   "translate_as": "dhoti / veshti",
+   "category": "object",
+   "note": "White wrapped garment of respect for men.",
+   "wiki_title": "Dhoti"
+  },
+  {
+   "key": "pudavai_saree",
+   "forms": [
+    "புடவை",
+    "Pudavai",
+    "Pudavay",
+    "Saree",
+    "புடவையில்",
+    "புடவைகள்",
+    "Pudavaiyil",
+    "Pudavaigal"
+   ],
+   "translate_as": "saree",
+   "category": "object",
+   "note": "Everyday six-yard wrap marking womanhood.",
+   "wiki_title": "Sari"
+  },
+  {
+   "key": "pattu_pudavai",
+   "forms": [
+    "பட்டுப்புடவை",
+    "Pattu Pudavai",
+    "Pattu Pudavay",
+    "Silk Saree",
+    "பட்டுப்புடவையில்",
+    "Pattu Pudavaiyil"
+   ],
+   "translate_as": "silk saree",
+   "category": "object",
+   "note": "Kanchipuram silk for weddings and pride.",
+   "wiki_title": "Kanchipuram silk sari"
+  },
+  {
+   "key": "thaali_necklace",
+   "forms": [
+    "தாலி",
+    "Thaali",
+    "Thali",
+    "Taali",
+    "தாலியை",
+    "தாலிக்கொடி",
+    "Thaaliyai",
+    "Thaali kodi"
+   ],
+   "translate_as": "sacred marriage necklace",
+   "category": "object",
+   "note": "Sacred marriage chain never taken lightly.",
+   "wiki_title": "Mangalsutra"
+  },
+  {
+   "key": "metti_toe_ring",
+   "forms": [
+    "மெட்டி",
+    "Metti",
+    "Metty",
+    "Metti",
+    "மெட்டிகள்",
+    "Mettihal"
+   ],
+   "translate_as": "toe ring",
+   "category": "object",
+   "note": "Toe rings worn by married women.",
+   "wiki_title": "Toe ring"
+  },
+  {
+   "key": "pottu_bindi",
+   "forms": [
+    "பொட்டு",
+    "Pottu",
+    "Pottu",
+    "Bottu",
+    "பொட்டுகள்",
+    "பொட்டில்",
+    "Pottugal",
+    "Pottil"
+   ],
+   "translate_as": "bindi",
+   "category": "object",
+   "note": "Forehead dot of protection and marriage.",
+   "wiki_title": "Bindi"
+  },
+  {
+   "key": "kuthuvilakku_lamp",
+   "forms": [
+    "குத்துவிளக்கு",
+    "Kuthuvilakku",
+    "Kuthu Vilakku",
+    "Kuththuvilakku",
+    "குத்துவிளக்கில்",
+    "Kuthuvilakkil"
+   ],
+   "translate_as": "standing oil lamp",
+   "category": "object",
+   "note": "Tall brass lamp lit for gods and guests.",
+   "wiki_title": "Oil lamp"
+  },
+  {
+   "key": "sombu_vessel",
+   "forms": [
+    "சொம்பு",
+    "Sombu",
+    "Sombhu",
+    "Chombu",
+    "சொம்பில்",
+    "சொம்புகள்",
+    "Sombil",
+    "Sombugal"
+   ],
+   "translate_as": "metal water vessel",
+   "category": "object",
+   "note": "Small water vessel for daily rituals.",
+   "wiki_title": "Lota (vessel)"
+  },
+  {
+   "key": "dabara_tumbler",
+   "forms": [
+    "டபரா டம்ளர்",
+    "Dabara Tumbler",
+    "Davara Tumbler",
+    "Dabara Dhamlar",
+    "டபரா டம்ளரில்",
+    "Dabara Tumbleril"
+   ],
+   "translate_as": "dabara-tumbler set",
+   "category": "object",
+   "note": "Wide bowl-cup for frothy filter coffee.",
+   "wiki_title": "Indian filter coffee"
+  },
+  {
+   "key": "ammi_grinding_stone",
+   "forms": [
+    "அம்மி",
+    "Ammi",
+    "Ammy",
+    "Atmi",
+    "அம்மியில்",
+    "Ammiyil"
+   ],
+   "translate_as": "grinding stone",
+   "category": "object",
+   "note": "Heavy stone for masala and wedding rite.",
+   "wiki_title": "Grinding slab"
+  },
+  {
+   "key": "aattukkal_grinder",
+   "forms": [
+    "ஆட்டுக்கல்",
+    "Aattukkal",
+    "Attukkal",
+    "Aatukkal",
+    "ஆட்டுக்கல்லில்",
+    "Aattukkallil"
+   ],
+   "translate_as": "wet-grinding stone",
+   "category": "object",
+   "note": "Stone grinder for batter and nostalgia.",
+   "wiki_title": ""
+  },
+  {
+   "key": "muram_winnowing_basket",
+   "forms": [
+    "முறம்",
+    "Muram",
+    "Mooram",
+    "Murram",
+    "முறத்தில்",
+    "Murathil"
+   ],
+   "translate_as": "winnowing basket",
+   "category": "object",
+   "note": "Flat basket for winnowing rice by hand.",
+   "wiki_title": "Winnowing"
+  },
+  {
+   "key": "kudam_water_pot",
+   "forms": [
+    "குடம்",
+    "Kudam",
+    "Koodam",
+    "Gudam",
+    "குடத்தில்",
+    "குடங்கள்",
+    "Kudathil",
+    "Kudangal"
+   ],
+   "translate_as": "water pot",
+   "category": "object",
+   "note": "Round pot carried for water and vows.",
+   "wiki_title": "Kalasha"
+  },
+  {
+   "key": "visiri_hand_fan",
+   "forms": [
+    "விசிறி",
+    "Visiri",
+    "Visiri",
+    "Vichiri",
+    "விசிறியில்",
+    "Visiriyil"
+   ],
+   "translate_as": "hand fan",
+   "category": "object",
+   "note": "Palm-leaf hand fan of power-cut summers.",
+   "wiki_title": "Hand fan"
+  },
+  {
+   "key": "thinnai_verandah",
+   "forms": [
+    "திண்ணை",
+    "Thinnai",
+    "Tinnai",
+    "Thinai",
+    "திண்ணையில்",
+    "Thinnaiyil"
+   ],
+   "translate_as": "front porch platform",
+   "category": "object",
+   "note": "Raised porch where neighbours chat.",
+   "wiki_title": "Veranda"
+  },
+  {
+   "key": "kayiru_kattil_cot",
+   "forms": [
+    "கயிற்றுக்கட்டில்",
+    "Kayittru Kattil",
+    "Kayiru Kattil",
+    "Charpai",
+    "கயிற்றுக்கட்டிலில்",
+    "Kayittru Kattilil"
+   ],
+   "translate_as": "rope cot",
+   "category": "object",
+   "note": "Rope cot for naps in courtyard breeze.",
+   "wiki_title": "Charpai"
+  },
+  {
+   "key": "sambrani_incense",
+   "forms": [
+    "சாம்பிராணி",
+    "Sambrani",
+    "Saambrani",
+    "Chambrani",
+    "சாம்பிராணியில்",
+    "Sambraniyil"
+   ],
+   "translate_as": "benzoin incense",
+   "category": "object",
+   "note": "Resin smoke that purifies home and hair.",
+   "wiki_title": "Benzoin"
+  },
+  {
+   "key": "thiruneeru_ash",
+   "forms": [
+    "திருநீறு",
+    "Thiruneeru",
+    "Tiruneeru",
+    "Vibhuti",
+    "திருநீற்றில்",
+    "Thiruneetril"
+   ],
+   "translate_as": "sacred ash",
+   "category": "object",
+   "note": "Holy ash pressed as blessing on forehead.",
+   "wiki_title": "Vibhuti"
+  },
+  {
+   "key": "kungumam_powder",
+   "forms": [
+    "குங்குமம்",
+    "Kungumam",
+    "Kumkum",
+    "Kungumum",
+    "குங்குமத்தில்",
+    "Kungumathil"
+   ],
+   "translate_as": "kumkum",
+   "category": "object",
+   "note": "Red powder of goddess and marriage.",
+   "wiki_title": "Kumkum"
+  },
+  {
+   "key": "vetrilai_pakku",
+   "forms": [
+    "வெற்றிலை பாக்கு",
+    "Vetrilai Paakku",
+    "Vetrilai Pakku",
+    "Betel Leaf",
+    "வெற்றிலை பாக்கில்",
+    "Vetrilai Pakkil"
+   ],
+   "translate_as": "betel leaf and areca nut",
+   "category": "object",
+   "note": "Betel leaf-nut offered to guests and gods.",
+   "wiki_title": "Paan"
+  },
+  {
+   "key": "jathagam_horoscope",
+   "forms": [
+    "ஜாதகம்",
+    "Jathagam",
+    "Jadagam",
+    "Jaathagam",
+    "ஜாதகத்தில்",
+    "Jathagathil"
+   ],
+   "translate_as": "horoscope",
+   "category": "other",
+   "note": "Birth chart guiding marriage and life.",
+   "wiki_title": "Hindu astrology"
+  },
+  {
+   "key": "porutham_match",
+   "forms": [
+    "பொருத்தம்",
+    "Porutham",
+    "Poruttham",
+    "Poruththam",
+    "பொருத்தத்தில்",
+    "Poruthathil"
+   ],
+   "translate_as": "horoscope compatibility",
+   "category": "other",
+   "note": "Horoscope match deciding marriage talks.",
+   "wiki_title": ""
+  },
+  {
+   "key": "dhrishti_evil_eye",
+   "forms": [
+    "திருஷ்டி",
+    "Dhrishti",
+    "Dirishti",
+    "Thirusti",
+    "திருஷ்டியில்",
+    "Dhrishtiyil"
+   ],
+   "translate_as": "evil eye",
+   "category": "other",
+   "note": "Evil eye blamed for sudden bad luck.",
+   "wiki_title": "Evil eye"
+  },
+  {
+   "key": "seethanam_dowry",
+   "forms": [
+    "சீதனம்",
+    "Seethanam",
+    "Seedhanam",
+    "Seetanam",
+    "சீதனமாக",
+    "Seethanamaaga"
+   ],
+   "translate_as": "dowry / bridal gifts",
+   "category": "other",
+   "note": "Gifts given with bride, sensitive topic.",
+   "wiki_title": "Dowry"
+  },
+  {
+   "key": "aadi_month",
+   "forms": [
+    "ஆடி",
+    "Aadi",
+    "Adi",
+    "Aadi",
+    "ஆடியில்",
+    "Aadiyil"
+   ],
+   "translate_as": "Aadi month",
+   "category": "other",
+   "note": "Inauspicious month when weddings pause.",
+   "wiki_title": "Aadi"
+  },
+  {
+   "key": "thai_month",
+   "forms": [
+    "தை",
+    "Thai",
+    "Tai",
+    "Thay",
+    "தையில்",
+    "Thaiyil"
+   ],
+   "translate_as": "Thai month",
+   "category": "other",
+   "note": "Auspicious harvest month for new starts.",
+   "wiki_title": "Thai (month)"
+  },
+  {
+   "key": "sakunam_omen",
+   "forms": [
+    "சகுனம்",
+    "Sagunam",
+    "Sakunam",
+    "Sagoonam",
+    "சகுனத்தில்",
+    "Sagunathil"
+   ],
+   "translate_as": "omen",
+   "category": "other",
+   "note": "Good or bad omen before leaving home.",
+   "wiki_title": "Omens"
+  },
+  {
+   "key": "nalla_neram_time",
+   "forms": [
+    "நல்ல நேரம்",
+    "Nalla Neram",
+    "Nalla Neeram",
+    "Good Time",
+    "நல்ல நேரத்தில்",
+    "Nalla Nerathil"
+   ],
+   "translate_as": "auspicious time",
+   "category": "other",
+   "note": "Lucky hour when tasks must begin.",
+   "wiki_title": "Muhurta"
+  },
+  {
+   "key": "ayya_sir",
+   "forms": [
+    "ஐய்யா",
+    "aiyaa",
+    "ayya",
+    "ஐய்யாக்கள்",
+    "aiyaakkal",
+    "ஐய்யாவுக்கு",
+    "aiyaavukku"
+   ],
+   "translate_as": "sir, respected sir",
+   "category": "address",
+   "note": "Respectful sir for elders and strangers, warmth not distance.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "thiru_mister",
+   "forms": [
+    "திரு",
+    "thiru",
+    "tiru",
+    "திருவாளர்",
+    "thiruvalar"
+   ],
+   "translate_as": "Mr.",
+   "category": "address",
+   "note": "Formal Mr. put before names in respectful talk.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "thirumathi_mrs",
+   "forms": [
+    "திருமதி",
+    "thirumathi",
+    "tirumati",
+    "திருமதிகள்",
+    "thirumathikal"
+   ],
+   "translate_as": "Mrs.",
+   "category": "address",
+   "note": "Formal Mrs. for married women, shows high respect.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "selvan_young_mr",
+   "forms": [
+    "செல்வன்",
+    "selvan",
+    "chelvan",
+    "செல்வர்கள்",
+    "selvarkal"
+   ],
+   "translate_as": "Master",
+   "category": "address",
+   "note": "Formal Master for young unmarried men in invitations.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "selvi_young_miss",
+   "forms": [
+    "செல்வி",
+    "selvi",
+    "chelvi",
+    "செல்விகள்",
+    "selvikal"
+   ],
+   "translate_as": "Miss",
+   "category": "address",
+   "note": "Formal Miss for young unmarried women in invitations.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "avargal_honorific_they",
+   "forms": [
+    "அவர்கள்",
+    "avargal",
+    "avanga",
+    "avargal",
+    "அவங்க",
+    "avanga",
+    "அவர்களுக்கு",
+    "avargalukku"
+   ],
+   "translate_as": "he/she [respectful]",
+   "category": "address",
+   "note": "Says they for one elder to avoid blunt he or she.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "neengal_polite_you",
+   "forms": [
+    "நீங்கள்",
+    "neengal",
+    "ningal",
+    "neenga",
+    "நீங்க",
+    "neenga",
+    "உங்களுக்கு",
+    "ungalukku"
+   ],
+   "translate_as": "you [respectful]",
+   "category": "address",
+   "note": "Polite plural you used even for one elder.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "saar_sir_loan",
+   "forms": [
+    "சார்",
+    "saar",
+    "sar",
+    "sir",
+    "சாருங்க",
+    "saarunga"
+   ],
+   "translate_as": "sir",
+   "category": "address",
+   "note": "Everyday sir for teachers, officers and customers.",
+   "wiki_title": ""
+  },
+  {
+   "key": "medam_madam_loan",
+   "forms": [
+    "மேடம்",
+    "maedam",
+    "medam"
+   ],
+   "translate_as": "madam",
+   "category": "address",
+   "note": "Everyday madam for teachers, nurses and officers.",
+   "wiki_title": ""
+  },
+  {
+   "key": "saami_lord",
+   "forms": [
+    "சாமி",
+    "saami",
+    "samy",
+    "swami",
+    "சாமிகள்",
+    "saamigal",
+    "சாமியே",
+    "saamiye"
+   ],
+   "translate_as": "lord, good sir, god",
+   "category": "address",
+   "note": "Calls someone lord or god, for elders, gods and plea.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kannu_dear_eye",
+   "forms": [
+    "கண்ணு",
+    "kannu",
+    "kannoo",
+    "கண்ணே",
+    "kanne",
+    "கண்ணுகளா",
+    "kannukala"
+   ],
+   "translate_as": "dear, my eye",
+   "category": "address",
+   "note": "Calls you my eye, tender love for small children.",
+   "wiki_title": ""
+  },
+  {
+   "key": "chellam_darling",
+   "forms": [
+    "செல்லம்",
+    "chellam",
+    "sellam",
+    "செல்லமே",
+    "chellame",
+    "செல்லங்களா",
+    "chellangala"
+   ],
+   "translate_as": "darling, sweetheart",
+   "category": "address",
+   "note": "Pet darling grandparents coo to grandchildren.",
+   "wiki_title": ""
+  },
+  {
+   "key": "thangam_golden_dear",
+   "forms": [
+    "தங்கம்",
+    "thangam",
+    "tangam",
+    "தங்கமே",
+    "thangame"
+   ],
+   "translate_as": "my golden dear",
+   "category": "address",
+   "note": "Calls you my gold, proud affection for good child.",
+   "wiki_title": ""
+  },
+  {
+   "key": "raasa_dear_king",
+   "forms": [
+    "ராசா",
+    "raasaa",
+    "raja",
+    "ராசாவே",
+    "raasaave",
+    "ராணி",
+    "raani"
+   ],
+   "translate_as": "little king, dear",
+   "category": "address",
+   "note": "Crowns a boy little king, playful praise.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kutty_little_one",
+   "forms": [
+    "குட்டி",
+    "kutti",
+    "kutty",
+    "குட்டிகளா",
+    "kuttikala",
+    "குட்டியே",
+    "kuttiye"
+   ],
+   "translate_as": "little one, kiddo",
+   "category": "address",
+   "note": "Fond little one for kids and youngest.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kuzhandhai_child_call",
+   "forms": [
+    "குழந்தை",
+    "kuzhandhai",
+    "kulandhai",
+    "குழந்தைகள்",
+    "kuzhandhaigal",
+    "குழந்தையே",
+    "kuzhandhaye"
+   ],
+   "translate_as": "child, dear child",
+   "category": "address",
+   "note": "Gentle child to comfort or scold softly.",
+   "wiki_title": ""
+  },
+  {
+   "key": "da_di_familiar_tag",
+   "forms": [
+    "டா",
+    "daa",
+    "da",
+    "டி",
+    "di",
+    "ஏண்டா",
+    "yenda",
+    "ஏண்டி",
+    "yendi"
+   ],
+   "translate_as": "hey, buddy [familiar]",
+   "category": "address",
+   "note": "Rough-loving hey endings only for close juniors.",
+   "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "aathiram_puthi_mattu",
+   "forms": [
+    "ஆத்திரக்காரனுக்கு புத்தி மட்டு",
+    "aathirakkaaranukku puththi mattu",
+    "athirakaranukku buthi mattu"
+   ],
+   "translate_as": "anger dulls the mind",
+   "category": "saying",
+   "note": "Warns anger clouds judgment, calm down first.",
+   "wiki_title": ""
+  },
+  {
+   "key": "alavukku_minjinaal",
+   "forms": [
+    "அளவுக்கு மிஞ்சினால் அமிர்தமும் நஞ்சு",
+    "alavukku minjinaal amirthamum nanju",
+    "alavukku minjina amirthamum nanju"
+   ],
+   "translate_as": "too much nectar is poison",
+   "category": "saying",
+   "note": "Teaches moderation, even good things harm in excess.",
+   "wiki_title": ""
+  },
+  {
+   "key": "agathin_azhagu",
+   "forms": [
+    "அகத்தின் அழகு முகத்தில் தெரியும்",
+    "agaththin azhagu mugaththil theriyum",
+    "ahathin azhagu mugathil theriyum"
+   ],
+   "translate_as": "the heart shows on the face",
+   "category": "saying",
+   "note": "Face reveals true feelings, cannot hide heart.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aada_theriyathaval",
+   "forms": [
+    "ஆடத் தெரியாதவள் மேடை கோணல் என்றாளாம்",
+    "aada theriyaadhaval medai konal enraal",
+    "aada theriyathaval medai konal"
+   ],
+   "translate_as": "bad dancer blames the stage",
+   "category": "saying",
+   "note": "Mocks blaming tools for lack of skill.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aanaikkum_adi_sarukkum",
+   "forms": [
+    "ஆனைக்கும் அடி சறுக்கும்",
+    "aanaikkum adi sarukkum",
+    "yanaikkum adi sarukkum"
+   ],
+   "translate_as": "even an elephant can slip",
+   "category": "saying",
+   "note": "Even great strong people can slip, forgives error.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aazham_theriyamal",
+   "forms": [
+    "ஆழம் தெரியாமல் காலை விடாதே",
+    "aazham theriyaamal kaalai vidaadhe",
+    "aalam theriyama kalai vidathe"
+   ],
+   "translate_as": "don't step in without knowing the depth",
+   "category": "saying",
+   "note": "Caution before big decisions like money or marriage.",
+   "wiki_title": ""
+  },
+  {
+   "key": "adi_mel_adi",
+   "forms": [
+    "அடி மேல் அடி அடித்தால் அம்மியும் நகரும்",
+    "adi mel adi adiththaal ammiyum nagarum",
+    "adi mel adi adichal ammiyum nagarum"
+   ],
+   "translate_as": "steady blows move the grinding stone",
+   "category": "saying",
+   "note": "Steady persistence moves even stone, keep trying.",
+   "wiki_title": ""
+  },
+  {
+   "key": "azhutha_pillai",
+   "forms": [
+    "அழுத பிள்ளை பால் குடிக்கும்",
+    "azhutha pillai paal kudikkum",
+    "alutha pillai paal kudikum"
+   ],
+   "translate_as": "the crying baby gets milk",
+   "category": "saying",
+   "note": "Must ask for needs, no one reads minds.",
+   "wiki_title": ""
+  },
+  {
+   "key": "anbe_sivam",
+   "forms": [
+    "அன்பே சிவம்",
+    "anbe sivam",
+    "anbae sivam"
+   ],
+   "translate_as": "love is God",
+   "category": "saying",
+   "note": "Love itself is God, core family blessing.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aatril_pottalum",
+   "forms": [
+    "ஆற்றில் போட்டாலும் அளந்து போடு",
+    "aattril pottaalum alanthu podu",
+    "attril pottalum alanthu podu"
+   ],
+   "translate_as": "even if you throw it in the river, measure it",
+   "category": "saying",
+   "note": "Even when generous, be thoughtful and measured.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aappasaittha_kurangu",
+   "forms": [
+    "ஆப்பசைத்த குரங்கு போல",
+    "aappasaiththa kurangu pola",
+    "aapasetha kurangu pola"
+   ],
+   "translate_as": "like the monkey that pulled the wedge",
+   "category": "saying",
+   "note": "Meddling without sense brings self-harm, stay out.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kaakkai_pon_kunju",
+   "forms": [
+    "காக்கைக்கு தன் குஞ்ಚு பொன் குஞ்ಚு",
+    "kaakkaikku than kunju pon kunju",
+    "kakaiku than kunju pon kunju"
+   ],
+   "translate_as": "to the crow its chick is golden",
+   "category": "saying",
+   "note": "Every parent finds own child golden, proud love.",
+   "wiki_title": ""
+  },
+  {
+   "key": "katrathu_kaimann",
+   "forms": [
+    "கற்றது கைம்மண் அளவு, கல்லாதது உலகளவு",
+    "katrathu kaiman alavu kallaathathu ulagalavu",
+    "katradhu kaiman alavu"
+   ],
+   "translate_as": "learned a handful, unlearned a world",
+   "category": "saying",
+   "note": "Stay humble, learning is endless ocean.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kadugu_siruthalum",
+   "forms": [
+    "கடுகு சிறுத்தாலும் காரம் குறையாது",
+    "kadugu siruththaalum kaaram kuraiyaathu",
+    "kadugu siruthalum karam kuraiyathu"
+   ],
+   "translate_as": "small mustard is still pungent",
+   "category": "saying",
+   "note": "Small child can be strong and sharp, proud praise.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kurai_kudam",
+   "forms": [
+    "குறை குடம் கூத்தாடும்",
+    "kurai kudam kooththaadum",
+    "korai kudam koothadum"
+   ],
+   "translate_as": "a half pot splashes",
+   "category": "saying",
+   "note": "Empty braggers make most noise, ignore boasting.",
+   "wiki_title": ""
+  },
+  {
+   "key": "siru_thurumbu",
+   "forms": [
+    "சிறு துரும்பும் பல் குத்த உதவும்",
+    "siru thurumbum pal kuththa uthavum",
+    "siru thurumbum pal kutha udhavum"
+   ],
+   "translate_as": "even a splinter can clean teeth",
+   "category": "saying",
+   "note": "Even smallest person or thing has use.",
+   "wiki_title": ""
+  },
+  {
+   "key": "poruthaar_boomi",
+   "forms": [
+    "பொறுத்தார் பூமி ஆள்வார்",
+    "poruththaar boomi aalvaar",
+    "poruthar bhoomi alvar"
+   ],
+   "translate_as": "the patient shall rule the earth",
+   "category": "saying",
+   "note": "Patience wins in family fights, endure calmly.",
+   "wiki_title": ""
+  },
+  {
+   "key": "patharatha_kariyam",
+   "forms": [
+    "பதறாத காரியம் சிதறாது",
+    "patharaatha kaariyam sitharaathu",
+    "padharatha kariyam sidharathu"
+   ],
+   "translate_as": "unhurried work never scatters",
+   "category": "saying",
+   "note": "Slow careful work lasts, do not rush.",
+   "wiki_title": ""
+  },
+  {
+   "key": "pazham_nazhuvi",
+   "forms": [
+    "பழம் நழுவி பாலில் விழுந்தது",
+    "pazham nazhuvi paalil vizhunthathu",
+    "palam naluvi palil vilundhathu"
+   ],
+   "translate_as": "the fruit slipped into the milk",
+   "category": "saying",
+   "note": "Lucky double gain, fortune fell in lap.",
+   "wiki_title": ""
+  },
+  {
+   "key": "muyarchi_thiruvinai",
+   "forms": [
+    "முயற்சி திருவினையாக்கும்",
+    "muyarchi thiruvinaiyaakkum",
+    "muyarchi thiruvinaiyakum"
+   ],
+   "translate_as": "effort brings fortune",
+   "category": "saying",
+   "note": "Hard study and effort bring success, keep at it.",
+   "wiki_title": ""
+  },
+  {
+   "key": "veettukku_veedu",
+   "forms": [
+    "வீட்டுக்கு வீடு வாசப்படி",
+    "veettukku veedu vaasappadi",
+    "veetuku veedu vasapadi"
+   ],
+   "translate_as": "every house has a doorstep",
+   "category": "saying",
+   "note": "Every family has troubles, you are not alone.",
+   "wiki_title": ""
+  },
+  {
+   "key": "thalaikku_mel_vellam",
+   "forms": [
+    "தலைக்கு மேல் வெள்ளம் போனால் சாண் முழம் என்ன?",
+    "thalaikku mel vellam ponaal saan muzam enna",
+    "thalaiku mela vellam"
+   ],
+   "translate_as": "when flood is overhead, an inch more means nothing",
+   "category": "saying",
+   "note": "Beyond limit, shame or fear no longer matters.",
+   "wiki_title": ""
+  },
+  {
+   "key": "eli_azhuthal",
+   "forms": [
+    "எலி அழுதால் பூனை விடுமா?",
+    "eli azhuthaal poonai vidumaa",
+    "eli aluthal poonai viduma"
+   ],
+   "translate_as": "if the mouse cries will the cat let go",
+   "category": "saying",
+   "note": "Strong will not pity, protect yourself first.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kaalam_pon",
+   "forms": [
+    "காலம் பொன் போன்றது",
+    "kaalam pon pondrathu",
+    "kalam pon ponrathu"
+   ],
+   "translate_as": "time is like gold",
+   "category": "saying",
+   "note": "Urges punctual study and duty, time is precious.",
+   "wiki_title": ""
+  },
+  {
+   "key": "ottrumaiye_balam",
+   "forms": [
+    "ஒற்றுமையே பலம்",
+    "otrumaiye balam",
+    "ottrumaiye balam"
+   ],
+   "translate_as": "unity is strength",
+   "category": "saying",
+   "note": "Family must stick together to stay strong.",
+   "wiki_title": ""
+  },
+  {
+   "key": "aalum_velum",
+   "forms": [
+    "ஆலும் வேலும் பல்லுக்குறுதி, நாலும் ரெண்டும் சொல்லுக்குறுதி",
+    "aalum velum pallukkuruthi naalum rendum sollukkuruthi",
+    "alum velum pallukuruthi"
+   ],
+   "translate_as": "banyan and neem firm teeth, four and two firm speech",
+   "category": "saying",
+   "note": "Daily twig-brushing and good speech keep health and honor.",
+   "wiki_title": ""
+  },
+  {
+   "key": "arpanukku_vaazhvu",
+   "forms": [
+    "அற்பனுக்கு வாழ்வு வந்தால் அர்த்த ஜாமம் அர்த்த ராத்திரியில் போவான்",
+    "arpanukku vaazhvu vanthaal artha jaamam artharaththiriyil povaan",
+    "arpanukku vazhvu vanthal"
+   ],
+   "translate_as": "when the petty prosper he roams at midnight",
+   "category": "saying",
+   "note": "Warns sudden money makes petty folk arrogant.",
+   "wiki_title": ""
+  },
+  {
+   "key": "naalai_enbathu",
+   "forms": [
+    "நாளை என்பது நாளைக்கு இல்லை",
+    "naalai enbathu naalaikku illai",
+    "nalai enbathu nalaiku illai"
+   ],
+   "translate_as": "tomorrow never comes",
+   "category": "saying",
+   "note": "Stop delaying study or good deeds, do now.",
+   "wiki_title": ""
+  },
+  {
+   "key": "vinasa_kale",
+   "forms": [
+    "விநாச காலே விபரீத புத்தி",
+    "vinaasa kaale vibareetha puththi",
+    "vinasa kale vibaritha buddhi"
+   ],
+   "translate_as": "before ruin wisdom turns crooked",
+   "category": "saying",
+   "note": "When ruin nears, mind turns perverse, heed warning.",
+   "wiki_title": ""
+  }
+ ]
+}

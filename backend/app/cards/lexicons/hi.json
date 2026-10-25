@@ -1,0 +1,2590 @@
+{
+ "lang": "hi",
+ "language": "Hindi",
+ "verified": false,
+ "source": "muse-spark (muse-spark-1.3, effort low)",
+ "generated_at": "2026-10-25T02:23:21+00:00",
+ "notes": "Muse Spark draft; not reviewed by a speaker.",
+ "entries": [
+  {
+   "key": "dal",
+   "forms": [
+    "दाल",
+    "dal",
+    "daal",
+    "दालें",
+    "dalon"
+   ],
+   "translate_as": "lentils; dal",
+   "category": "food",
+   "note": "Daily lentils means home and comfort, not just soup.",
+   "wiki_title": "Dal"
+  },
+  {
+   "key": "roti",
+   "forms": [
+    "रोटी",
+    "roti",
+    "rotis",
+    "रोटियां",
+    "rotiyan"
+   ],
+   "translate_as": "flatbread; roti",
+   "category": "food",
+   "note": "Fresh flatbread grandma urges you to eat hot.",
+   "wiki_title": "Roti"
+  },
+  {
+   "key": "chapati",
+   "forms": [
+    "चपाती",
+    "chapati",
+    "chapatti",
+    "चपातियां",
+    "chapatiyan"
+   ],
+   "translate_as": "chapati flatbread",
+   "category": "food",
+   "note": "Soft thin bread made fresh on the flame.",
+   "wiki_title": "Chapati"
+  },
+  {
+   "key": "paratha",
+   "forms": [
+    "परांठा",
+    "paratha",
+    "parantha",
+    "परांठे",
+    "parathe"
+   ],
+   "translate_as": "stuffed flatbread; paratha",
+   "category": "food",
+   "note": "Stuffed pan-fried bread for breakfast treats.",
+   "wiki_title": "Paratha"
+  },
+  {
+   "key": "puri",
+   "forms": [
+    "पूरी",
+    "puri",
+    "poori",
+    "पूरियां",
+    "puriyan"
+   ],
+   "translate_as": "puri puffed bread",
+   "category": "food",
+   "note": "Puffy fried bread for festive mornings.",
+   "wiki_title": "Puri (food)"
+  },
+  {
+   "key": "sabzi",
+   "forms": [
+    "सब्ज़ी",
+    "sabzi",
+    "sabji",
+    "सब्ज़ियां",
+    "sabziyan"
+   ],
+   "translate_as": "vegetable curry; sabzi",
+   "category": "food",
+   "note": "The everyday vegetable curry served with bread.",
+   "wiki_title": ""
+  },
+  {
+   "key": "chawal",
+   "forms": [
+    "चावल",
+    "chawal",
+    "chaawal",
+    "चावलों",
+    "chawalon"
+   ],
+   "translate_as": "cooked rice",
+   "category": "food",
+   "note": "Cooked rice at the center of lunch.",
+   "wiki_title": "Cooked rice"
+  },
+  {
+   "key": "khichdi",
+   "forms": [
+    "खिचड़ी",
+    "khichdi",
+    "khichadi",
+    "खिचड़ियां"
+   ],
+   "translate_as": "rice-lentil porridge; khichdi",
+   "category": "food",
+   "note": "Soft rice-lentil comfort food when sick.",
+   "wiki_title": "Khichdi"
+  },
+  {
+   "key": "kadhi",
+   "forms": [
+    "कढ़ी",
+    "kadhi",
+    "karhi",
+    "कढ़ियां"
+   ],
+   "translate_as": "yogurt curry; kadhi",
+   "category": "food",
+   "note": "Tangy yogurt curry eaten with rice.",
+   "wiki_title": "Kadhi"
+  },
+  {
+   "key": "raita",
+   "forms": [
+    "रायता",
+    "raita",
+    "rayta",
+    "रायते"
+   ],
+   "translate_as": "yogurt side; raita",
+   "category": "food",
+   "note": "Cooling yogurt side to calm spice.",
+   "wiki_title": "Raita"
+  },
+  {
+   "key": "dahi",
+   "forms": [
+    "दही",
+    "dahi",
+    "dahee"
+   ],
+   "translate_as": "yogurt; curd",
+   "category": "food",
+   "note": "Homemade yogurt for health and blessing.",
+   "wiki_title": "Yogurt"
+  },
+  {
+   "key": "chhach",
+   "forms": [
+    "छाछ",
+    "chhach",
+    "chaas",
+    "छाछ"
+   ],
+   "translate_as": "salted buttermilk",
+   "category": "food",
+   "note": "Thin salted buttermilk to beat heat.",
+   "wiki_title": "Buttermilk"
+  },
+  {
+   "key": "lassi",
+   "forms": [
+    "लस्सी",
+    "lassi",
+    "lassie",
+    "लस्सियां"
+   ],
+   "translate_as": "lassi yogurt drink",
+   "category": "food",
+   "note": "Thick sweet or salty yogurt drink of love.",
+   "wiki_title": "Lassi"
+  },
+  {
+   "key": "chai",
+   "forms": [
+    "चाय",
+    "chai",
+    "chay",
+    "चाय"
+   ],
+   "translate_as": "milky spiced tea; chai",
+   "category": "food",
+   "note": "Milky spiced tea meaning sit and talk.",
+   "wiki_title": "Masala chai"
+  },
+  {
+   "key": "ghee",
+   "forms": [
+    "घी",
+    "ghee",
+    "ghi"
+   ],
+   "translate_as": "clarified butter; ghee",
+   "category": "food",
+   "note": "Clarified butter signaling care and richness.",
+   "wiki_title": "Ghee"
+  },
+  {
+   "key": "makkhan",
+   "forms": [
+    "मक्खन",
+    "makkhan",
+    "makhan",
+    "मक्खन"
+   ],
+   "translate_as": "white butter",
+   "category": "food",
+   "note": "Fresh white butter churned at home.",
+   "wiki_title": "Butter"
+  },
+  {
+   "key": "paneer",
+   "forms": [
+    "पनीर",
+    "paneer",
+    "panir",
+    "पनीर"
+   ],
+   "translate_as": "paneer fresh cheese",
+   "category": "food",
+   "note": "Fresh cheese for special veg curries.",
+   "wiki_title": "Paneer"
+  },
+  {
+   "key": "samosa",
+   "forms": [
+    "समोसा",
+    "samosa",
+    "samoosa",
+    "समोसे",
+    "samose"
+   ],
+   "translate_as": "samosa",
+   "category": "food",
+   "note": "Crispy potato snack for guests and rain.",
+   "wiki_title": "Samosa"
+  },
+  {
+   "key": "pakora",
+   "forms": [
+    "पकौड़ा",
+    "pakora",
+    "pakoda",
+    "पकौड़े",
+    "pakode"
+   ],
+   "translate_as": "fritters; pakora",
+   "category": "food",
+   "note": "Hot fritters made when it rains.",
+   "wiki_title": "Pakora"
+  },
+  {
+   "key": "kachori",
+   "forms": [
+    "कचौड़ी",
+    "kachori",
+    "kachodi",
+    "कचौड़ियां",
+    "kachoriyan"
+   ],
+   "translate_as": "kachori",
+   "category": "food",
+   "note": "Flaky stuffed snack bought from bazaar.",
+   "wiki_title": "Kachori"
+  },
+  {
+   "key": "jalebi",
+   "forms": [
+    "जलेबी",
+    "jalebi",
+    "jilebi",
+    "जलेबियां",
+    "jalebiyan"
+   ],
+   "translate_as": "jalebi",
+   "category": "food",
+   "note": "Crispy syrupy swirls for celebration.",
+   "wiki_title": "Jalebi"
+  },
+  {
+   "key": "gulab_jamun",
+   "forms": [
+    "गुलाब जामुन",
+    "gulab jamun",
+    "gulaab jaamun",
+    "गुलाब जामुन"
+   ],
+   "translate_as": "gulab jamun",
+   "category": "food",
+   "note": "Warm syrup balls for happy news.",
+   "wiki_title": "Gulab jamun"
+  },
+  {
+   "key": "rasgulla",
+   "forms": [
+    "रसगुल्ला",
+    "rasgulla",
+    "rasgulle",
+    "रसगुल्ले"
+   ],
+   "translate_as": "rasgulla",
+   "category": "food",
+   "note": "Spongy syrup sweet offered to guests.",
+   "wiki_title": "Rasgulla"
+  },
+  {
+   "key": "laddu",
+   "forms": [
+    "लड्डू",
+    "laddu",
+    "ladoo",
+    "लड्डुओं",
+    "ladduon"
+   ],
+   "translate_as": "laddu sweet balls",
+   "category": "food",
+   "note": "Round sweets for festivals and prasad.",
+   "wiki_title": "Laddu"
+  },
+  {
+   "key": "barfi",
+   "forms": [
+    "बरफ़ी",
+    "barfi",
+    "burfi",
+    "बरफियां",
+    "barfiyan"
+   ],
+   "translate_as": "barfi milk fudge",
+   "category": "food",
+   "note": "Milk fudge squares gifted at Diwali.",
+   "wiki_title": "Barfi"
+  },
+  {
+   "key": "halwa",
+   "forms": [
+    "हलवा",
+    "halwa",
+    "halva",
+    "हलवे"
+   ],
+   "translate_as": "halwa pudding",
+   "category": "food",
+   "note": "Warm pudding made with ghee and love.",
+   "wiki_title": "Halva"
+  },
+  {
+   "key": "kheer",
+   "forms": [
+    "खीर",
+    "kheer",
+    "khir"
+   ],
+   "translate_as": "rice pudding; kheer",
+   "category": "food",
+   "note": "Rice pudding for birthdays and prayers.",
+   "wiki_title": "Kheer"
+  },
+  {
+   "key": "sevaiyan",
+   "forms": [
+    "सेवई",
+    "sevaiyan",
+    "sevai",
+    "sewai",
+    "सेवई"
+   ],
+   "translate_as": "sweet vermicelli",
+   "category": "food",
+   "note": "Sweet vermicelli for Eid and mornings.",
+   "wiki_title": "Vermicelli"
+  },
+  {
+   "key": "poha",
+   "forms": [
+    "पोहा",
+    "poha",
+    "pohe"
+   ],
+   "translate_as": "flattened rice snack; poha",
+   "category": "food",
+   "note": "Light flattened-rice breakfast snack.",
+   "wiki_title": "Poha (rice)"
+  },
+  {
+   "key": "upma",
+   "forms": [
+    "उपमा",
+    "upma",
+    "upama"
+   ],
+   "translate_as": "savory semolina porridge; upma",
+   "category": "food",
+   "note": "Savory semolina breakfast grandma makes fast.",
+   "wiki_title": "Upma"
+  },
+  {
+   "key": "idli",
+   "forms": [
+    "इडली",
+    "idli",
+    "idly",
+    "इडलियां",
+    "idliyan"
+   ],
+   "translate_as": "idli steamed cakes",
+   "category": "food",
+   "note": "Soft steamed cakes for light meal.",
+   "wiki_title": "Idli"
+  },
+  {
+   "key": "dosa",
+   "forms": [
+    "डोसा",
+    "dosa",
+    "dosha",
+    "डोसे"
+   ],
+   "translate_as": "dosa crepe",
+   "category": "food",
+   "note": "Crisp crepe kids love with chutney.",
+   "wiki_title": "Dosa (food)"
+  },
+  {
+   "key": "sambar",
+   "forms": [
+    "सांभर",
+    "sambar",
+    "sambhar"
+   ],
+   "translate_as": "sambar lentil stew",
+   "category": "food",
+   "note": "Tangy lentil soup with idli and dosa.",
+   "wiki_title": "Sambar (dish)"
+  },
+  {
+   "key": "chutney",
+   "forms": [
+    "चटनी",
+    "chutney",
+    "chatni",
+    "चटनियां",
+    "chutneys"
+   ],
+   "translate_as": "chutney",
+   "category": "food",
+   "note": "Fresh ground dip that lifts any meal.",
+   "wiki_title": "Chutney"
+  },
+  {
+   "key": "achaar",
+   "forms": [
+    "अचार",
+    "achaar",
+    "achar",
+    "aachar",
+    "अचार"
+   ],
+   "translate_as": "pickle; achaar",
+   "category": "food",
+   "note": "Homemade pickle that tastes like nani's hands.",
+   "wiki_title": "South Asian pickles"
+  },
+  {
+   "key": "papad",
+   "forms": [
+    "पापड़",
+    "papad",
+    "papadum",
+    "पापड़",
+    "papadon"
+   ],
+   "translate_as": "papad crisp",
+   "category": "food",
+   "note": "Crackly lentil wafer for crunch.",
+   "wiki_title": "Papadam"
+  },
+  {
+   "key": "bhindi",
+   "forms": [
+    "भिंडी",
+    "bhindi",
+    "bhindi"
+   ],
+   "translate_as": "okra",
+   "category": "food",
+   "note": "Okra curry kids are coaxed to eat.",
+   "wiki_title": "Okra"
+  },
+  {
+   "key": "baingan_bharta",
+   "forms": [
+    "बैंगन",
+    "baingan",
+    "baingun",
+    "बैंगन"
+   ],
+   "translate_as": "eggplant; baingan bharta",
+   "category": "food",
+   "note": "Smoky eggplant mash from village fire.",
+   "wiki_title": "Baingan bharta"
+  },
+  {
+   "key": "palak",
+   "forms": [
+    "पालक",
+    "palak",
+    "paalak"
+   ],
+   "translate_as": "spinach",
+   "category": "food",
+   "note": "Spinach for strength like mothers insist.",
+   "wiki_title": "Spinach"
+  },
+  {
+   "key": "sarson_ka_saag",
+   "forms": [
+    "सरसों का साग",
+    "sarson ka saag",
+    "sarson da saag",
+    "sarson ka saag"
+   ],
+   "translate_as": "mustard greens; sarson ka saag",
+   "category": "food",
+   "note": "Winter mustard greens with white butter.",
+   "wiki_title": "Sarson ka saag"
+  },
+  {
+   "key": "rajma",
+   "forms": [
+    "राजमा",
+    "rajma",
+    "raajma"
+   ],
+   "translate_as": "kidney bean curry; rajma",
+   "category": "food",
+   "note": "Red kidney-bean curry with rice on Sundays.",
+   "wiki_title": "Rajma"
+  },
+  {
+   "key": "chole",
+   "forms": [
+    "छोले",
+    "chole",
+    "chhole",
+    "chole"
+   ],
+   "translate_as": "chickpea curry; chole",
+   "category": "food",
+   "note": "Spicy chickpeas for feasts and bhature.",
+   "wiki_title": "Chana masala"
+  },
+  {
+   "key": "biryani",
+   "forms": [
+    "बिरयानी",
+    "biryani",
+    "biriyani",
+    "बिरयानी"
+   ],
+   "translate_as": "biryani",
+   "category": "food",
+   "note": "Fragrant layered rice for weddings.",
+   "wiki_title": "Biryani"
+  },
+  {
+   "key": "pulao",
+   "forms": [
+    "पुलाव",
+    "pulao",
+    "pulav",
+    "pulao"
+   ],
+   "translate_as": "pulao rice",
+   "category": "food",
+   "note": "Mild festive rice with peas and carrots.",
+   "wiki_title": "Pilaf"
+  },
+  {
+   "key": "tandoori_chicken",
+   "forms": [
+    "तंदूरी चिकन",
+    "tandoori chicken",
+    "tandoori",
+    "तंदूरी"
+   ],
+   "translate_as": "tandoori chicken",
+   "category": "food",
+   "note": "Clay-oven roast for proud hosting.",
+   "wiki_title": "Tandoori chicken"
+  },
+  {
+   "key": "namkeen",
+   "forms": [
+    "नमकीन",
+    "namkeen",
+    "namkin",
+    "नमकीन"
+   ],
+   "translate_as": "savory snacks; namkeen",
+   "category": "food",
+   "note": "Savory munchies kept for visiting kids.",
+   "wiki_title": "Bombay mix"
+  },
+  {
+   "key": "mathri",
+   "forms": [
+    "मठरी",
+    "mathri",
+    "matthi",
+    "mathree",
+    "मठरियां",
+    "mathriyan"
+   ],
+   "translate_as": "mathri crackers",
+   "category": "food",
+   "note": "Crisp crackers stored for tea time.",
+   "wiki_title": "Mathri"
+  },
+  {
+   "key": "shrikhand",
+   "forms": [
+    "श्रीखंड",
+    "shrikhand",
+    "srikhand"
+   ],
+   "translate_as": "sweetened yogurt; shrikhand",
+   "category": "food",
+   "note": "Sweet saffron yogurt for festive spoonfuls.",
+   "wiki_title": "Shrikhand"
+  },
+  {
+   "key": "aam",
+   "forms": [
+    "आम",
+    "aam",
+    "am",
+    "आम",
+    "आमों",
+    "aamon"
+   ],
+   "translate_as": "mango",
+   "category": "food",
+   "note": "Summer mango nostalgia and sharing slices.",
+   "wiki_title": "Mango"
+  },
+  {
+   "key": "gajar_ka_halwa",
+   "forms": [
+    "गाजर का हलवा",
+    "gajar ka halwa",
+    "gajar halwa",
+    "gaajar ka halwa"
+   ],
+   "translate_as": "carrot pudding; gajar ka halwa",
+   "category": "food",
+   "note": "Winter carrot pudding slow-cooked in milk.",
+   "wiki_title": "Gajar ka halwa"
+  },
+  {
+   "key": "diwali",
+   "forms": [
+    "दिवाली",
+    "Diwali",
+    "Deepawali",
+    "Deepavali",
+    "दिवाली पर",
+    "Diwali par",
+    "दिवालियों"
+   ],
+   "translate_as": "Diwali, festival of lights",
+   "category": "festival",
+   "note": "Grandparent means the festival of lights, homecoming and Lakshmi puja, not just fireworks.",
+   "wiki_title": "Diwali"
+  },
+  {
+   "key": "holi",
+   "forms": [
+    "होली",
+    "Holi",
+    "होली पर",
+    "Holi par",
+    "होलियों"
+   ],
+   "translate_as": "Holi, festival of colors",
+   "category": "festival",
+   "note": "Grandparent means spring, Krishna's play and forgiveness, not just colors.",
+   "wiki_title": "Holi"
+  },
+  {
+   "key": "dussehra",
+   "forms": [
+    "दशहरा",
+    "Dussehra",
+    "Dashahara",
+    "Vijayadashami",
+    "दशहरे पर",
+    "Dussehre par"
+   ],
+   "translate_as": "Dussehra",
+   "category": "festival",
+   "note": "Grandparent means Ram's victory over Ravan and good over evil.",
+   "wiki_title": "Vijayadashami"
+  },
+  {
+   "key": "navratri",
+   "forms": [
+    "नवरात्रि",
+    "Navratri",
+    "Navaratri",
+    "नवरात्रों में",
+    "Navratron mein"
+   ],
+   "translate_as": "Navratri, nine nights of the Goddess",
+   "category": "festival",
+   "note": "Grandparent means nine nights of fasting and Devi worship.",
+   "wiki_title": "Navaratri"
+  },
+  {
+   "key": "raksha_bandhan",
+   "forms": [
+    "रक्षाबंधन",
+    "Raksha Bandhan",
+    "Rakhi",
+    "राखी पर",
+    "Rakhi par",
+    "रक्षाबंधन में"
+   ],
+   "translate_as": "Raksha Bandhan",
+   "category": "festival",
+   "note": "Grandparent means tying protection thread celebrating brother-sister love.",
+   "wiki_title": "Raksha Bandhan"
+  },
+  {
+   "key": "janmashtami",
+   "forms": [
+    "जन्माष्टमी",
+    "Janmashtami",
+    "Krishna Janmashtami",
+    "जन्माष्टमी पर",
+    "Janmashtami par"
+   ],
+   "translate_as": "Janmashtami, Krishna's birthday",
+   "category": "festival",
+   "note": "Grandparent means midnight fast and celebration of Krishna's birth.",
+   "wiki_title": "Krishna Janmashtami"
+  },
+  {
+   "key": "maha_shivaratri",
+   "forms": [
+    "महाशिवरात्रि",
+    "Maha Shivaratri",
+    "Shivratri",
+    "शिवरात्रि पर",
+    "Shivratri par"
+   ],
+   "translate_as": "Maha Shivaratri",
+   "category": "festival",
+   "note": "Grandparent means night-long fast and Shiva vigil.",
+   "wiki_title": "Maha Shivaratri"
+  },
+  {
+   "key": "ram_navami",
+   "forms": [
+    "राम नवमी",
+    "Ram Navami",
+    "Rama Navami",
+    "राम नवमी पर",
+    "Ram Navami par"
+   ],
+   "translate_as": "Ram Navami",
+   "category": "festival",
+   "note": "Grandparent means Ram's birthday with temple readings and fast.",
+   "wiki_title": "Rama Navami"
+  },
+  {
+   "key": "ganesh_chaturthi",
+   "forms": [
+    "गणेश चतुर्थी",
+    "Ganesh Chaturthi",
+    "Ganesh Chauth",
+    "गणेश चतुर्थी पर",
+    "Ganesh Chaturthi par"
+   ],
+   "translate_as": "Ganesh Chaturthi",
+   "category": "festival",
+   "note": "Grandparent means welcoming Ganesh home and later immersion.",
+   "wiki_title": "Ganesh Chaturthi"
+  },
+  {
+   "key": "karva_chauth",
+   "forms": [
+    "करवा चौथ",
+    "Karva Chauth",
+    "Karwa Chauth",
+    "करवा चौथ पर",
+    "Karva Chauth par"
+   ],
+   "translate_as": "Karva Chauth",
+   "category": "festival",
+   "note": "Grandparent means wives' dawn-to-moon fast for husbands.",
+   "wiki_title": "Karva Chauth"
+  },
+  {
+   "key": "teej",
+   "forms": [
+    "तीज",
+    "Teej",
+    "Hariyali Teej",
+    "Hartalika Teej",
+    "तीज पर",
+    "Teej par"
+   ],
+   "translate_as": "Teej",
+   "category": "festival",
+   "note": "Grandparent means monsoon fast for marital happiness and Shiva-Parvati.",
+   "wiki_title": "Teej"
+  },
+  {
+   "key": "makar_sankranti",
+   "forms": [
+    "मकर संक्रांति",
+    "Makar Sankranti",
+    "Sankranti",
+    "मकर संक्रांति पर",
+    "Makar Sankranti par"
+   ],
+   "translate_as": "Makar Sankranti harvest festival",
+   "category": "festival",
+   "note": "Grandparent means sun's northward turn, kite flying and til-gud sweets.",
+   "wiki_title": "Makar Sankranti"
+  },
+  {
+   "key": "basant_panchami",
+   "forms": [
+    "बसंत पंचमी",
+    "Basant Panchami",
+    "Vasant Panchami",
+    "Saraswati Puja",
+    "बसंत पंचमी पर",
+    "Basant Panchami par"
+   ],
+   "translate_as": "Basant Panchami, Saraswati day",
+   "category": "festival",
+   "note": "Grandparent means Saraswati day when children start learning.",
+   "wiki_title": "Vasant Panchami"
+  },
+  {
+   "key": "chhath_puja",
+   "forms": [
+    "छठ",
+    "Chhath",
+    "Chhath Puja",
+    "छठ पर",
+    "Chhath par",
+    "छठ में"
+   ],
+   "translate_as": "Chhath, sun worship festival",
+   "category": "festival",
+   "note": "Grandparent means strict sun fast at the riverbank at sunrise-sunset.",
+   "wiki_title": "Chhath"
+  },
+  {
+   "key": "lohri",
+   "forms": [
+    "लोहड़ी",
+    "Lohri",
+    "लोहड़ी पर",
+    "Lohri par"
+   ],
+   "translate_as": "Lohri bonfire festival",
+   "category": "festival",
+   "note": "Grandparent means winter bonfire, peanuts and new harvest joy.",
+   "wiki_title": "Lohri"
+  },
+  {
+   "key": "bhai_dooj",
+   "forms": [
+    "भाई दूज",
+    "Bhai Dooj",
+    "Bhai Duj",
+    "भाई दूज पर",
+    "Bhai Dooj par"
+   ],
+   "translate_as": "Bhai Dooj",
+   "category": "festival",
+   "note": "Grandparent means sister's tilak and feast for brother after Diwali.",
+   "wiki_title": "Bhai Dooj"
+  },
+  {
+   "key": "govardhan_puja",
+   "forms": [
+    "गोवर्धन पूजा",
+    "Govardhan Puja",
+    "Annakut",
+    "गोवर्धन पूजा पर",
+    "Govardhan Puja par"
+   ],
+   "translate_as": "Govardhan Puja",
+   "category": "festival",
+   "note": "Grandparent means day after Diwali worshipping Krishna's hill with food mound.",
+   "wiki_title": "Govardhan Puja"
+  },
+  {
+   "key": "dhanteras",
+   "forms": [
+    "धनतेरस",
+    "Dhanteras",
+    "Dhan Trayodashi",
+    "धनतेरस पर",
+    "Dhanteras par"
+   ],
+   "translate_as": "Dhanteras",
+   "category": "festival",
+   "note": "Grandparent means buying metal and lighting yam lamp before Diwali.",
+   "wiki_title": "Dhanteras"
+  },
+  {
+   "key": "hanuman_jayanti",
+   "forms": [
+    "हनुमान जयंती",
+    "Hanuman Jayanti",
+    "Hanuman Janmotsav",
+    "हनुमान जयंती पर",
+    "Hanuman Jayanti par"
+   ],
+   "translate_as": "Hanuman Jayanti",
+   "category": "festival",
+   "note": "Grandparent means Hanuman's birthday with chanting and temple visit.",
+   "wiki_title": "Hanuman Jayanti"
+  },
+  {
+   "key": "guru_purnima",
+   "forms": [
+    "गुरू पूर्णिमा",
+    "Guru Purnima",
+    "गुरू पूर्णिमा पर",
+    "Guru Purnima par"
+   ],
+   "translate_as": "Guru Purnima",
+   "category": "festival",
+   "note": "Grandparent means full-moon day to honor teachers and gurus.",
+   "wiki_title": "Guru Purnima"
+  },
+  {
+   "key": "sharad_purnima",
+   "forms": [
+    "शरद पूर्णिमा",
+    "Sharad Purnima",
+    "शरद पूर्णिमा पर",
+    "Sharad Purnima par"
+   ],
+   "translate_as": "Sharad Purnima harvest moon",
+   "category": "festival",
+   "note": "Grandparent means harvest moon night with sweet rice left in moonlight.",
+   "wiki_title": "Sharad Purnima"
+  },
+  {
+   "key": "ekadashi",
+   "forms": [
+    "एकादशी",
+    "Ekadashi",
+    "Gyaras",
+    "एकादशी को",
+    "Ekadashi ko",
+    "एकादशियों"
+   ],
+   "translate_as": "Ekadashi fasting day",
+   "category": "festival",
+   "note": "Grandparent means eleventh-day Vishnu fast, not just skipping food.",
+   "wiki_title": "Ekadashi"
+  },
+  {
+   "key": "dev_uthani_ekadashi",
+   "forms": [
+    "जन्माष्टमी का व्रत",
+    "Dev Uthani Ekadashi",
+    "Devotthan",
+    "Tulsi Vivah",
+    "देवउठनी पर",
+    "Dev Uthani par"
+   ],
+   "translate_as": "Dev Uthani Ekadashi",
+   "category": "festival",
+   "note": "Grandparent means Vishnu wakes and wedding season can begin.",
+   "wiki_title": "Prabodhini Ekadashi"
+  },
+  {
+   "key": "puja",
+   "forms": [
+    "पूजा",
+    "Puja",
+    "Pooja",
+    "पूजा करना",
+    "Puja karna",
+    "पूजाओं"
+   ],
+   "translate_as": "puja, worship offering",
+   "category": "ritual",
+   "note": "Grandparent means daily offering to God, the heart of home faith.",
+   "wiki_title": "Puja (Hinduism)"
+  },
+  {
+   "key": "aarti",
+   "forms": [
+    "आरती",
+    "Aarti",
+    "Arti",
+    "आरती करना",
+    "Aarti karna",
+    "आरतियों"
+   ],
+   "translate_as": "aarti, lamp-waving prayer",
+   "category": "ritual",
+   "note": "Grandparent means waving lamp and singing to greet God.",
+   "wiki_title": "Aarti"
+  },
+  {
+   "key": "prasad",
+   "forms": [
+    "प्रसाद",
+    "Prasad",
+    "Parsad",
+    "प्रसाद लेना",
+    "Prasad lena",
+    "प्रसादों"
+   ],
+   "translate_as": "prasad, blessed offering",
+   "category": "ritual",
+   "note": "Grandparent means blessed food sharing God's grace, must not refuse.",
+   "wiki_title": "Prasada"
+  },
+  {
+   "key": "vrat",
+   "forms": [
+    "व्रत",
+    "Vrat",
+    "Upvas",
+    "Vrata",
+    "व्रत रखना",
+    "Vrat rakhna",
+    "व्रतों"
+   ],
+   "translate_as": "vrat, religious fast",
+   "category": "ritual",
+   "note": "Grandparent means holy vow-fast for prayer, not dieting.",
+   "wiki_title": "Vrata"
+  },
+  {
+   "key": "katha",
+   "forms": [
+    "कथा",
+    "Katha",
+    "Satyanarayan Katha",
+    "कथा सुनना",
+    "Katha sunna",
+    "कथाओं"
+   ],
+   "translate_as": "katha, sacred storytelling",
+   "category": "ritual",
+   "note": "Grandparent means sacred story listening that brings blessing.",
+   "wiki_title": "Kathakalakshepa"
+  },
+  {
+   "key": "havan",
+   "forms": [
+    "हवन",
+    "Havan",
+    "Homa",
+    "Yagya",
+    "हवन करना",
+    "Havan karna"
+   ],
+   "translate_as": "havan, fire offering",
+   "category": "ritual",
+   "note": "Grandparent means fire offering with mantras to purify home.",
+   "wiki_title": "Homa (ritual)"
+  },
+  {
+   "key": "tilak",
+   "forms": [
+    "टीका",
+    "Tilak",
+    "Tika",
+    "टीका लगाना",
+    "Tilak lagana"
+   ],
+   "translate_as": "tilak, forehead mark",
+   "category": "ritual",
+   "note": "Grandparent means blessed forehead mark of protection.",
+   "wiki_title": "Tilaka"
+  },
+  {
+   "key": "janeu_upanayan",
+   "forms": [
+    "जनेऊ",
+    "Janeu",
+    "Yajnopaveet",
+    "Upanayan",
+    "जनेऊ पहनना",
+    "Janeu pehanna"
+   ],
+   "translate_as": "Janeu, sacred-thread rite",
+   "category": "ritual",
+   "note": "Grandparent means sacred-thread ceremony marking a boy's initiation.",
+   "wiki_title": "Upanayana"
+  },
+  {
+   "key": "mundan",
+   "forms": [
+    "मुंडन",
+    "Mundan",
+    "Chudakarana",
+    "मुंडन कराना",
+    "Mundan karana"
+   ],
+   "translate_as": "mundan, first tonsure rite",
+   "category": "ritual",
+   "note": "Grandparent means baby's first head-shaving for purity and health.",
+   "wiki_title": "Chudakarana"
+  },
+  {
+   "key": "namkaran",
+   "forms": [
+    "नामकरण",
+    "Namkaran",
+    "Naamkaran Sanskar",
+    "नामकरण करना",
+    "Namkaran karna"
+   ],
+   "translate_as": "namkaran, naming ceremony",
+   "category": "ritual",
+   "note": "Grandparent means formal naming ceremony with horoscope and blessings.",
+   "wiki_title": "Namakarana"
+  },
+  {
+   "key": "annaprashan",
+   "forms": [
+    "अन्नप्राशन",
+    "Annaprashan",
+    "Annaprasanna",
+    "अन्नप्राशन करना",
+    "Annaprashan karna"
+   ],
+   "translate_as": "annaprashan, first-feeding rite",
+   "category": "ritual",
+   "note": "Grandparent means baby's first rice feeding celebration.",
+   "wiki_title": "Annaprashana"
+  },
+  {
+   "key": "vivah_phera",
+   "forms": [
+    "फंवर",
+    "Phera",
+    "Saptapadi",
+    "Saat Phere",
+    "फंवर लेना",
+    "Phere lena",
+    "फेरों"
+   ],
+   "translate_as": "phere, seven wedding rounds",
+   "category": "ritual",
+   "note": "Grandparent means seven rounds around fire that seal marriage.",
+   "wiki_title": "Hindu wedding"
+  },
+  {
+   "key": "shradh",
+   "forms": [
+    "श्राद्ध",
+    "Shraddh",
+    "Shraadh",
+    "श्राद्ध करना",
+    "Shraddh karna"
+   ],
+   "translate_as": "shraddh, ancestor offering",
+   "category": "ritual",
+   "note": "Grandparent means food offering to feed and remember ancestors.",
+   "wiki_title": "Shraddha"
+  },
+  {
+   "key": "pitru_paksha",
+   "forms": [
+    "पितृ पक्ष",
+    "Pitru Paksha",
+    "Shraddh Paksha",
+    "पितृ पक्ष में",
+    "Pitru Paksha mein"
+   ],
+   "translate_as": "Pitru Paksha, ancestors' fortnight",
+   "category": "ritual",
+   "note": "Grandparent means fortnight to remember ancestors, no new beginnings.",
+   "wiki_title": "Pitru Paksha"
+  },
+  {
+   "key": "antyeshti",
+   "forms": [
+    "अंतिम संस्कार",
+    "Antyeshti",
+    "Dah Sanskar",
+    "Antim Sanskar",
+    "अंतिम संस्कार करना",
+    "Antim Sanskar karna"
+   ],
+   "translate_as": "antyeshti, last rites",
+   "category": "ritual",
+   "note": "Grandparent means cremation rites to free and honor the soul.",
+   "wiki_title": "Antyesti"
+  },
+  {
+   "key": "griha_pravesh",
+   "forms": [
+    "गृह प्रवेश",
+    "Griha Pravesh",
+    "Grah Pravesh",
+    "गृह प्रवेश करना",
+    "Griha Pravesh karna"
+   ],
+   "translate_as": "griha pravesh, housewarming rite",
+   "category": "ritual",
+   "note": "Grandparent means housewarming puja before first sleeping in new home.",
+   "wiki_title": "Griha Pravesh"
+  },
+  {
+   "key": "kalash_sthapana",
+   "forms": [
+    "कलश स्थापना",
+    "Kalash Sthapana",
+    "Ghat Sthapana",
+    "कलश स्थापना करना",
+    "Kalash Sthapana karna"
+   ],
+   "translate_as": "kalash sthapana, sacred-pot installation",
+   "category": "ritual",
+   "note": "Grandparent means installing sacred pot to invite Goddess for Navratri.",
+   "wiki_title": "Kalasha"
+  },
+  {
+   "key": "kanya_pujan",
+   "forms": [
+    "कन्या पूजन",
+    "Kanya Pujan",
+    "Kanjak",
+    "Kanya Puja",
+    "कन्या पूजन करना",
+    "Kanya Pujan karna"
+   ],
+   "translate_as": "kanya pujan, girl worship",
+   "category": "ritual",
+   "note": "Grandparent means worshipping little girls as Goddess and feeding them.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kirtan_bhajan",
+   "forms": [
+    "कीर्तन",
+    "Kirtan",
+    "Bhajan",
+    "कीर्तन करना",
+    "Kirtan karna",
+    "भजन गाना"
+   ],
+   "translate_as": "kirtan, devotional singing",
+   "category": "ritual",
+   "note": "Grandparent means group singing of God's names for joy and comfort.",
+   "wiki_title": "Kirtan"
+  },
+  {
+   "key": "jagran",
+   "forms": [
+    "जागरण",
+    "Jagran",
+    "Jagrata",
+    "Mata ka Jagran",
+    "जागरण करना",
+    "Jagran karna"
+   ],
+   "translate_as": "jagran, night-long vigil",
+   "category": "ritual",
+   "note": "Grandparent means all-night singing vigil for the Goddess.",
+   "wiki_title": ""
+  },
+  {
+   "key": "parikrama",
+   "forms": [
+    "परिक्रमा",
+    "Parikrama",
+    "Pradakshina",
+    "परिक्रमा करना",
+    "Parikrama karna"
+   ],
+   "translate_as": "parikrama, circumambulation",
+   "category": "ritual",
+   "note": "Grandparent means walking clockwise around shrine out of respect.",
+   "wiki_title": "Parikrama"
+  },
+  {
+   "key": "abhishek",
+   "forms": [
+    "अभिषेक",
+    "Abhishek",
+    "Jalabhishek",
+    "अभिषेक करना",
+    "Abhishek karna"
+   ],
+   "translate_as": "abhishek, ritual bathing",
+   "category": "ritual",
+   "note": "Grandparent means bathing the idol with milk and water.",
+   "wiki_title": "Abhisheka"
+  },
+  {
+   "key": "gaon_village",
+   "forms": [
+    "गाँव",
+    "gaon",
+    "gaav",
+    "ganv",
+    "गाँवों",
+    "gaonvon",
+    "गाँव में",
+    "gaon mein"
+   ],
+   "translate_as": "native village",
+   "category": "place",
+   "note": "Means home roots and belonging, not just a village.",
+   "wiki_title": "Village"
+  },
+  {
+   "key": "mandir_temple",
+   "forms": [
+    "मंदिर",
+    "mandir",
+    "mander",
+    "मंदिरों",
+    "mandiron",
+    "मंदिर में",
+    "mandir mein"
+   ],
+   "translate_as": "Hindu temple",
+   "category": "place",
+   "note": "Community and prayer centre grandparent trusts.",
+   "wiki_title": "Hindu temple"
+  },
+  {
+   "key": "ghat_riverfront",
+   "forms": [
+    "घाट",
+    "ghat",
+    "ghaat",
+    "घाटों",
+    "ghaton",
+    "घाट पर",
+    "ghat par"
+   ],
+   "translate_as": "riverfront steps",
+   "category": "place",
+   "note": "River steps for bathing, prayer and funerals.",
+   "wiki_title": "Ghat"
+  },
+  {
+   "key": "bazaar_market",
+   "forms": [
+    "बाज़ार",
+    "bazaar",
+    "bazar",
+    "bajaar",
+    "बाज़ारों",
+    "bazaaron",
+    "बाज़ार में",
+    "bazaar mein"
+   ],
+   "translate_as": "market",
+   "category": "place",
+   "note": "Bustling market tied to memories and bargaining.",
+   "wiki_title": "Bazaar"
+  },
+  {
+   "key": "varanasi_kashi",
+   "forms": [
+    "वाराणसी",
+    "varanasi",
+    "banaras",
+    "kashi",
+    "वाराणसी में",
+    "varanasi mein"
+   ],
+   "translate_as": "Varanasi",
+   "category": "place",
+   "note": "Holiest city for Shiva, death and liberation.",
+   "wiki_title": "Varanasi"
+  },
+  {
+   "key": "haridwar_city",
+   "forms": [
+    "हरिद्वार",
+    "haridwar",
+    "hardwar",
+    "हरिद्वार में",
+    "haridwar mein"
+   ],
+   "translate_as": "Haridwar",
+   "category": "place",
+   "note": "Gateway to gods where Ganga enters plains.",
+   "wiki_title": "Haridwar"
+  },
+  {
+   "key": "ayodhya_city",
+   "forms": [
+    "अयोध्या",
+    "ayodhya",
+    "ajodhya",
+    "अयोध्या में",
+    "ayodhya mein"
+   ],
+   "translate_as": "Ayodhya",
+   "category": "place",
+   "note": "Birthplace of Ram, deeply sacred and emotional.",
+   "wiki_title": "Ayodhya"
+  },
+  {
+   "key": "mathura_city",
+   "forms": [
+    "मथुरा",
+    "mathura",
+    "muttra",
+    "मथुरा में",
+    "mathura mein"
+   ],
+   "translate_as": "Mathura",
+   "category": "place",
+   "note": "Birthplace of Krishna and festival stories.",
+   "wiki_title": "Mathura"
+  },
+  {
+   "key": "vrindavan_town",
+   "forms": [
+    "वृंदावन",
+    "vrindavan",
+    "brindavan",
+    "vrindavan",
+    "वृंदावन में",
+    "vrindavan mein"
+   ],
+   "translate_as": "Vrindavan",
+   "category": "place",
+   "note": "Krishna childhood town of temples and widows.",
+   "wiki_title": "Vrindavan"
+  },
+  {
+   "key": "vaishno_devi_shrine",
+   "forms": [
+    "वैष्णो देवी",
+    "vaishno devi",
+    "vaishnodevi",
+    "vaisno devi",
+    "वैष्णो देवी में",
+    "vaishno devi mein"
+   ],
+   "translate_as": "Vaishno Devi",
+   "category": "place",
+   "note": "Mountain goddess shrine reached by hard pilgrimage.",
+   "wiki_title": "Vaishno Devi"
+  },
+  {
+   "key": "gurdwara_temple",
+   "forms": [
+    "गुरुद्वारा",
+    "gurdwara",
+    "gurudwara",
+    "gurudvaara",
+    "गुरुद्वारों",
+    "gurdwaron",
+    "गुरुद्वारे में",
+    "gurdware mein"
+   ],
+   "translate_as": "gurdwara",
+   "category": "place",
+   "note": "Sikh temple of prayer and free food.",
+   "wiki_title": "Gurdwara"
+  },
+  {
+   "key": "dargah_shrine",
+   "forms": [
+    "दरगाह",
+    "dargah",
+    "dargaah",
+    "दरगाहों",
+    "dargahon",
+    "दरगाह पर",
+    "dargah par"
+   ],
+   "translate_as": "Sufi shrine",
+   "category": "place",
+   "note": "Saint tomb for blessings across religions.",
+   "wiki_title": "Dargah"
+  },
+  {
+   "key": "sangam_confluence",
+   "forms": [
+    "संगम",
+    "sangam",
+    "sungum",
+    "संगम पर",
+    "sangam par",
+    "संगम में",
+    "sangam mein"
+   ],
+   "translate_as": "holy confluence",
+   "category": "place",
+   "note": "Holy river meeting place for huge baths.",
+   "wiki_title": "Triveni Sangam"
+  },
+  {
+   "key": "mohalla_neighbourhood",
+   "forms": [
+    "मोहल्ला",
+    "mohalla",
+    "mahalla",
+    "mohalla",
+    "मोहल्लों",
+    "mohallon",
+    "मोहल्ले में",
+    "mohalle mein"
+   ],
+   "translate_as": "neighbourhood",
+   "category": "place",
+   "note": "Close neighbourhood where everyone knows you.",
+   "wiki_title": ""
+  },
+  {
+   "key": "haveli_mansion",
+   "forms": [
+    "हवेली",
+    "haveli",
+    "haweli",
+    "हवेलियों",
+    "haveliyon",
+    "हवेली में",
+    "haveli mein"
+   ],
+   "translate_as": "traditional mansion",
+   "category": "place",
+   "note": "Old family mansion full of ancestral pride.",
+   "wiki_title": "Haveli"
+  },
+  {
+   "key": "diya_lamp",
+   "forms": [
+    "दीया",
+    "diya",
+    "diya",
+    "deeya",
+    "दीयों",
+    "diyon",
+    "दीये में",
+    "diye mein"
+   ],
+   "translate_as": "oil lamp",
+   "category": "object",
+   "note": "Small oil lamp lit for prayer and hope.",
+   "wiki_title": "Diya (lamp)"
+  },
+  {
+   "key": "thali_plate",
+   "forms": [
+    "थाली",
+    "thali",
+    "thaali",
+    "thal",
+    "थालियों",
+    "thaliyon",
+    "थाली में",
+    "thali mein"
+   ],
+   "translate_as": "thali",
+   "category": "object",
+   "note": "Big plate for meals and worship rituals.",
+   "wiki_title": "Thali"
+  },
+  {
+   "key": "prasad_offering",
+   "forms": [
+    "प्रसाद",
+    "prasad",
+    "parshad",
+    "prasaad",
+    "प्रसादों",
+    "prasadon"
+   ],
+   "translate_as": "prasad",
+   "category": "object",
+   "note": "Blessed food shared after prayer.",
+   "wiki_title": "Prasada"
+  },
+  {
+   "key": "agarbatti_incense",
+   "forms": [
+    "अगरबत्ती",
+    "agarbatti",
+    "agarbattee",
+    "agarbati",
+    "अगरबत्तियों",
+    "agarbattiyon"
+   ],
+   "translate_as": "incense stick",
+   "category": "object",
+   "note": "Scented stick that makes a home feel holy.",
+   "wiki_title": "Incense"
+  },
+  {
+   "key": "murti_idol",
+   "forms": [
+    "मूर्ति",
+    "murti",
+    "moorti",
+    "murat",
+    "मूर्तियों",
+    "murtiyon",
+    "मूर्ति में",
+    "murti mein"
+   ],
+   "translate_as": "deity idol",
+   "category": "object",
+   "note": "God statue treated as living presence.",
+   "wiki_title": "Murti"
+  },
+  {
+   "key": "mala_prayer_beads",
+   "forms": [
+    "माला",
+    "mala",
+    "maala",
+    "maal",
+    "मालाओं",
+    "malaon",
+    "माला से",
+    "mala se"
+   ],
+   "translate_as": "prayer beads",
+   "category": "object",
+   "note": "Beads counted while repeating god's name.",
+   "wiki_title": "Japamala"
+  },
+  {
+   "key": "rudraksha_bead",
+   "forms": [
+    "रुद्राक्ष",
+    "rudraksha",
+    "rudraksh",
+    "रुद्राक्षों",
+    "rudrakshon"
+   ],
+   "translate_as": "rudraksha",
+   "category": "object",
+   "note": "Holy Shiva seed worn for protection.",
+   "wiki_title": "Rudraksha"
+  },
+  {
+   "key": "gangajal_water",
+   "forms": [
+    "गंगाजल",
+    "gangajal",
+    "ganga jal",
+    "gangajal",
+    "गंगाजल से",
+    "gangajal se"
+   ],
+   "translate_as": "Ganga water",
+   "category": "object",
+   "note": "Ganga water kept for purity and last rites.",
+   "wiki_title": "Ganges"
+  },
+  {
+   "key": "sari_dress",
+   "forms": [
+    "साड़ी",
+    "sari",
+    "saree",
+    "saari",
+    "साड़ियों",
+    "sadiyon",
+    "साड़ी में",
+    "sari mein"
+   ],
+   "translate_as": "sari",
+   "category": "object",
+   "note": "Long drape marking womanhood and occasions.",
+   "wiki_title": "Sari"
+  },
+  {
+   "key": "kurta_tunic",
+   "forms": [
+    "कुर्ता",
+    "kurta",
+    "kurtaa",
+    "कुर्तों",
+    "kurton",
+    "कुर्ते में",
+    "kurte mein"
+   ],
+   "translate_as": "kurta",
+   "category": "object",
+   "note": "Loose tunic for respect and comfort.",
+   "wiki_title": "Kurta"
+  },
+  {
+   "key": "dhoti_wrap",
+   "forms": [
+    "धोती",
+    "dhoti",
+    "dhotee",
+    "धोतियों",
+    "dhotiyon"
+   ],
+   "translate_as": "dhoti",
+   "category": "object",
+   "note": "Wrapped cloth of elders and priests.",
+   "wiki_title": "Dhoti"
+  },
+  {
+   "key": "dupatta_scarf",
+   "forms": [
+    "दुपट्टा",
+    "dupatta",
+    "chunni",
+    "chunri",
+    "दुपट्टों",
+    "dupatton",
+    "चुन्नी",
+    "chunni"
+   ],
+   "translate_as": "dupatta",
+   "category": "object",
+   "note": "Head scarf for modesty and blessing.",
+   "wiki_title": "Dupatta"
+  },
+  {
+   "key": "pagdi_turban",
+   "forms": [
+    "पगड़ी",
+    "pagdi",
+    "pagri",
+    "pugree",
+    "पगड़ियों",
+    "pagdiyon"
+   ],
+   "translate_as": "turban",
+   "category": "object",
+   "note": "Tied turban for honour and elder status.",
+   "wiki_title": "Turban"
+  },
+  {
+   "key": "jutti_shoes",
+   "forms": [
+    "जूती",
+    "jutti",
+    "jooti",
+    "jutti",
+    "जूतियों",
+    "jutiyon"
+   ],
+   "translate_as": "jutti",
+   "category": "object",
+   "note": "Embroidered wedding shoes of celebration.",
+   "wiki_title": "Jutti"
+  },
+  {
+   "key": "bindi_dot",
+   "forms": [
+    "बिंदी",
+    "bindi",
+    "bindee",
+    "बिंदियों",
+    "bindiyon"
+   ],
+   "translate_as": "bindi",
+   "category": "object",
+   "note": "Forehead dot for marriage and protection.",
+   "wiki_title": "Bindi (decoration)"
+  },
+  {
+   "key": "sindoor_vermilion",
+   "forms": [
+    "सिंदूर",
+    "sindoor",
+    "sindur",
+    "sindoor",
+    "सिंदूर से",
+    "sindoor se"
+   ],
+   "translate_as": "sindoor",
+   "category": "object",
+   "note": "Red powder showing a married woman.",
+   "wiki_title": "Sindoor"
+  },
+  {
+   "key": "mangalsutra_necklace",
+   "forms": [
+    "मंगलसूत्र",
+    "mangalsutra",
+    "mangalsootra",
+    "mangal sutra",
+    "मंगलसूत्रों",
+    "mangalsutron"
+   ],
+   "translate_as": "mangalsutra",
+   "category": "object",
+   "note": "Sacred necklace tied at Hindu wedding.",
+   "wiki_title": "Mangala sutra"
+  },
+  {
+   "key": "choodiyan_bangles",
+   "forms": [
+    "चूड़ियाँ",
+    "choodiyan",
+    "chudiyan",
+    "chooriyan",
+    "चूड़ी",
+    "choodi",
+    "chudi"
+   ],
+   "translate_as": "bangles",
+   "category": "object",
+   "note": "Glass bangles jingling with married life.",
+   "wiki_title": "Bangle"
+  },
+  {
+   "key": "payal_anklet",
+   "forms": [
+    "पायल",
+    "payal",
+    "paayal",
+    "payel",
+    "पायलों",
+    "payalon"
+   ],
+   "translate_as": "anklet",
+   "category": "object",
+   "note": "Ankle bells heard as mother moves.",
+   "wiki_title": "Anklet"
+  },
+  {
+   "key": "lota_vessel",
+   "forms": [
+    "लोटा",
+    "lota",
+    "lotta",
+    "लोटों",
+    "loton",
+    "लोटे में",
+    "lote mein"
+   ],
+   "translate_as": "lota",
+   "category": "object",
+   "note": "Round water pot for daily rituals.",
+   "wiki_title": "Lota (vessel)"
+  },
+  {
+   "key": "chulha_stove",
+   "forms": [
+    "चूल्हा",
+    "chulha",
+    "choolha",
+    "chullah",
+    "चूल्हों",
+    "chulhon",
+    "चूल्हे पर",
+    "chulhe par"
+   ],
+   "translate_as": "clay stove",
+   "category": "object",
+   "note": "Clay stove recalled as real tasty food.",
+   "wiki_title": "Chulha"
+  },
+  {
+   "key": "charpai_cot",
+   "forms": [
+    "चारपाई",
+    "charpai",
+    "charpai",
+    "khaat",
+    "चारपाइयों",
+    "charpaiyon",
+    "चारपाई पर",
+    "charpai par"
+   ],
+   "translate_as": "charpai",
+   "category": "object",
+   "note": "Woven cot for courtyard naps and talks.",
+   "wiki_title": "Charpai"
+  },
+  {
+   "key": "dholak_drum",
+   "forms": [
+    "ढोलक",
+    "dholak",
+    "dholuk",
+    "ढोलकों",
+    "dholakon"
+   ],
+   "translate_as": "dholak",
+   "category": "object",
+   "note": "Hand drum behind songs and weddings.",
+   "wiki_title": "Dholak"
+  },
+  {
+   "key": "nazar_evil_eye",
+   "forms": [
+    "नज़र",
+    "nazar",
+    "najar",
+    "nazr",
+    "नज़रों",
+    "nazron",
+    "नज़र से",
+    "nazar se"
+   ],
+   "translate_as": "evil eye",
+   "category": "other",
+   "note": "Bad glance blamed for sudden misfortune.",
+   "wiki_title": "Evil eye"
+  },
+  {
+   "key": "shagun_omen",
+   "forms": [
+    "शगुन",
+    "shagun",
+    "sagan",
+    "shugun",
+    "शगुनों",
+    "shagunon"
+   ],
+   "translate_as": "auspicious omen",
+   "category": "other",
+   "note": "Good omen or gift for new beginnings.",
+   "wiki_title": ""
+  },
+  {
+   "key": "punya_merit",
+   "forms": [
+    "पुण्य",
+    "punya",
+    "punn",
+    "punay",
+    "पुण्यों",
+    "punyon"
+   ],
+   "translate_as": "spiritual merit",
+   "category": "other",
+   "note": "Good deeds earning blessing for next life.",
+   "wiki_title": ""
+  },
+  {
+   "key": "tirth_yatra_pilgrimage",
+   "forms": [
+    "तीर्थ यात्रा",
+    "tirth yatra",
+    "teerth yatra",
+    "tirath yatra",
+    "तीर्थ यात्राओं",
+    "tirth yatraon"
+   ],
+   "translate_as": "pilgrimage",
+   "category": "other",
+   "note": "Life-goal holy trip taken in old age.",
+   "wiki_title": "Tirtha (Hinduism)"
+  },
+  {
+   "key": "mannat_vow",
+   "forms": [
+    "मानता",
+    "mannat",
+    "manat",
+    "munnat",
+    "मानताओं",
+    "mannaton"
+   ],
+   "translate_as": "vow to god",
+   "category": "other",
+   "note": "Promise to god if wish comes true.",
+   "wiki_title": "Vow"
+  },
+  {
+   "key": "tulsi_basil",
+   "forms": [
+    "तुलसी",
+    "tulsi",
+    "tulasi",
+    "तुलसी में",
+    "tulsi mein"
+   ],
+   "translate_as": "holy basil",
+   "category": "other",
+   "note": "Sacred plant worshipped like a goddess.",
+   "wiki_title": "Ocimum tenuiflorum"
+  },
+  {
+   "key": "peepal_tree",
+   "forms": [
+    "पीपल",
+    "peepal",
+    "pipal",
+    "peepul",
+    "पीपलों",
+    "peeplon"
+   ],
+   "translate_as": "sacred fig",
+   "category": "other",
+   "note": "Sacred fig tree housing spirits and gods.",
+   "wiki_title": "Ficus religiosa"
+  },
+  {
+   "key": "ji_honorific",
+   "forms": [
+    "जी",
+    "ji",
+    "jee",
+    "जी जी"
+   ],
+   "translate_as": "ji (respectful particle)",
+   "category": "address",
+   "note": "Added to names to show respect; softens everything a grandparent says.",
+   "wiki_title": "Ji (honorific)"
+  },
+  {
+   "key": "sahab",
+   "forms": [
+    "साहब",
+    "sahab",
+    "sahib",
+    "saheb",
+    "साहबों",
+    "sahabon"
+   ],
+   "translate_as": "sir / mister",
+   "category": "address",
+   "note": "Polite sir for officials, elders, husbands; marks formal respect.",
+   "wiki_title": "Sahib"
+  },
+  {
+   "key": "memsahab",
+   "forms": [
+    "मेमसाहब",
+    "memsahab",
+    "memsaab",
+    "मेमसाहबों",
+    "memsahabon"
+   ],
+   "translate_as": "ma'am / madam",
+   "category": "address",
+   "note": "Colonial-era madam for a lady boss or foreign lady; still teasingly used.",
+   "wiki_title": "Memsahib"
+  },
+  {
+   "key": "janab",
+   "forms": [
+    "जनाब",
+    "janab",
+    "janaab",
+    "जनाब आप"
+   ],
+   "translate_as": "esteemed sir",
+   "category": "address",
+   "note": "Urdu-flavored respectful sir to address a man politely or ironically.",
+   "wiki_title": ""
+  },
+  {
+   "key": "mohtarma",
+   "forms": [
+    "मोहतरमा",
+    "mohtarma",
+    "muhtarma"
+   ],
+   "translate_as": "respected lady",
+   "category": "address",
+   "note": "Very courteous way to say madam in Urdu-style speech.",
+   "wiki_title": ""
+  },
+  {
+   "key": "huzoor",
+   "forms": [
+    "हुजूर",
+    "huzoor",
+    "huzur",
+    "hazoor"
+   ],
+   "translate_as": "your honour / presence",
+   "category": "address",
+   "note": "Old courtly your honour; used for joking pleading or deep respect.",
+   "wiki_title": ""
+  },
+  {
+   "key": "sarkar",
+   "forms": [
+    "सरकार",
+    "sarkar",
+    "sarcar",
+    "सरकारों"
+   ],
+   "translate_as": "my lord / boss",
+   "category": "address",
+   "note": "Calls someone boss-lord; half-respectful, half-teasing for authority.",
+   "wiki_title": ""
+  },
+  {
+   "key": "maharaj",
+   "forms": [
+    "महाराज",
+    "maharaj",
+    "maharajji",
+    "महाराज जी"
+   ],
+   "translate_as": "great sir / master",
+   "category": "address",
+   "note": "Great-king for priests, cooks, elders; affectionate reverence.",
+   "wiki_title": "Maharaja"
+  },
+  {
+   "key": "shriman",
+   "forms": [
+    "श्रीमान",
+    "shriman",
+    "sriman",
+    "shreeman"
+   ],
+   "translate_as": "Mr. / gentleman",
+   "category": "address",
+   "note": "Formal mister in letters and announcements; sounds official.",
+   "wiki_title": "Shri"
+  },
+  {
+   "key": "shrimati",
+   "forms": [
+    "श्रीमती",
+    "shrimati",
+    "srimati",
+    "shreemati"
+   ],
+   "translate_as": "Mrs.",
+   "category": "address",
+   "note": "Formal Mrs. used for married women in respectful talk.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kumari",
+   "forms": [
+    "कुमारी",
+    "kumari",
+    "kumaari"
+   ],
+   "translate_as": "Miss",
+   "category": "address",
+   "note": "Miss for an unmarried girl; formal and protective.",
+   "wiki_title": ""
+  },
+  {
+   "key": "mahoday",
+   "forms": [
+    "महोदय",
+    "mahoday",
+    "mahodaya",
+    "महोदया"
+   ],
+   "translate_as": "honourable sir / madam",
+   "category": "address",
+   "note": "Most formal sir/madam in applications and stage speeches.",
+   "wiki_title": ""
+  },
+  {
+   "key": "babuji",
+   "forms": [
+    "बाबू",
+    "babu",
+    "babuji",
+    "बाबूजी",
+    "babujii"
+   ],
+   "translate_as": "dear sir",
+   "category": "address",
+   "note": "Affectionate sir for clerks, elders, husbands; warm and old-style.",
+   "wiki_title": "Babu (honorific)"
+  },
+  {
+   "key": "sethji",
+   "forms": [
+    "सेठ",
+    "seth",
+    "sethji",
+    "सेठजी",
+    "sethji"
+   ],
+   "translate_as": "merchant sir / boss",
+   "category": "address",
+   "note": "Merchant-boss title for shopkeepers and moneyed elders.",
+   "wiki_title": ""
+  },
+  {
+   "key": "guruji",
+   "forms": [
+    "गुरूजी",
+    "guruji",
+    "guru ji",
+    "guru",
+    "गुरू"
+   ],
+   "translate_as": "revered teacher",
+   "category": "address",
+   "note": "Teacher-master with folded-hands respect; also for priests.",
+   "wiki_title": "Guru"
+  },
+  {
+   "key": "panditji",
+   "forms": [
+    "पंडितजी",
+    "panditji",
+    "pandit ji",
+    "pandit"
+   ],
+   "translate_as": "learned sir",
+   "category": "address",
+   "note": "Respect for a learned Brahmin, priest, or clever elder.",
+   "wiki_title": "Pandit"
+  },
+  {
+   "key": "dost",
+   "forms": [
+    "दोस्त",
+    "dost",
+    "doston",
+    "दोस्तों",
+    "dosto"
+   ],
+   "translate_as": "friend",
+   "category": "address",
+   "note": "Warm friend call across ages; invites closeness.",
+   "wiki_title": ""
+  },
+  {
+   "key": "yaar",
+   "forms": [
+    "यार",
+    "yaar",
+    "yaaron",
+    "यारों",
+    "yaaro"
+   ],
+   "translate_as": "buddy / mate",
+   "category": "address",
+   "note": "Buddy, mate; makes scolding or joking sound loving.",
+   "wiki_title": ""
+  },
+  {
+   "key": "jaisi_karni",
+   "forms": [
+    "जैसी करनी वैसी भरनी",
+    "jaisi karni waisi bharni",
+    "jaisi karni vaisi bharni"
+   ],
+   "translate_as": "as you sow, so shall you reap",
+   "category": "saying",
+   "note": "Core karma lesson: you reap what you sow.",
+   "wiki_title": ""
+  },
+  {
+   "key": "babool_ka_ped",
+   "forms": [
+    "बोए पेड़ बबूल का तो आम कहाँ से होय",
+    "boye ped babool ka to aam kahan se hoy",
+    "boya ped babool"
+   ],
+   "translate_as": "plant thorns, expect no mangoes",
+   "category": "saying",
+   "note": "Scolds bad choices: thorns planted cannot give mangoes.",
+   "wiki_title": ""
+  },
+  {
+   "key": "oont_jeera",
+   "forms": [
+    "ऊँट के मुह में जीरा",
+    "oont ke muh mein jeera",
+    "unt ke muh me zeera"
+   ],
+   "translate_as": "a cumin seed in a camel's mouth — too little",
+   "category": "saying",
+   "note": "Mocks a tiny offer for a huge need.",
+   "wiki_title": ""
+  },
+  {
+   "key": "haathi_ke_daant",
+   "forms": [
+    "हाथी के दाँत खाने के और दिखाने के और",
+    "haathi ke daant khane ke aur dikhane ke aur",
+    "hathi ke daant"
+   ],
+   "translate_as": "elephant's teeth: one to show, one to chew — two-faced",
+   "category": "saying",
+   "note": "Warns people say one thing and do another.",
+   "wiki_title": ""
+  },
+  {
+   "key": "naach_aangan",
+   "forms": [
+    "नाच न जाने आँगन टेढ़ा",
+    "naach na jaane aangan tedha",
+    "nach na jane angan tedha"
+   ],
+   "translate_as": "can't dance, blames the courtyard",
+   "category": "saying",
+   "note": "Teases blaming tools for lack of skill.",
+   "wiki_title": ""
+  },
+  {
+   "key": "bandar_adrak",
+   "forms": [
+    "बंदर क्या जाने अदरक का स्वाद",
+    "bandar kya jaane adrak ka swaad",
+    "bandar kya jane adrak"
+   ],
+   "translate_as": "what does a monkey know of ginger's taste",
+   "category": "saying",
+   "note": "Says fine things are wasted on those who can't value them.",
+   "wiki_title": ""
+  },
+  {
+   "key": "khali_bartan",
+   "forms": [
+    "खाली बर्तन शोर मचाता है",
+    "khali bartan shor machata hai",
+    "khali bartan shor"
+   ],
+   "translate_as": "empty vessels make most noise",
+   "category": "saying",
+   "note": "Hushes boasters: empty vessels make most noise.",
+   "wiki_title": ""
+  },
+  {
+   "key": "door_ke_dhol",
+   "forms": [
+    "दूर के ढोल सुहावने",
+    "door ke dhol suhavne",
+    "dur ke dhol suhawane"
+   ],
+   "translate_as": "distant drums sound sweet",
+   "category": "saying",
+   "note": "Warns distant things look better than they are.",
+   "wiki_title": ""
+  },
+  {
+   "key": "jahan_chah",
+   "forms": [
+    "जहाँ चाह वहाँ राह",
+    "jahan chah wahan raah",
+    "jahan chaah vahan raah"
+   ],
+   "translate_as": "where there's a will, there's a way",
+   "category": "saying",
+   "note": "Encouragement to keep trying; will finds a way.",
+   "wiki_title": ""
+  },
+  {
+   "key": "der_aaye",
+   "forms": [
+    "देर आए दुरुस्त आए",
+    "der aaye durust aaye",
+    "der aaye durust"
+   ],
+   "translate_as": "better late than never, if correct",
+   "category": "saying",
+   "note": "Forgives lateness: better late than never.",
+   "wiki_title": ""
+  },
+  {
+   "key": "chidiya_chug_gayi",
+   "forms": [
+    "अब पछताए होत क्या जब चिड़िया चुग गई खेत",
+    "ab pachhtaye hot kya jab chidiya chug gayi khet",
+    "ab pachtaye"
+   ],
+   "translate_as": "what use repenting when birds have eaten the field",
+   "category": "saying",
+   "note": "No use crying after the chance is eaten up.",
+   "wiki_title": ""
+  },
+  {
+   "key": "jal_magar",
+   "forms": [
+    "जल में रहकर मगर से बैर",
+    "jal mein rehkar magar se bair",
+    "jal me rahkar magar"
+   ],
+   "translate_as": "living in water, don't feud with the crocodile",
+   "category": "saying",
+   "note": "Warns don't fight the power you live under.",
+   "wiki_title": ""
+  },
+  {
+   "key": "laaton_ke_bhoot",
+   "forms": [
+    "लातों के भूत बातों से नहीं मानते",
+    "laaton ke bhoot baaton se nahi mante",
+    "laton ke bhoot"
+   ],
+   "translate_as": "some ghosts only listen to kicks, not words",
+   "category": "saying",
+   "note": "Gruff joke that some stubborn folks only learn the hard way.",
+   "wiki_title": ""
+  },
+  {
+   "key": "ulta_chor",
+   "forms": [
+    "उल्टा चोर कोतवाल को डांटे",
+    "ulta chor kotwal ko daante",
+    "ulta chor kotwal"
+   ],
+   "translate_as": "the thief scolds the policeman",
+   "category": "saying",
+   "note": "Calls out cheeky blame-shifting by the guilty.",
+   "wiki_title": ""
+  },
+  {
+   "key": "chor_dadhi",
+   "forms": [
+    "चोर की दाढ़ी में तिनका",
+    "chor ki dadhi mein tinka",
+    "chor ki dadhi me tinka"
+   ],
+   "translate_as": "a straw in the thief's beard — guilt shows",
+   "category": "saying",
+   "note": "Says the guilty betray themselves by nervousness.",
+   "wiki_title": ""
+  },
+  {
+   "key": "neki_dariya",
+   "forms": [
+    "नेकी कर दरिया में डाल",
+    "neki kar dariya mein daal",
+    "neki kar dariya me dal"
+   ],
+   "translate_as": "do good and throw it in the river",
+   "category": "saying",
+   "note": "Teaches selfless good: do good and forget it.",
+   "wiki_title": ""
+  },
+  {
+   "key": "man_changa",
+   "forms": [
+    "मन चंगा तो कठौती में गंगा",
+    "man changa to kathauti mein ganga",
+    "mun changa to kathauti me ganga"
+   ],
+   "translate_as": "if heart is pure, Ganga is in your tub",
+   "category": "saying",
+   "note": "Purity of heart matters more than pilgrimage.",
+   "wiki_title": ""
+  },
+  {
+   "key": "jaan_jahan",
+   "forms": [
+    "जान है तो जहान है",
+    "jaan hai to jahan hai",
+    "jan hai to jahan hai"
+   ],
+   "translate_as": "if there's life, there's the world",
+   "category": "saying",
+   "note": "Health-first blessing: life itself is the world.",
+   "wiki_title": ""
+  },
+  {
+   "key": "sabr_phal",
+   "forms": [
+    "सब्र का फल मीठा होता है",
+    "sabr ka phal meetha hota hai",
+    "sabar ka phal meetha"
+   ],
+   "translate_as": "patience bears sweet fruit",
+   "category": "saying",
+   "note": "Comforts waiting children: patience tastes sweet.",
+   "wiki_title": ""
+  },
+  {
+   "key": "der_andher",
+   "forms": [
+    "भगवान के घर देर है अंधेर नहीं",
+    "bhagwan ke ghar der hai andher nahi",
+    "bhagwan ke ghar der"
+   ],
+   "translate_as": "God delays but never denies justice",
+   "category": "saying",
+   "note": "Faith that justice comes late but surely comes.",
+   "wiki_title": ""
+  },
+  {
+   "key": "sangat_rangat",
+   "forms": [
+    "जैसी संगत वैसी रंगत",
+    "jaisi sangat waisi rangat",
+    "jaisi sangat vaisi rangat"
+   ],
+   "translate_as": "as the company, so the colour",
+   "category": "saying",
+   "note": "Warns friends colour you; choose company well.",
+   "wiki_title": ""
+  },
+  {
+   "key": "boond_sagar",
+   "forms": [
+    "बूंद बूंद से सागर भरता है",
+    "boond boond se sagar bharta hai",
+    "boond boond se sagar"
+   ],
+   "translate_as": "drop by drop fills the ocean",
+   "category": "saying",
+   "note": "Praise for small savings and steady effort.",
+   "wiki_title": ""
+  },
+  {
+   "key": "ekta_bal",
+   "forms": [
+    "एकता में बल है",
+    "ekta mein bal hai",
+    "ekta me bal"
+   ],
+   "translate_as": "unity is strength",
+   "category": "saying",
+   "note": "Family motto for sticking together in trouble.",
+   "wiki_title": ""
+  },
+  {
+   "key": "dheere_sab",
+   "forms": [
+    "धीरे धीरे रे मना धीरे सब कुछ होय",
+    "dheere dheere re mana dheere sab kuch hoy",
+    "dheere dheere"
+   ],
+   "translate_as": "slowly, slowly, all things happen",
+   "category": "saying",
+   "note": "Soothes hurry: slow ripening brings sweetness.",
+   "wiki_title": ""
+  },
+  {
+   "key": "shabaash",
+   "forms": [
+    "शाबाश",
+    "shabaash",
+    "shabash",
+    "shaabaash"
+   ],
+   "translate_as": "bravo! well done!",
+   "category": "saying",
+   "note": "Grandparent's proud clap and praise for a child.",
+   "wiki_title": ""
+  },
+  {
+   "key": "kya_baat_hai",
+   "forms": [
+    "क्या बात है",
+    "kya baat hai",
+    "kya bath hai",
+    "kya baat"
+   ],
+   "translate_as": "how wonderful! wow!",
+   "category": "saying",
+   "note": "Delighted wow for good news, food, or praise.",
+   "wiki_title": ""
+  },
+  {
+   "key": "arre_wah",
+   "forms": [
+    "अरे वाह",
+    "arre wah",
+    "are wah",
+    "arre waah"
+   ],
+   "translate_as": "oh wow!",
+   "category": "saying",
+   "note": "Warm exclamation of surprise and admiration.",
+   "wiki_title": ""
+  }
+ ]
+}

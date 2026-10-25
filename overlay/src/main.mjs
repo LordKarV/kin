@@ -102,6 +102,7 @@ function connect() {
 function onKin(msg) {
   if (msg.type === 'partial' && msg.role === 'grandparent') { send('captions', msg); showCaptions() }
   else if (msg.type === 'transcript') { sendAll(msg); showCaptions() }
+  else if (msg.type === 'glance' || msg.type === 'glance_image' || msg.type === 'enrich') sendAll(msg)
   else if (msg.type === 'status' || msg.type === 'error') status(msg.detail || msg.message || msg.asr || 'KIN status', msg.type === 'error' ? 'error' : 'warn')
 }
 

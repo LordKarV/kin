@@ -50,10 +50,13 @@ class CallSession:
     history: list[tuple[str, str, str]] = field(default_factory=list)  # (speaker slug, src, translation)
     fade: Callable | None = None   # Phase 4: (listener_slug, text) -> list[str] passthrough tokens
     on_utterance: Callable | None = None  # Phase 4/6 hook: (utterance dict) -> None
+    bg_tasks: set = field(default_factory=set)  # card enrichment tasks (a reference keeps them from being GC'd mid-flight)
 
     # ---- membership --------------------------------------------------------
     watchers: list[SendJSON] = field(default_factory=list)  # read-only viewers (phone captions page)
     phone_line: bool = False  # a merged phone call (audio/buddy.py) is feeding this session
+    glance_sent: set[str] = field(default_factory=set)        # glance card keys already sent this call (app/cards)
+    glance_tasks: set[asyncio.Task] = field(default_factory=set)  # background picture fetches (kept so they are not GC'd)
 
     def add_watcher(self, send_json: SendJSON) -> None:
         self.watchers = [*self.watchers, send_json]
@@ -121,8 +124,10 @@ class CallSession:
             async for ev in side.asr.events():
                 if not ev.final:
                     await self._broadcast({"type": "partial", "role": side.role, "text": ev.text})
+                    await self._glance(side, ev.text)
                     continue
                 side.speech_end_at = time.perf_counter()
+                await self._glance(side, ev.text, final=True)
                 try:
                     await self.process_utterance(side, ev.text, lang_tags=ev.lang_tags, t_start=ev.t_start, t_end=ev.t_end)
                 except Exception as e:  # noqa: BLE001
@@ -147,6 +152,11 @@ class CallSession:
             await self._stop_asr(side)
             await self._safe_send(side, {"type": "status", "asr": "ended", "detail": str(e)[:200]})
 
+    async def _glance(self, side: Side, text: str, final: bool = False) -> None:
+        """Instant glance cards before translation (app/cards/glance.py); never raises."""
+        from ..cards.glance import live_glance
+        await live_glance(self, side, text, final)
+
     async def _safe_send(self, side: Side, msg: dict) -> None:
         try:
             await side.send_json(msg)
@@ -157,6 +167,7 @@ class CallSession:
         side = self.sides.get(role)
         if side and text.strip():
             side.speech_end_at = time.perf_counter()
+            await self._glance(side, text.strip(), final=True)
             await self.process_utterance(side, text.strip())
 
     # ---- the pipeline -----------------------------------------------------
@@ -166,7 +177,10 @@ class CallSession:
         listener = peer.person if peer else self._default_listener(side)
         target_lang = (peer.lang if peer else ("en" if side.role == "grandparent" else self.translator.g.heritage_lang))
         passthrough = self.fade(listener, text) if (self.fade and target_lang == "en") else []
-        res = await asyncio.to_thread(self.translator.translate, text, side.person, listener, self.history, passthrough, None, target_lang)
+        res = await asyncio.to_thread(self.translator.translate_speech, text, side.person, listener, self.history, passthrough, None, target_lang)
+        cards_pending = res.cards
+        if cards_pending is not None and cards_pending.done():  # B already landed: ship its cards with the transcript
+            res, cards_pending = self.translator.with_cards(res), None
         lat = dict(res.latencies)
         lat["asr_ms"] = round((t0 - side.speech_end_at) * 1000, 1) if side.speech_end_at else 0.0
         payload = {"type": "transcript", "call_id": self.call_id, "speaker": side.person, "listener": listener, "role": side.role,
@@ -176,6 +190,10 @@ class CallSession:
         payload["utterance_id"] = self._persist(side, listener, text, list(lang_tags), t_start, t_end, res, lat)
         self.history.append((side.person, text, res.result.translation)); self.history = self.history[-6:]
         await self._broadcast(payload)
+        if cards_pending is not None:  # B lands later as an `enrich` event; it never holds up TTS
+            task = asyncio.create_task(self._enrich(side, payload["utterance_id"], cards_pending))
+            self.bg_tasks.add(task)
+            task.add_done_callback(self.bg_tasks.discard)
         # TTS to the peer, measuring first byte
         if peer and peer.wants_audio and res.result.translation:
             t_tts = time.perf_counter()
@@ -205,6 +223,30 @@ class CallSession:
             except Exception as e:  # noqa: BLE001
                 log.warning("on_utterance hook failed: %s", e)
         return payload
+
+    async def _enrich(self, side: Side, utterance_id: int, cards_future) -> None:
+        """Call B finished after the transcript went out: persist its cards (glossary) and push them to the UI."""
+        try:
+            cards, b_ms = await asyncio.wrap_future(cards_future)
+            if cards:
+                self._attach_cards(side, utterance_id, cards)
+            await self._broadcast({"type": "enrich", "utterance_id": utterance_id, "pragmatics_cards": [c.model_dump() for c in cards], "b_ms": b_ms})
+        except Exception as e:  # noqa: BLE001  (enrichment is optional: the turn already succeeded)
+            log.warning("card enrichment failed for utterance %s: %s", utterance_id, e)
+
+    def _attach_cards(self, side: Side, utterance_id: int, cards) -> None:
+        with session_scope() as s:
+            u = s.get(m.Utterance, utterance_id)
+            if u is None:
+                return
+            u.cards = [c.model_dump() for c in cards]
+            entries = []
+            for c in cards:
+                e = m.GlossaryEntry(family_id=self.family_id, card=c.model_dump(), utterance_id=u.id, speaker_id=u.speaker_id)
+                s.add(e); s.flush(); entries.append((e.id, c.source))
+            if entries and get_settings().glossary_audio:
+                from .glossary_audio import schedule_card_audio
+                schedule_card_audio(entries, side.lang, side.voice_id)
 
     def _default_listener(self, side: Side) -> str:
         g = self.translator.g

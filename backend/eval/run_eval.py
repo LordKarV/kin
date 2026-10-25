@@ -64,7 +64,7 @@ def score_row(it: GroundingItem, res) -> dict:
             ok, flat = False, False
         ents.append({"source": e.source, "node": e.node, "type": e.type, "correct": ok, "flattened": flat})
     return {"id": it.id, "category": it.category, "translation": res.result.translation, "entities": ents,
-            "latency_ms": res.latencies.get("mt_ms", 0.0), "error": res.error, "cards": len(res.result.pragmatics_cards)}
+            "latency_ms": res.latencies.get("mt_ms", 0.0), "b_ms": res.latencies.get("b_ms"), "error": res.error, "cards": len(res.result.pragmatics_cards)}
 
 
 def run_condition(name: str, items: list[GroundingItem], fn, workers: int) -> dict:
@@ -83,7 +83,7 @@ def run_condition(name: str, items: list[GroundingItem], fn, workers: int) -> di
     p = lambda q: lats[min(len(lats) - 1, int(q * len(lats)))] if lats else float("nan")  # noqa: E731
     return {"name": name, "rows": rows, "overall": err_rate(lambda r: True), "kin": err_rate(lambda r: r["category"] == "kin"),
             "collision": (coll_err, len(coll)), "dish_place": err_rate(lambda r: r["category"] == "dish_place"), "flattening": flat,
-            "p50": p(0.5), "p95": p(0.95), "errors": sum(1 for r in rows if r["error"])}
+            "p50": p(0.5), "p95": p(0.95), "b_ms": sorted(r["b_ms"] for r in rows if r.get("b_ms") is not None), "errors": sum(1 for r in rows if r["error"])}
 
 
 def run_idioms(name: str, items: list[IdiomItem], fn, workers: int) -> dict:
@@ -109,6 +109,10 @@ def write_results(path: Path, conds: list[dict], idioms: list[dict], model: str,
     for c in conds:
         lines.append(f"| {c['name']} | {pct(c['overall'][0])} (n={c['overall'][1]}) | {pct(c['kin'][0])} (n={c['kin'][1]}) | {pct(c['collision'][0])} (n={c['collision'][1]}) | "
                      f"{pct(c['dish_place'][0])} (n={c['dish_place'][1]}) | {pct(c['flattening'])} | {c['p50']:.0f} ms | {c['p95']:.0f} ms | {c['errors']} |")
+    for c in conds:
+        if c.get("b_ms"):
+            b = c["b_ms"]
+            lines.append(f"\n{c['name']}: MT p50/p95 above is call A (speech, hot path); call B (cards, parallel) p50 {b[len(b) // 2]:.0f} ms / p95 {b[min(len(b) - 1, int(0.95 * len(b)))]:.0f} ms.")
     from collections import Counter
     err_lines = []
     for c in conds:
@@ -135,7 +139,7 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", default=str(HERE / "results.md"))
     ap.add_argument("--workers", type=int, default=4)
-    ap.add_argument("--effort", default="low", help="reasoning_effort for eval calls (low ≈ live setting; medium ≈ +1 s)")
+    ap.add_argument("--effort", default=None, help="reasoning_effort override for every eval call (default: the live settings, i.e. minimal for grounded A/B, LLM_REASONING_EFFORT for generic)")
     args = ap.parse_args(argv)
 
     init_db()

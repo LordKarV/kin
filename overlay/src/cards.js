@@ -1,15 +1,15 @@
-import { asksFor, cardsFor, esc } from './lib.mjs'
-const LIFETIME_MS = 25000
+import { LIFETIME_MS, asksFor, cardsFor, esc, glanceCardsFor, mergeImage, norm } from './lib.mjs'
 const ANSWERED_MS = 8000
 const HOVER_RECHECK_MS = 3000
-const MAX_CARDS = 5
-const LABEL = { who: 'Who is this', what: 'What is this', idiom: 'Idiom', proverb: 'Proverb', register: 'Tone', honorific: 'Honorific', cultural: 'Culture' }
+const SKELETON_MS = 6000 // no picture by then: the card settles as text-only
+const MAX_CARDS = 4
 const ICON_X = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9m0-9l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
 const ICON_OK = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="currentColor"/><path d="M6 10.5l2.6 2.5L14 7.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 const dismissBtn = `<button type="button" class="icon" aria-label="Dismiss" title="Dismiss">${ICON_X}</button>`
 const stack = document.getElementById('stack')
 let seen = new Map()
 let asked = new Set()
+let shown = new Map() // card key -> { el, item } for glance_image updates
 let hovering = false
 let familyId = null
 let relationsP = null
@@ -17,6 +17,7 @@ let relationsP = null
 const errText = (e) => String(e?.message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
 // cached once; a failed load is retried by the next card
 const relations = () => (relationsP ??= window.kin.relations().catch(() => { relationsP = null; return [] }))
+const isHttps = (u) => /^https:\/\//i.test(u || '')
 
 // control announces the family on load; this covers the case where that message beat this listener
 window.kin.families().then((f) => { if (familyId == null && f.length) familyId = f[0].id }).catch(() => {})
@@ -40,16 +41,57 @@ function trim() {
 }
 function push(el) { stack.prepend(el); trim(); report() }
 
+const titleHtml = (c) => `<div class="title">${esc(c.title)}${c.native && norm(c.native) !== norm(c.title) ? ` <span class="native">${esc(c.native)}</span>` : ''}</div>`
+const chipHtml = (c) => `<div class="kind"><span class="chip">${esc(c.chip)}</span>${dismissBtn}</div>`
+const bodyHtml = (c) => (c.body ? `<div class="body">${esc(c.body)}</div>` : '')
+
+function picture(c) {
+  const fig = document.createElement('div')
+  fig.className = 'pic'
+  if (!isHttps(c.image_url)) { fig.classList.add('skeleton'); return fig }
+  const img = new Image()
+  img.loading = 'lazy'
+  img.alt = c.title || ''
+  img.onerror = () => fig.remove() // a broken picture leaves a complete text card
+  img.src = c.image_url
+  fig.append(img)
+  return fig
+}
+
+/** (Re)draws a card element for its item; glance_image calls this again on the same element. */
+function fill(el, c) {
+  el.className = `card panel ${c.layout} ${c.kind}`
+  if (c.layout === 'person') {
+    el.innerHTML = `<div class="avatar" aria-hidden="true">${esc([...(c.title || '?')][0].toUpperCase())}</div>`
+      + `<div class="main">${chipHtml(c)}${titleHtml(c)}${bodyHtml(c)}</div>`
+  } else {
+    el.innerHTML = chipHtml(c) + titleHtml(c) + bodyHtml(c)
+      + (c.literal ? `<div class="why">Literally: ${esc(c.literal)}</div>` : '')
+      + (c.why ? `<div class="why">${esc(c.why)}</div>` : '')
+      + (c.layout === 'info' && (c.image_credit || c.source_url) ? `<div class="credit">${esc([c.image_credit, c.source_url && 'Wikipedia'].filter(Boolean).join(' / '))}</div>` : '')
+  }
+  if (c.layout === 'info') {
+    const fig = picture(c)
+    el.prepend(fig)
+    if (fig.classList.contains('skeleton')) setTimeout(() => { if (fig.classList.contains('skeleton')) fig.remove() }, SKELETON_MS)
+  }
+  el.querySelector('.kind button').onclick = () => remove(el)
+}
+
 function add(c) {
   const el = document.createElement('div')
-  el.className = `card panel ${c.kind}`
-  el.innerHTML = `<div class="kind">${esc(LABEL[c.kind] || c.kind)}${dismissBtn}</div>`
-    + `<div class="title">${esc(c.title)}</div><div class="body">${esc(c.body)}</div>`
-    + (c.literal ? `<div class="why">Literally: ${esc(c.literal)}</div>` : '')
-    + (c.why ? `<div class="why">${esc(c.why)}</div>` : '')
-  el.querySelector('button').onclick = () => remove(el)
-  expireAfter(el, LIFETIME_MS)
+  fill(el, c)
+  shown = new Map(shown).set(c.key, { el, item: c })
+  expireAfter(el, LIFETIME_MS[c.layout] ?? LIFETIME_MS.compact)
   push(el)
+}
+
+function updateImage(m) {
+  const hit = shown.get(m.key)
+  if (!hit) return
+  const item = mergeImage(hit.item, m)
+  shown = new Map(shown).set(m.key, { el: hit.el, item })
+  if (hit.el.isConnected) fill(hit.el, item)
 }
 
 // ---- "Who is X?" cards: stay until answered or dismissed ---------------------
@@ -57,7 +99,7 @@ function addAsk(a) {
   const el = document.createElement('div')
   el.className = 'card panel ask'
   const who = [a.guess, a.term].filter(Boolean).join(' ')
-  el.innerHTML = `<div class="kind">New relative${dismissBtn}</div>`
+  el.innerHTML = `<div class="kind"><span class="chip">New relative</span>${dismissBtn}</div>`
     + `<div class="title">Who is ‘${esc(who)}’?</div>`
     + '<form novalidate>'
     + '<label class="field"><span>How are they related to you?</span><select name="path"><option value="">Loading…</option></select></label>'
@@ -122,12 +164,26 @@ window.kin.on((m) => {
     familyId = m.familyId
     return
   }
-  if (m.type !== 'transcript' || m.role !== 'grandparent') return
-  const r = cardsFor(m, seen, Date.now())
-  seen = r.seen
-  r.cards.forEach(add)
-  const q = asksFor(m, asked)
-  asked = q.asked
-  q.asks.forEach(addAsk)
+  if (m.type === 'glance' && m.role === 'grandparent') {
+    const r = glanceCardsFor(m.items, seen, asked, Date.now())
+    seen = r.seen
+    asked = r.asked
+    r.cards.forEach(add)
+    r.asks.forEach(addAsk)
+  } else if (m.type === 'glance_image') {
+    updateImage(m)
+  } else if (m.type === 'enrich') {
+    const r = cardsFor({ pragmatics_cards: m.pragmatics_cards }, seen, Date.now())
+    seen = r.seen
+    r.cards.forEach(add)
+  } else if (m.type === 'transcript' && m.role === 'grandparent') {
+    // fallback: anything the glance missed (same keys, so nothing shows twice)
+    const r = cardsFor(m, seen, Date.now())
+    seen = r.seen
+    r.cards.forEach(add)
+    const q = asksFor(m, asked)
+    asked = q.asked
+    q.asks.forEach(addAsk)
+  } else return
   report()
 })

@@ -60,3 +60,65 @@ test('asksFor: unplaced kin words become "Who is X?" questions, once each, with 
   assert.deepEqual(a.asks, [{ term: 'மாமா', guess: 'ரவி', key: 'மாமா' }])
   assert.equal(asksFor(t, a.asked).asks.length, 0)  // never ask twice about the same word
 })
+
+const glance = (o) => ({ key: 'k', kind: 'term', title: 't', native: '', body: '', category: 'other', image_url: '', image_credit: '', source_url: '', ...o })
+
+test('layoutFor / chipFor: picture bubble for things, compact for sayings, avatar for people', async () => {
+  const { layoutFor, chipFor } = await import('../src/lib.mjs')
+  assert.equal(layoutFor(glance({ kind: 'what', category: 'food' })), 'info')
+  assert.equal(chipFor(glance({ kind: 'what', category: 'food' })), 'Food')
+  assert.equal(layoutFor(glance({ kind: 'term', category: 'other', image_url: 'https://x/y.jpg' })), 'info')
+  assert.equal(layoutFor(glance({ kind: 'saying', category: 'saying' })), 'compact')
+  assert.equal(chipFor(glance({ kind: 'saying', category: 'saying' })), 'Saying')
+  assert.equal(chipFor(glance({ kind: 'term', category: 'address' })), 'Address')
+  assert.equal(layoutFor(glance({ kind: 'who', category: 'person' })), 'person')
+  assert.equal(layoutFor(glance({ kind: 'ask' })), 'ask')
+})
+
+test('glanceCardsFor dedupes by key, routes asks through the asked set, never mutates state', async () => {
+  const { glanceCardsFor } = await import('../src/lib.mjs')
+  const items = [
+    glance({ key: 'thing:pongal', kind: 'what', title: 'pongal', category: 'festival' }),
+    glance({ key: 'ask:மாமா', kind: 'ask', title: 'மாமா', term: 'மாமா', guess: 'ரவி' }),
+  ]
+  const seen0 = new Map(), asked0 = new Set()
+  const a = glanceCardsFor(items, seen0, asked0, 1000)
+  assert.deepEqual(a.cards.map((c) => [c.key, c.layout, c.chip]), [['thing:pongal', 'info', 'Festival']])
+  assert.deepEqual(a.asks, [{ term: 'மாமா', guess: 'ரவி', key: 'மாமா' }])
+  assert.equal(seen0.size + asked0.size, 0)
+  const b = glanceCardsFor(items, a.seen, a.asked, 2000)
+  assert.equal(b.cards.length + b.asks.length, 0)
+})
+
+test('transcript fallback and enrich cards skip what a glance already showed', async () => {
+  const { glanceCardsFor, asksFor } = await import('../src/lib.mjs')
+  const g = glanceCardsFor([
+    glance({ key: 'p_ravi', kind: 'who', title: 'Ravi', category: 'person' }),
+    glance({ key: 'lex:ta:kanna', kind: 'saying', title: 'kanna', category: 'address' }),
+    glance({ key: 'ask:மாமா', kind: 'ask', term: 'மாமா' }),
+  ], new Map(), new Set(), 0)
+  const t = {
+    src_text: 'மாமா', linker_spans: [{ start: 0, end: 4, source: 'மாமா', type: 'kin', node_id: null, method: 'unknown-relative' }],
+    grounded_spans: [{ source: 'Ravi', rendered: 'your uncle Ravi', node_id: 'p_ravi' }, { source: 'Adyar', rendered: 'the flat in Adyar', node_id: 'adyar' }],
+    pragmatics_cards: [{ kind: 'honorific', source: 'Kanna', meaning: 'dear one' }, { kind: 'idiom', source: 'x', meaning: 'm' }],
+  }
+  const r = cardsFor(t, g.seen, 10)
+  assert.deepEqual(r.cards.map((c) => [c.key, c.layout, c.chip]), [['thing:adyar', 'compact', 'What is this'], ['card:idiom:x', 'compact', 'Idiom']])
+  assert.equal(asksFor(t, g.asked).asks.length, 0)
+})
+
+test('mergeImage adds the picture, keeps an existing body, fills a missing one, upgrades the layout', async () => {
+  const { mergeImage } = await import('../src/lib.mjs')
+  const m = { key: 'k', image_url: 'https://img/a.jpg', image_credit: 'CC BY-SA', source_url: 'https://en.wikipedia.org/wiki/A', body: 'From wiki' }
+  const a = mergeImage({ ...glance({ kind: 'term', body: 'mine' }), layout: 'compact' }, m)
+  assert.equal(a.body, 'mine')
+  assert.equal(a.layout, 'info')
+  assert.equal(a.image_credit, 'CC BY-SA')
+  assert.equal(mergeImage(glance({}), m).body, 'From wiki')
+})
+
+test('markTerms underlines heard terms case-insensitively and escapes the rest', async () => {
+  const { markTerms } = await import('../src/lib.mjs')
+  assert.equal(markTerms('Pongal <today> pongal', ['pongal']), '<span class="heard">Pongal</span> &lt;today&gt; <span class="heard">pongal</span>')
+  assert.equal(markTerms('a & b', []), 'a &amp; b')
+})
