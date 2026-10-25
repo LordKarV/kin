@@ -67,7 +67,13 @@ final class CallController: ObservableObject {
     /// The invite for this call, on the API server's host (KIN key carried when the app has one).
     func inviteURL(apiBase: URL, key: String?) -> URL? { Invite(callId: callId, key: key).url(host: apiBase) }
 
+    /// Set just before AppModel.startCall() for an audio call, so the camera is never published. ponytail: a
+    /// one-shot flag because AppModel.startCall (2E) has no camera parameter; thread `camera:` through it instead.
+    static var audioOnlyNext = false
+
     func connect() async {
+        let camera = !Self.audioOnlyNext
+        Self.audioOnlyNext = false
         // Voice chat mode turns on iOS echo cancellation, which a speakerphone call needs.
         AudioManager.shared.sessionConfiguration = AudioSessionConfiguration(
             category: .playAndRecord, categoryOptions: [.defaultToSpeaker], mode: .voiceChat)
@@ -91,9 +97,13 @@ final class CallController: ObservableObject {
             micOn = false
             lastError = "Microphone unavailable: \(error.localizedDescription)"
         }
-        do { try await room.localParticipant.setCamera(enabled: true) } catch {
-            cameraOn = false  // the audio call works without video
-            lastError = "Camera unavailable: \(error.localizedDescription)"
+        if !camera {
+            cameraOn = false
+        } else {
+            do { try await room.localParticipant.setCamera(enabled: true) } catch {
+                cameraOn = false  // the audio call works without video
+                lastError = "Camera unavailable: \(error.localizedDescription)"
+            }
         }
         sync()
     }
@@ -137,6 +147,13 @@ final class CallController: ObservableObject {
         do { _ = try await api.typeText(callId: callId, text: text) } catch {
             lastError = "Send: \(error.localizedDescription)"
         }
+    }
+
+    func place(_ body: PlaceIn) async throws -> PlaceOut { try await api.place(body) }
+
+    /// Tap-to-explain: the card for a caption word, private to me (Amendment 5).
+    func explain(_ text: String, utteranceId: Int?) async throws -> [GlanceItem] {
+        try await api.explain(callId: callId, text: text, utteranceId: utteranceId)
     }
 
     func hangUp() async {

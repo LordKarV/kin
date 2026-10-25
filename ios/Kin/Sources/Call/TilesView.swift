@@ -7,15 +7,13 @@ struct TilesView: View {
     static let maxPeers = 8
     let peers: [Tile]
     let me: Tile?
+    /// false: the caller draws `SelfPip` itself (the call screen puts it top right, under the status bar).
+    var pip = true
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             main
-            if let me, !peers.isEmpty {
-                TileView(tile: me, mirror: true)
-                    .frame(width: 110, height: 160)
-                    .padding(12)
-            }
+            if pip, let me, !peers.isEmpty { SelfPip(tile: me).padding(12) }
         }
         .background(Theme.background)
     }
@@ -54,11 +52,25 @@ struct TilesView: View {
     }
 }
 
+/// My small self view. The stroke keeps it visible over the remote tile when neither has video.
+struct SelfPip: View {
+    let tile: Tile
+
+    var body: some View {
+        TileView(tile: tile, mirror: true, showName: false)
+            .frame(width: 104, height: 150)
+            .overlay(RoundedRectangle(cornerRadius: Theme.radius).stroke(Theme.field, lineWidth: 2))
+            .shadow(color: .black.opacity(0.35), radius: 12, y: 4)
+            .accessibilityLabel("Your camera")
+    }
+}
+
 /// One tile: video when there is a track, else the initial on the surface color; name label at the bottom.
 struct TileView: View {
     let tile: Tile
     var mirror = false
     var caption: String?
+    var showName = true
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -70,13 +82,15 @@ struct TileView: View {
                     .font(.largeTitle.bold())
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                if let caption { Text(caption).font(.footnote) }
-                Text(tile.name).font(.caption.bold())
+            if showName || caption != nil {
+                VStack(alignment: .leading, spacing: 2) {
+                    if let caption { Text(caption).font(.footnote) }
+                    if showName { Text(tile.name).font(.caption.bold()) }
+                }
+                .padding(.horizontal, 8).padding(.vertical, 4)
+                .background(.black.opacity(0.5), in: Capsule())
+                .padding(8)
             }
-            .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(.black.opacity(0.5), in: Capsule())
-            .padding(8)
         }
         .clipShape(RoundedRectangle(cornerRadius: Theme.radius))
         .accessibilityElement(children: .combine)

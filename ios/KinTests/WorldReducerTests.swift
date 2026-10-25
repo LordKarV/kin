@@ -62,9 +62,10 @@ final class WorldReducerTests: XCTestCase {
         guard case .glance(let g, let body) = s.rail[0].content else { return XCTFail("not a glance card") }
         XCTAssertTrue(g.isPrivate)
         let chip = BridgeChip(title: g.title, text: body, onDismiss: {})
-        XCTAssertEqual(BridgeChip.label, "Only you")
-        XCTAssertEqual(chip.line, "You haven't told Mei: you started bouldering")
-        XCTAssertEqual(BridgeChip(title: "", text: body, onDismiss: {}).line, "you started bouldering")
+        XCTAssertEqual(BridgeChip.label, "Only you see this")
+        XCTAssertEqual(chip.line, "You started bouldering")  // reads on its own line under the title
+        XCTAssertEqual(chip.accessibilityText, "Private to you. You haven't told Mei: you started bouldering")
+        XCTAssertEqual(BridgeChip(title: "", text: body, onDismiss: {}).accessibilityText, "Private to you. you started bouldering")
     }
 
     func testCardStyles() {
@@ -77,7 +78,8 @@ final class WorldReducerTests: XCTestCase {
         guard case .glance(let g, _) = s.rail[0].content else { return XCTFail("not a glance card") }
         XCTAssertEqual(g.states.map(\.label), ["applied", "second round"])
         XCTAssertEqual(g.states.map(\.known), [true, false])
-        XCTAssertEqual(StorylineCard.month("2026-10-10"), DateFormatter().shortMonthSymbols[9])
+        XCTAssertEqual(StorylineCard.day("2026-10-10"), "Oct 10")
+        XCTAssertEqual(StorylineCard.day("soon"), "soon")
     }
 
     func testCaptionUsesTranslationElseSource() {
@@ -94,18 +96,42 @@ final class WorldReducerTests: XCTestCase {
     func testPartialThenOwnTranscriptKeepsPeerCaption() {
         let s = run([#"{"type":"partial","speaker":"p5","person":"p_mei_5","lang":"zh","text":"我和林"}"#,
                      #"{"type":"transcript","call_id":1,"utterance_id":10,"speaker":"p_arjun_3","speaker_identity":"p3","src_text":"nice","src_lang":"en","target_lang":"en","translation":null}"#])
-        XCTAssertEqual(s.caption?.text, "我和林")
-        XCTAssertEqual(s.caption?.isPartial, true)
+        XCTAssertEqual(s.partial?.text, "我和林")
+        XCTAssertEqual(s.partial?.isPartial, true)
+        XCTAssertNil(s.caption)
+    }
+
+    func testBigLineDoesNotJitterWhilePartialsArrive() {
+        // design-notes rule 5: the readable line changes only on a final; live words show underneath.
+        let first = #"{"type":"transcript","call_id":1,"utterance_id":9,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"你好","src_lang":"zh","target_lang":"en","translation":"Hi."}"#
+        let second = #"{"type":"transcript","call_id":1,"utterance_id":10,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"我和林去攀岩了","src_lang":"zh","target_lang":"en","translation":"I went climbing with Lin."}"#
+        let mid = run([first, #"{"type":"partial","speaker":"p5","person":"p_mei_5","lang":"zh","text":"我和林"}"#])
+        XCTAssertEqual(mid.caption?.text, "Hi.")
+        XCTAssertEqual(mid.caption?.original, "你好")
+        XCTAssertEqual(mid.partial?.text, "我和林")
+        let done = run([second], from: mid)
+        XCTAssertEqual(done.caption?.text, "I went climbing with Lin.")
+        XCTAssertEqual(done.caption?.utteranceId, 10)
+        XCTAssertEqual(done.previous?.text, "Hi.")
+        XCTAssertNil(done.partial)
+    }
+
+    func testOneWorldCardAndOneBridgeOnScreen() {
+        let s = run([glance(lin), glance(#"{"key":"bridge:42","kind":"bridge","title":"t","body":"b","private":true}"#), glance(who(1))])
+        let shown = slots(s.rail)
+        XCTAssertEqual(shown.card?.key, "who:p1")  // a newer card replaces the one on screen
+        XCTAssertEqual(shown.bridge?.key, "bridge:42")
+        XCTAssertEqual(triggerTerms(shown.card), ["P1"])
     }
 
     func testKinStatusOffShowsPaused() throws {
         // The screen reads CallController.isPaused/pausedBy, which come straight from kin_status.
         guard case .kinStatus(let off) = msg(#"{"type":"kin_status","on":false,"paused_by":{"person":"p_mei_5","name":"Mei"}}"#)
         else { return XCTFail("not kin_status") }
-        XCTAssertEqual(KinIndicator(on: off.on, pausedBy: off.pausedBy, myPerson: "p_arjun_3").text, "KIN paused by Mei")
+        XCTAssertEqual(KinIndicator(on: off.on, pausedBy: off.pausedBy, myPerson: "p_arjun_3").text, "Paused by Mei")
         XCTAssertEqual(KinIndicator(on: off.on, pausedBy: off.pausedBy, myPerson: "p_mei_5").text, "You paused KIN")
-        XCTAssertEqual(KinIndicator(on: false, pausedBy: nil, myPerson: "p_arjun_3").text, "KIN is paused")
-        XCTAssertEqual(KinIndicator(on: true, pausedBy: nil, myPerson: "p_arjun_3").text, "KIN is on")
+        XCTAssertEqual(KinIndicator(on: false, pausedBy: nil, myPerson: "p_arjun_3").text, "KIN paused")
+        XCTAssertEqual(KinIndicator(on: true, pausedBy: nil, myPerson: "p_arjun_3").text, "KIN on")
     }
 
     func testErrorClearsWhenPipelineRecovers() {
@@ -157,33 +183,12 @@ final class WorldReducerTests: XCTestCase {
         XCTAssertEqual(s.rail.first?.kind, "culture")
     }
 
-    func testDemoDataHasTheThreeCardsAndACaption() {
-        let s = CallDemo.state(now: t0)
-        XCTAssertEqual(s.rail.map(\.key), ["who:p_lin_17", "bridge:42", "story:3"])
-        XCTAssertEqual(s.caption?.text, "Lin and I finally did the Moganshan trip.")
-    }
-}
-
-/// Renders the -demoCallScreen view in the host app's window and saves ios/screens/call-demo.png.
-/// ponytail: stand-in for `simctl io screenshot` until App/KinApp.swift (2E) reads CallDemo.isRequested; delete then.
-@MainActor
-final class CallDemoScreenshotTests: XCTestCase {
-    func testSaveDemoScreenshot() throws {
-        // Writes into the source tree, so only on request: TEST_RUNNER_KIN_WRITE_SCREENSHOT=1 xcodebuild test ...
-        try XCTSkipUnless(ProcessInfo.processInfo.environment["KIN_WRITE_SCREENSHOT"] == "1", "set KIN_WRITE_SCREENSHOT=1")
-        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first as? UIWindowScene)
-        let window = UIWindow(windowScene: scene)
-        window.overrideUserInterfaceStyle = .dark
-        window.rootViewController = UIHostingController(rootView: CallDemo.view().preferredColorScheme(.dark))
-        window.makeKeyAndVisible()
-        RunLoop.main.run(until: Date().addingTimeInterval(1.0))
-        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
-            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
-        }
-        window.isHidden = true
-        let out = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("screens/call-demo.png")
-        try FileManager.default.createDirectory(at: out.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try XCTUnwrap(image.pngData()).write(to: out)
+    func testDemoStatesBuildFromWireJSON() {
+        let s = CallDemo.state("whoBridge", now: t0)
+        XCTAssertEqual(s.rail.map(\.key), ["bridge:41", "who:p_lin_17"])
+        XCTAssertEqual(s.caption?.text, "Lin and I finally went climbing at Moganshan.")
+        XCTAssertEqual(s.caption?.original, "我和林终于去莫干山攀岩了")
+        XCTAssertEqual(CallDemo.state("storyline", now: t0).rail.first?.kind, "storyline")
+        XCTAssertEqual(CallDemo.state("meaning", now: t0).rail.first?.kind, "culture")
     }
 }

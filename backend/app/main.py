@@ -65,7 +65,7 @@ async def api_key_gate(request, call_next):
 
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-from .api import buddy, calls, rtc, cards, family_build, connector, fade, glossary, graph, languages, latency, translate, twilio, ws, users, world, dev, sms  # noqa: E402
+from .api import buddy, calls, rtc, cards, family_build, connector, fade, glossary, graph, languages, latency, translate, twilio, ws, users, world, dev, sms, explain  # noqa: E402
 from .audio.glossary_audio import media_dir  # noqa: E402
 
 app.include_router(calls.router)
@@ -87,6 +87,7 @@ app.include_router(users.router)
 app.include_router(world.router)
 app.include_router(dev.router)
 app.include_router(sms.router)
+app.include_router(explain.router)
 
 
 @app.get("/health")

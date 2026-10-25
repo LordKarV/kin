@@ -30,11 +30,27 @@ struct Caption: Equatable {
     let text: String             // in my language (translation, or src_text when we share a language)
     let isPartial: Bool
     let spans: [String: GroundedSpan]  // node_id -> how that name was grounded for me
+    var original: String? = nil  // the speaker's own words, shown small above a translated line
+    var utteranceId: Int? = nil  // sent with a tap-to-explain request
+    var lang: String? = nil      // speaker's language
+    var targetLang: String? = nil
 }
 
 struct WorldState: Equatable {
     var participants: [Participant] = []
+    /// The latest line I can read. It changes only when a final lands, so the big line never jitters.
     var caption: Caption?
+    /// The line before `caption` (hidden on screen while a card is up).
+    var previous: Caption?
+    /// The other person's live words, in their language, while they are still talking. Cleared by their final.
+    var partial: Caption?
+    /// Words I tapped and are waiting on (tap-to-explain), so a second tap does not send twice.
+    var explaining: Set<String> = []
+    /// One quiet line after a tap that found nothing ("Nothing to explain for X"), with when it was set.
+    var hint: String?
+    var hintAt: Date?
+    /// Names and terms KIN grounded or carded this call; they stay tappable in later captions.
+    var known: Set<String> = []
     var rail: [RailCard] = []         // newest first
     var dismissed: Set<String> = []   // keys I answered or dismissed; never shown again this call
     var status: String?               // asr state when not ok
@@ -46,6 +62,7 @@ struct WorldState: Equatable {
         "who": 20, "what": 20, "bridge": 30, "storyline": 30, "ask": 60, "culture": 25,
     ]
     static let defaultLifetime: TimeInterval = 20
+    static let hintLifetime: TimeInterval = 4
 
     func name(of identity: String) -> String {
         participants.first { $0.identity == identity }?.name ?? identity
@@ -64,20 +81,30 @@ func reduce(_ state: WorldState, _ msg: KinWorldMsg, me: String, now: Date) -> W
         break  // ponytail: CallController owns KIN on/paused (REST reply + kin_status); one source for the screen
     case .partial(let p):
         guard p.speaker != me, !p.text.isEmpty else { break }
-        s.caption = Caption(speaker: s.name(of: p.speaker), text: p.text, isPartial: true, spans: [:])
+        s.partial = Caption(speaker: s.name(of: p.speaker), text: p.text, isPartial: true, spans: [:], lang: p.lang)
     case .transcript(let t):
         guard t.speakerIdentity != me else { break }  // my own words are not captioned back to me
         var spans: [String: GroundedSpan] = [:]
-        for span in t.groundedSpans ?? [] { if let id = span.nodeId { spans[id] = span } }
+        for span in t.groundedSpans ?? [] {
+            if let id = span.nodeId { spans[id] = span }
+            // source is in the speaker's words (the original line), rendered in mine (the translated line)
+            s.known.formUnion([span.source, span.rendered].filter { !$0.isEmpty })
+        }
+        if s.caption != nil { s.previous = s.caption }
         s.caption = Caption(speaker: s.name(of: t.speakerIdentity), text: t.translation ?? t.srcText,
-                            isPartial: false, spans: spans)
+                            isPartial: false, spans: spans, original: t.translation == nil ? nil : t.srcText,
+                            utteranceId: t.utteranceId, lang: t.srcLang, targetLang: t.targetLang)
+        if s.partial?.speaker == s.caption?.speaker { s.partial = nil }
         s.error = nil  // a good transcript means the pipeline recovered
         s = addCulture(s, t.pragmaticsCards ?? [], utterance: t.utteranceId, now: now)
     case .enrich(let e):
         s = addCulture(s, e.pragmaticsCards, utterance: e.utteranceId, now: now)
     case .glance(let g):
         guard g.speaker != me else { break }  // the speaker never gets cards about their own words
-        for item in g.items { s = add(s, RailCard(key: item.key, content: .glance(item, body: item.body), born: now)) }
+        for item in g.items {
+            s = add(s, RailCard(key: item.key, content: .glance(item, body: item.body), born: now))
+            if item.kind != "bridge" { s.known.formUnion([item.title, item.native, item.term].filter { !$0.isEmpty }) }
+        }
     case .glanceRetract(let r):
         s.rail.removeAll { r.keys.contains($0.key) }
     case .glanceUpdate(let u):
@@ -101,6 +128,7 @@ func reduce(_ state: WorldState, _ msg: KinWorldMsg, me: String, now: Date) -> W
 /// Drops untouched cards past their lifetime. Call it on a timer too, not only when messages arrive.
 func expire(_ state: WorldState, now: Date) -> WorldState {
     var s = state
+    if let at = s.hintAt, now.timeIntervalSince(at) > WorldState.hintLifetime { s.hint = nil; s.hintAt = nil }
     s.rail.removeAll { card in
         !card.touched && now.timeIntervalSince(card.born) > (WorldState.lifetimes[card.kind] ?? WorldState.defaultLifetime)
     }
@@ -129,7 +157,7 @@ func remove(_ state: WorldState, key: String) -> WorldState {
 }
 
 /// Dedupe by key (a repeat replaces the card in place, keeping its age), newest first, then the cap.
-private func add(_ state: WorldState, _ card: RailCard) -> WorldState {
+func add(_ state: WorldState, _ card: RailCard) -> WorldState {
     var s = state
     guard !s.dismissed.contains(card.key) else { return s }
     if let i = s.rail.firstIndex(where: { $0.key == card.key }) {
