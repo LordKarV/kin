@@ -5,14 +5,14 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-VIRAMA = "\u0bcd"  # Tamil pulli; dropped when a case suffix attaches (பொங்கல் + உக்கு → பொங்கலுக்கு)
+VIRAMA = "\u0bcd"  # the virama; dropped when a case suffix attaches
 
 
 def stem_in(source: str, text: str) -> bool:
-    """True if `source` occurs in `text`, allowing the final pulli to be replaced by a suffix vowel sign."""
+    """True if `source` occurs in `text`, allowing the final virama to be replaced by a suffix vowel sign."""
     if source in text:
         return True
-    if source.endswith("\u0bae" + VIRAMA):  # -ம் nouns drop the ம் before a suffix (கல்யாணம் → கல்யாணத்துக்கு)
+    if source.endswith("\u0bae" + VIRAMA):  # nouns ending in MA + virama drop both before a suffix
         return source[:-2] in text
     return source.endswith(VIRAMA) and source[:-1] in text
 
@@ -24,7 +24,7 @@ class ExpectedEntity(BaseModel):
     # Each inner list is a group of alternatives; at least one string from EVERY group must appear
     # (case/punct-insensitive) in the rendered span (or translation for the generic baseline).
     must_include: list[list[str]]
-    must_not_include: list[str] = Field(default_factory=list)   # generic flattenings, e.g. "soup" for rasam
+    must_not_include: list[str] = Field(default_factory=list)   # generic flattenings, e.g. "soup" for a named dish
 
 
 class GroundingItem(BaseModel):
@@ -33,7 +33,7 @@ class GroundingItem(BaseModel):
     speaker: str = "p_kamala"
     listener: str = "p_arjun"
     context: list[str] = Field(default_factory=list)   # prior utterances (romanized), oldest first
-    src_text: str                                       # Tamil script, as ASR would emit it
+    src_text: str                                       # native script, as ASR would emit it
     src_roman: str                                      # romanized, for readers and the fuzzy linker
     gloss: str                                          # plain English meaning (for humans)
     entities: list[ExpectedEntity]

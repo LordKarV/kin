@@ -62,7 +62,7 @@ def make_asr(language: str, keyterms: list[str]) -> ASRSession:
     if s.asr_provider == "muse":
         from ..graph.kin_tables import MUSE_LANGUAGES
         from .asr_muse import MuseASR
-        # VERIFIED: languageBias takes language NAMES (docs example ["English", "French"]), not codes
+        # VERIFIED: languageBias takes language NAMES (the docs example lists full names), not codes
         name = MUSE_LANGUAGES.get(language, language)
         heritage = MUSE_LANGUAGES.get(s.asr_heritage_lang, s.asr_heritage_lang)
         bias = [name, "English"] if language != "en" else ["English", heritage]

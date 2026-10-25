@@ -1,5 +1,5 @@
-"""Light heritage-language lemmatizer for Fade. Tamil is agglutinative: strip the common case/clitic suffixes so
-"மதுரைக்கு", "மதுரையில", "மதுரை" share one mastery row. Deliberately shallow; good enough to track vocabulary."""
+"""Light heritage-language lemmatizer for Fade. For agglutinative languages, strip the common case/clitic suffixes so
+a word and its suffixed forms share one mastery row. Deliberately shallow; good enough to track vocabulary."""
 from __future__ import annotations
 
 import re
@@ -58,10 +58,10 @@ def _lemma_tamil_legacy(tok: str) -> str:
         for suf in TAMIL_SUFFIXES:
             if t.endswith(suf) and len(t) - len(suf) >= 2:
                 base = t[: -len(suf)]
-                # restore a dropped pulli when the stem ended in a consonant + case vowel sign (ரவியும் → ரவி stays; மதுரைக்கு → மதுரை)
+                # restore a dropped virama when the stem ended in a consonant + case vowel sign
                 return base
         return t
-    if "-" in t:  # "Madurai-kku": the suffix is already split off
+    if "-" in t:  # hyphenated romanization: the suffix is already split off
         return t.lower().split("-")[0]
     t = t.lower()
     for suf in ROMAN_SUFFIXES:
@@ -75,9 +75,9 @@ def is_heritage(tok: str, lang: str = "ta") -> bool:
     tb = _table(lang)
     if tb.is_script(t):
         return True
-    if tb.script:  # a non-Latin-script language: Latin tokens are romanization only if they look like it (Tamil-style clusters)
+    if tb.script:  # a non-Latin-script language: Latin tokens are romanization only if they look like it (common romanization clusters)
         return bool(re.search(r"(aa|zh|nn|tt|dh|th|kk|ng|nga|ch)", t.lower())) and t.isalpha() and len(t) >= 4
-    # Latin-script heritage language (Spanish, Tagalog...): the grandparent side speaks it; anything that is not an obvious English word counts
+    # Latin-script heritage language: the grandparent side speaks it; anything that is not an obvious English word counts
     return t.isalpha() and len(t) >= 3 and t.lower() not in ENGLISH_STOP
 
 

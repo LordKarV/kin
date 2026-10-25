@@ -32,7 +32,7 @@ struct Eyebrow: View {
     }
 }
 
-/// Initial avatar. The initial is in the person's own script when there is one (林, க), so cross-script names show.
+/// Initial avatar. The initial is in the person's own script when there is one, so cross-script names show.
 struct Avatar: View {
     let text: String
     let size: CGFloat

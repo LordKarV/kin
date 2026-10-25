@@ -121,7 +121,7 @@ def end_call(call_id: int) -> dict:
 
 
 def _slug(prefix: str, name: str, taken: set[str]) -> str:
-    """ASCII fold of the name, with a numeric suffix when the fold is empty (CJK, Tamil) or already taken."""
+    """ASCII fold of the name, with a numeric suffix when the fold is empty (no Latin letters) or already taken."""
     base = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
     base = re.sub(r"[^a-z0-9]+", "_", base).strip("_")
     stem = f"{prefix}_{base}" if base else prefix

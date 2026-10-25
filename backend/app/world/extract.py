@@ -257,9 +257,9 @@ def reduce_sensitive(f: FactOut) -> FactOut:
 
 
 def _one_script(form: str) -> bool:
-    """Base letters only: marks and modifier letters (ー, 々) carry no script of their own, and Latin with diacritics
-    (Lín, Pāṭṭi) is still Latin. script_of catches Latin mixed with another script, which lexicon._mixed_script
-    (non-ASCII only) misses. Known cost: Japanese kanji mixed with kana counts as two scripts."""
+    """Base letters only: marks and modifier letters (length or repeat marks) carry no script of their own, and Latin with
+    diacritics is still Latin. script_of catches Latin mixed with another script, which lexicon._mixed_script
+    (non-ASCII only) misses. Known cost: a word mixing ideographs with a syllabary counts as two scripts."""
     letters = "".join(c for c in form if unicodedata.category(c) in ("Lu", "Ll", "Lt", "Lo"))
     return len({script_of(c) for c in letters}) <= 1 and not _mixed_script(letters)
 

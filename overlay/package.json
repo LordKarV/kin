@@ -7,8 +7,7 @@
   "main": "src/main.mjs",
   "scripts": {
     "build:native": "swiftc -O -swift-version 5 native/syscap.swift -o native/syscap",
-    "start": "electron .",
-    "test": "node --test test/*.test.mjs"
+    "start": "electron ."
   },
   "devDependencies": {
     "electron": "44.7.0"

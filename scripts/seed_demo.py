@@ -3,7 +3,7 @@
 --part 1: Karthik (CMU) and Nithin (UT Turing Scholar), high school friends, both English. Nithin's climbing friend
   Rohan and Meta application (heard by Karthik ~7 weeks ago), Karthik's project partner Priya (heard by Nithin), and
   Karthik's untold news: bouldering, and flying to Austin for HackTX.
---part 2: Karthik and his grandmother (Mom's mom, Tamil). Her side heard by Karthik ~7 weeks ago: his two uncles named
+--part 2: Karthik and his grandmother (Mom's mom, heritage language). Her side heard by Karthik ~7 weeks ago: his two uncles named
   Ravi, her sister Saroja, cousin Meena's engagement. His side heard by her ~8 weeks ago: his roommate Mei. Untold:
   his hiking trip with Mei, her bhajan group.
 
@@ -90,7 +90,7 @@ async def part2(d: Demo) -> None:
     placed = await d.json("/api/world/place", {"person": g, "owner": k, "relation": "mother.mother"}, "Karthik")
     print(f"placed Grandma for Karthik: {placed['render']}")
 
-    # ~8 weeks ago: Karthik told her about his roommate Mei (her reminder now, in Tamil).
+    # ~8 weeks ago: Karthik told her about his roommate Mei (her reminder now, in her language).
     await d.clock(-56)
     await d.apply("Karthik", ["Grandma"], {"entities": [_person("mei", "Mei", "மெய்")],
                                            "ties": [_tie("mei", "his roommate at CMU, from Shanghai")], "facts": [

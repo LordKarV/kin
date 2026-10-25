@@ -95,7 +95,7 @@ def link_phone(s: Session, phone: str, code: str) -> m.User | None:
 
 def normalize_phone(raw: str | None) -> str | None:
     """E.164 '+<digits>' (8-15 digits) or None, so a typed number matches Twilio's From.
-    Any Unicode decimal digit counts (Devanagari, fullwidth)."""
+    Any Unicode decimal digit counts (other scripts' digits, fullwidth)."""
     if not raw:
         return None
     digits = "".join(str(unicodedata.digit(c)) for c in raw if c.isdecimal())

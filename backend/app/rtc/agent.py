@@ -33,12 +33,12 @@ FRAME_SAMPLES = 320  # 20 ms frames into the AudioSource
 QUIET_AFTER_S = 0.06  # no mic frame for this long: feed silence to the ASR (WebRTC DTX)
 AGENT_IDENTITY = "kin"
 DATA_TOPIC = "kin"
-DEV_URL, DEV_KEY, DEV_SECRET = "ws://localhost:7880", "devkey", "secret"  # `livekit-server --dev` (local only)
 
 
 def livekit_creds() -> tuple[str, str, str]:
     s = get_settings()
-    return (s.livekit_url or DEV_URL, s.livekit_api_key or DEV_KEY, s.livekit_api_secret or DEV_SECRET)
+    return (s.livekit_url or s.livekit_dev_url, s.livekit_api_key or s.livekit_dev_key,
+            s.livekit_api_secret or s.livekit_dev_secret)
 
 
 def room_name(call_id: int) -> str:

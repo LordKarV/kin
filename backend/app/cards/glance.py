@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 log = logging.getLogger("kin.cards.glance")
 THING_CATEGORY = {"dish": "food", "place": "place", "event": "festival"}
 GLOSS_CATEGORY = {"idiom": "saying", "proverb": "saying", "honorific": "address", "register": "address", "cultural": "other"}
-EXTRA_SUFFIXES = ("s", "es")  # romanized/English plurals: laddus, dosas
+EXTRA_SUFFIXES = ("s", "es")  # romanized/English plurals (-s, -es)
 
 
 def glossary_entries(family_id: int) -> list[LexEntry]:

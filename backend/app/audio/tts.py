@@ -13,11 +13,10 @@ import httpx
 from ..config import get_settings
 
 log = logging.getLogger("kin.tts")
-BASE = "https://api.elevenlabs.io"
 
 
 def elevenlabs_request(voice_id: str, text: str, model_id: str, api_key: str, language_code: str) -> tuple[str, dict, dict]:
-    url = f"{BASE}/v1/text-to-speech/{voice_id}/stream?output_format=pcm_16000"
+    url = f"{get_settings().elevenlabs_base_url}/v1/text-to-speech/{voice_id}/stream?output_format=pcm_16000"
     headers = {"xi-api-key": api_key, "accept": "audio/pcm", "content-type": "application/json"}
     body = {"text": text, "model_id": model_id, "language_code": language_code,
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.8, "speed": 1.0}}
@@ -45,7 +44,7 @@ class ElevenLabsTTS:
 
     async def clone_voice(self, name: str, wav_bytes: bytes, description: str = "KIN consented voice sample") -> str:
         """Instant voice clone. Caller MUST have checked consents.voice_clone (plan §9)."""
-        r = await self._client.post(f"{BASE}/v1/voices/add", headers={"xi-api-key": self.api_key},
+        r = await self._client.post(f"{get_settings().elevenlabs_base_url}/v1/voices/add", headers={"xi-api-key": self.api_key},
                                     data={"name": name, "description": description}, files={"files": ("sample.wav", wav_bytes, "audio/wav")})
         r.raise_for_status()
         return r.json()["voice_id"]

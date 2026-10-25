@@ -68,8 +68,8 @@ def fetch_forms(person_id: int) -> None:
 
 
 def _new_lang_others(s: Session, person: m.Person, lang: str) -> list[int]:
-    """The other users' person ids when `lang` is new to the space: their names need forms in its script (a Tamil
-    transcript writes Mei as மெய்). fetch_forms always asks for English, so English is never new."""
+    """The other users' person ids when `lang` is new to the space: their names need forms in its script (a
+    transcript in that script spells each name in it). fetch_forms always asks for English, so English is never new."""
     rows = s.execute(select(m.User.person_id, m.User.lang).join(m.Person, m.Person.id == m.User.person_id)
                      .where(m.Person.family_id == person.family_id, m.User.person_id != person.id)).all()
     return [] if lang == "en" or lang in {lg for _pid, lg in rows} else [pid for pid, _lg in rows]

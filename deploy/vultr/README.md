@@ -1,7 +1,7 @@
 # KIN on Vultr
 
 The hosted backend for the submission: FastAPI and LiveKit on one Vultr VM, reachable from any network. The live demo
-still runs on the local network (lower latency); see docs/DEMO.md.
+can still run on the local network for lower latency; see docs/DEMO_SCRIPT.md.
 
 ## 1. Create the server (Vultr dashboard)
 
@@ -31,12 +31,17 @@ LiveKit, opens the firewall (22, 8000, 7880-7881/tcp, 50000-60000/udp) and gener
 ## 4. Use it
 
 - Read the app key: `ssh root@<ip> grep KIN_API_KEY /etc/kin/kin.env`.
-- In the app: Sign up > Server `http://<ip>:8000`, Key = that value.
-- Plant the demo story through an SSH tunnel, because a locked server answers `/api/dev/*` only to loopback callers.
+- In the app: Sign up > Server `http://<ip>:8000`, Key = that value. Or build the phones with the server baked in:
+  `xcodebuild -project ios/Kin.xcodeproj -scheme Kin KIN_DEFAULT_SERVER=http://<ip>:8000 ...` (after `xcodegen generate`).
+- Plant the demo worlds through an SSH tunnel, because a locked server answers `/api/dev/*` only to loopback callers.
   In one terminal run `ssh -N -L 8100:127.0.0.1:8000 root@<ip>`, then in another, from the repo root:
-  `KIN_BASE=http://127.0.0.1:8100 KIN_KEY=<key> backend/.venv/bin/python scripts/demo_common_ground.py --plant-only`.
+  `KIN_BASE=http://127.0.0.1:8100 KIN_KEY=<key> backend/.venv/bin/python scripts/seed_demo.py --part 1`.
   The tunnel address is loopback, so the printed sign-in links carry no `server=` and each phone keeps
   `http://<ip>:8000`.
+- Save a snapshot right after seeding, on the server itself (the server's database is `/opt/kin/data/kin.db`):
+  `ssh root@<ip> '/opt/kin/venv/bin/python /opt/kin/scripts/demo_snapshot.py save --db /opt/kin/data/kin.db --snapshot /opt/kin/data/kin.demo-snapshot.db'`.
+  Restore between runs with the same command and `restore`. The in-app Demo reset instead looks for
+  `/opt/kin/data/kin.demo-part1.db` and `kin.demo-part2.db`.
 - Logs: `ssh root@<ip> journalctl -u kin-backend -u livekit -f`.
 
 ## Notes

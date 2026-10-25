@@ -12,7 +12,7 @@ _ENGLISH = frozenset(
     "thank just too also very really there here got get going go miss love tell said say".split()
 )
 
-# ponytail: function-word ratio, not a language-ID model; a heritage sentence full of "a"/"no" (Spanish) can flip.
+# ponytail: function-word ratio, not a language-ID model; a heritage sentence full of "a"/"no" can flip.
 # Upgrade path: ask the MT call to report the source language.
 _ENGLISH_RATIO = 0.25
 _NON_LATIN_RATIO = 0.3

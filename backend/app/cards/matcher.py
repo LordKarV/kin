@@ -2,7 +2,7 @@
 
 Whole-word, longest-form-first, nested spans suppressed. Native scripts keep their combining marks (tokens are split on
 whitespace only and normalized with ontology.normalize_term, which keeps vowel signs in every script). Inflection: the
-LAST token of a form may carry one case suffix from the language's kin table (பொங்கலுக்கு, pongalukku), only for forms of
+LAST token of a form may carry one case suffix from the language's kin table, only for forms of
 4+ characters. Fuzzy matching (rapidfuzz) is used only for sayings/long phrases, with a high cutoff; short phrases are
 exact only.
 """
@@ -82,7 +82,7 @@ class Matcher:
 
     # -- token comparison --------------------------------------------------
     def _bases(self, tok: str) -> list[str]:
-        """The token with one known suffix removed (and the droppable final restored: பொங்கலுக்கு → பொங்கல்)."""
+        """The token with one known suffix removed (and the droppable final restored)."""
         out = []
         for s in self.suffixes:
             if tok.endswith(s) and len(tok) - len(s) >= STEM_MIN_CHARS - 1:

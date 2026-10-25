@@ -1,5 +1,5 @@
-"""Deepgram nova-3 streaming (VERIFIED 2026-10-24: wss://api.deepgram.com/v1/listen, `keyterm` repeated, Tamil = language=ta,
-not available in `multi`). Auth header: `Authorization: Token <key>`."""
+"""Deepgram nova-3 streaming (VERIFIED 2026-10-24: wss://api.deepgram.com/v1/listen, `keyterm` repeated, heritage language as language=<code>,
+which `multi` does not cover). Auth header: `Authorization: Token <key>`."""
 from __future__ import annotations
 
 import asyncio

@@ -88,7 +88,7 @@ struct LiveCaptions: View {
     }
 }
 
-/// "Mandarin -> English": the languages of the current translation.
+/// "Source -> Target": the languages of the current translation.
 struct RouteLabel: View {
     let from: String
     let to: String

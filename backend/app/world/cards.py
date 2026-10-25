@@ -114,8 +114,8 @@ def _entity_card(view: WorldView, kcache: KCache, listener: int, speaker: int, h
         fids = tuple(dict.fromkeys((*fids, *_render_facts(view, listener, id_, speaker))))
     key = entity_key(view, h.kind, id_)
     category = {"person": "person", "group": "group"}.get(h.kind) or ent.kind
-    # The app shows `native` under the name and as the avatar letter, so an English listener got "ரோஹன்" on Rohan.
-    # ponytail: English listeners get no native form; a zh listener would still see a Tamil one (per-script match if needed)
+    # The app shows `native` under the name and as the avatar letter, so an English listener got a non-Latin form on Rohan.
+    # ponytail: English listeners get no native form; a listener of another language may still see a third script's form (per-script match if needed)
     lp = view.people.get(listener)
     native = getattr(ent, "lang_name", "") if lp is not None and lp.lang not in ("", "en") else ""
     payload = _glance(key=key, kind=CARD_KIND[h.kind], title=ent.name, native=native,
@@ -189,8 +189,8 @@ def bridge_candidates(view: WorldView, listener: int, other: int, now: datetime)
 
 
 def _strong(form: str) -> bool:
-    """Hangul is spaced but syllabic, so it counts like the isolating scripts; every other alphabet (Tamil,
-    Devanagari, Cyrillic, Arabic) like Latin, in code points (vowel signs included)."""
+    """A spaced but syllabic script ("hangul") counts like the isolating scripts; every other alphabet counts like
+    Latin, in code points (vowel signs included)."""
     f = fold(form)[0].strip()
     script = next((script_of(c) for c in f if c.isalpha()), "common")
     if script in ISOLATING or script == "hangul":

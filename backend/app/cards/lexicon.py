@@ -93,7 +93,7 @@ class Lexicon:
 
 
 def _mixed_script(form: str) -> bool:
-    """True if the non-ASCII letters come from more than one script (DEVANAGARI, TAMIL, ...)."""
+    """True if the non-ASCII letters come from more than one script (first word of each letter's Unicode name)."""
     scripts = {unicodedata.name(c, "?").split()[0] for c in form if ord(c) > 0x7F and unicodedata.category(c)[0] in "LM"}
     return len(scripts) > 1
 
@@ -110,7 +110,7 @@ def validate_entries(raw: list[dict]) -> tuple[list[LexEntry], list[str]]:
         key = re.sub(r"[^a-z0-9_]+", "_", str(r.get("key") or "").strip().lower()).strip("_")
         forms = [f.strip() for f in (r.get("forms") or []) if isinstance(f, str) and f.strip() and len(f.strip()) <= MAX_FORM_LEN]
         mixed = [f for f in forms if _mixed_script(f)]
-        if mixed:  # Muse sometimes leaks a letter from a sister script (Kannada ಚ inside a Tamil word): drop that form
+        if mixed:  # Muse sometimes leaks a letter from a sister script (a letter from a sister script inside a word): drop that form
             dropped.extend(f"{r.get('key')}: mixed-script form {f!r}" for f in mixed)
             forms = [f for f in forms if f not in mixed]
         forms = list(dict.fromkeys(forms))[:MAX_FORMS]

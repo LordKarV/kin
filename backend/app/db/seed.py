@@ -1,4 +1,4 @@
-"""The demo family: the Krishnans, a Tamil family split between Madurai, Chennai, Coimbatore, Singapore and Austin.
+"""The demo family: the Krishnans, a family split between Madurai, Chennai, Coimbatore, Singapore and Austin.
 
 Fictional but realistic. Two people share the first name Ravi (the "Ravi problem"):
   - Ravi mama        = Priya's younger brother  = Arjun's maternal uncle (Mom's brother), Chennai
@@ -15,7 +15,7 @@ from . import models as m
 
 FAMILY_NAME = "Krishnan family"
 
-# slug, display, tamil, gender, birth, notes, aliases(list of (alias, lang, kind)), learner, deceased
+# slug, display, native, gender, birth, notes, aliases(list of (alias, lang, kind)), learner, deceased
 PEOPLE = [
     ("p_arjun", "Arjun", "அர்ஜுன்", "m", 2005, "Grandchild, UT Austin student; learning Tamil. The listener.",
      [("Arjun", "en", "name"), ("அர்ஜுன்", "ta", "script"), ("Arju", "en", "nickname"), ("அர்ஜு", "ta", "nickname"), ("Kanna", "ta", "address"), ("கண்ணா", "ta", "address")], True, False),
@@ -69,7 +69,7 @@ EDGES = [
     ("p_ravi_periyappa", "p_vishnu", "parent", "Appa", {}),
 ]
 
-# slug, kind, name, tamil, aliases, note
+# slug, kind, name, native, aliases, note
 THINGS = [
     ("d_rasam", "dish", "rasam", "ரசம்", ["rasam", "ரசம்", "milagu rasam", "மிளகு ரசம்"], "Paatti's pepper rasam; the cure for every cold in this family. Not 'soup'."),
     ("d_sambar", "dish", "sambar", "சாம்பார்", ["sambar", "sambhar", "சாம்பார்"], "Sunday sambar with drumstick (murungakkai). Priya's version is sweeter; Paatti disapproves."),
@@ -143,7 +143,7 @@ def seed_demo_family(session: Session) -> m.Family:
 
 
 def seed_languages(session: Session) -> int:
-    """Upsert every available language table (Tamil gold + Muse Spark drafts) into `languages` and `kin_terms`. Idempotent."""
+    """Upsert every available language table (hand-written gold + Muse Spark drafts) into `languages` and `kin_terms`. Idempotent."""
     n = 0
     for code in available_codes():
         t = load_table(code)

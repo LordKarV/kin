@@ -1,11 +1,11 @@
-"""Tamil kinship ontology: kin term → structured relation patterns relative to the speaker ("ego").
+"""Kinship ontology (the hand-written gold table): kin term → structured relation patterns relative to the speaker ("ego").
 
 Pattern grammar (dot-separated steps from ego to the referent):
   mother father parent spouse husband wife son daughter child
   brother sister sibling  elder_brother younger_brother elder_sister younger_sister
-Example: mama → "mother.brother" (mother's brother). Several patterns = context-dependent term.
+Example: the term for mother's brother → "mother.brother". Several patterns = context-dependent term.
 Family-specific usage on Edge.lang_term always overrides these defaults.
-Sources: standard Tamil kin terminology (Dravidian system; cross/parallel cousin distinction), Kinbank-style tables.
+Sources: standard kin terminology for the table's language (cross/parallel cousin distinction), Kinbank-style tables.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 @dataclass(frozen=True)
 class KinTermDef:
     term: str                 # canonical romanized form
-    script: str               # Tamil script
+    script: str               # native script form
     patterns: tuple[str, ...]  # relation patterns from ego
     gloss: str                # short English gloss for the UI
     kind: str = "kin"         # kin | endearment | honorific
@@ -72,10 +72,10 @@ _INDEX: dict[str, KinTermDef] = {}
 
 
 def normalize_term(s: str) -> str:
-    """Lowercase, NFC, collapse doubled long vowels (maamaa→mama), drop punctuation."""
+    """Lowercase, NFC, collapse doubled long vowels in romanized text, drop punctuation."""
     s = unicodedata.normalize("NFC", s).strip().lower()
     # drop punctuation, symbols and zero-width joiners by category. Vowel signs (Mn/Mc) are kept in EVERY script:
-    # a Tamil-only allowance used to strip Devanagari matras, so नानी (nani) and नाना (nana) collided.
+    # a script-specific allowance used to strip them elsewhere, so words differing only by a vowel sign collided.
     s = "".join(c for c in s if unicodedata.category(c)[0] not in "PS" and unicodedata.category(c) != "Cf")
     s = re.sub(r"\s+", " ", s)
     if re.search(r"[a-z]", s):

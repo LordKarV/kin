@@ -1,77 +1,126 @@
 # KIN
 
-A family-specific interpreter for calls between diaspora grandchildren and their grandparents.
-Translates live, grounds every translation on *this family's* people, places and foods, remembers across calls,
-and fades its own translation as the grandchild learns the language.
+Common ground for people who live apart.
 
-Plan: [KIN_BUILD_PLAN.md](KIN_BUILD_PLAN.md). Decisions: [docs/DECISIONS.md](docs/DECISIONS.md).
+KIN is a calling app for one-to-one calls between friends and family who live far from each other. During a call it
+tracks what each person knows about the other's world and fills only the gaps, privately, in each listener's own
+language. Most of the time it shows nothing: it speaks up only when someone would be lost.
 
-## Run
+Built at HackTX 2026 on Meta Muse Spark and Muse Voice Transcribe, with LiveKit, ElevenLabs, Twilio and SwiftUI.
+Code written with Claude Code.
+
+## What it does
+
+- **Live captions in your language.** Grounded in who your people are, so a name like "Ravi" becomes "your uncle Ravi
+  mama" and not just "uncle". Translation switches on only when two people's languages differ.
+- **"Who's that?" cards.** When someone you have likely forgotten comes up, you get one quiet line on who they are.
+  Heard it last week, and KIN stays quiet.
+- **Bridges.** A private nudge when the conversation makes your own news relevant: "You haven't told Nithin: started
+  bouldering." Only your own facts, never something someone else told you, and it clears once you say it.
+- **Storylines and "Who is X?" cards.** Where an ongoing thread stands, and a one-tap way to add someone new.
+- **Ask for more.** Double-twist the phone, or tap a word in a caption, for a card about what was just said.
+- **Cultural meaning.** Tone and care, not just words.
+- **Texts to KIN.** Text your own news to KIN in the app or by SMS; it stays private.
+- **Pause and delete.** Everyone sees KIN is on and anyone can pause it. Audio is never kept, and deleted means gone.
+
+## How it works
+
+```
+iPhone A ── LiveKit (one track per voice) ── Muse Voice Transcribe (partial and final transcripts)
+                                                  │
+           partials, milliseconds                 │ finals, about 3 s
+           ▼                                      ▼
+  name matcher ─ common-ground model ─ card picker ─ privacy guard     Muse Spark: grounded captions,
+  (plain code, no model call, under 3 ms)                               card localization, fact extraction
+           │                                      │
+           └────────────── world graph: people, kinship, who heard what ┘
+                                                  ▼
+                                   iPhone B: its own card and caption
+```
+
+Muse is called for speech, captions, card localization, fact extraction, text parsing, bridge reranking and the
+twist when its answer is unclear. Deciding who needs which card is plain code, so it runs on the partial transcript
+in milliseconds and privacy is enforced in code rather than in a prompt.
+
+## Results
+
+Same Muse Spark model (muse-spark-1.3) on both sides of every comparison:
+
+| Test | KIN | Without KIN's engine |
+| --- | --- | --- |
+| Names and relationships wrong in captions (105 family sentences, 150 entities) | 1% | 54% |
+| Same-name people mixed up | 0% | 97% |
+| Moments caught after three months of history (63 planted scenarios) | 26 of 27 | 22 of 27 |
+| Private texts shown to the wrong person, same test | 0 | 2 |
+| Median time to decide on a card, same test | 2.0 to 2.7 ms | 3.7 to 4.4 s |
+
+Reports: `backend/eval/results.md` and `backend/eval/common_ground/results_live*.md`.
+
+## Run it locally
 
 ```bash
-cp .env.example .env            # fill in MODEL_API_KEY, DEEPGRAM_API_KEY, ELEVENLABS_API_KEY
-cd backend && python3.12 -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
-python -m app.smoke             # one structured completion from Muse Spark
-uvicorn app.main:app --reload   # http://localhost:8000/health
+cp .env.example .env    # set MODEL_API_KEY (Muse); ELEVENLABS_API_KEY and TWILIO_* are optional
+cd backend && python3.12 -m venv .venv && source .venv/bin/activate && pip install -e ".[livekit]"
+livekit-server --dev    # LiveKit on ws://localhost:7880
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Dev database: `create_all` never alters existing tables. If your `backend/kin.db` predates the common-ground schema,
-run `rm backend/kin.db` once (the next start recreates it). Dev routes (`/api/dev/*`) are off unless the server runs
-with `DEV_ENDPOINTS=1`.
+Every setting is an environment variable (see `backend/app/config.py` and `.env.example`). Dev routes
+(`/api/dev/*`, used to plant demo history) are off unless the server runs with `DEV_ENDPOINTS=1`.
 
-The client is the iOS app in `ios/` (SwiftUI + LiveKit Swift 2.17.0):
+The iOS app is in `ios/` (SwiftUI, LiveKit Swift 2.17.0). Generate the project and point it at a server with build
+settings, so nothing is hardcoded:
 
 ```bash
-livekit-server --dev                                  # LiveKit on ws://localhost:7880
-cd ios && xcodegen generate && open Kin.xcodeproj     # run the Kin scheme on an iPhone simulator
+cd ios && xcodegen generate
+xcodebuild -project Kin.xcodeproj -scheme Kin -destination 'generic/platform=iOS' \
+  KIN_DEFAULT_SERVER=http://<server>:8000 build
 ```
 
-`frontend/` (the old Vite web UI) and `mobile/` are legacy and frozen; they are kept for reference only.
+`KIN_DEFAULT_NAME`, `KIN_DEFAULT_LANG` and `KIN_DEFAULT_SIGNIN` pre-fill a demo phone the same way. The server can
+also be typed under Sign up > Server.
 
-Demo: [docs/DEMO.md](docs/DEMO.md). `cd backend && .venv/bin/python ../scripts/demo_common_ground.py --next-day` plays
-the whole story against a running server (fresh `kin.db`, `DEV_ENDPOINTS=1`, `livekit-server --dev`).
+## Demo
 
-Tests: `cd backend && pytest -q`. Eval: `cd backend && python -m eval.run_eval` (committed live result: generic MT 54%
-entity error vs grounded KIN 1%, in `backend/eval/results.md`).
-
-## Architecture
-
-```
-Grandparent (laptop / phone)                                Grandchild (laptop)
-        │ 16 kHz PCM over WebSocket (or Twilio ConversationRelay)         │
-        ▼                                                                 ▼
-   FastAPI CallSession ── per utterance ──────────────────────────────────┤
-     1. ASR final (Muse Voice Transcribe | Deepgram nova-3 | typed)      │
-     2. Linker: names, kin terms, dishes, places → family-graph nodes     │
-     3. Fade policy: mastered words → passthrough (never inside a span)   │
-     4. Grounded MT (Muse Spark, strict JSON): translation + spans + cards │
-     5. TTS (ElevenLabs pcm_16000, consented clone) → peer                │
-     6. Persist utterance + latencies; glossary audio; Fade exposures      │
-        ▼
-   SQLite/Postgres: families, people, aliases, edges, things, kin_terms, calls, utterances,
-                    glossary, mastery (BKT), call_summaries, consents
-        ▲
-   React UI (Call · Family · Glossary · Fade)  ·  /connectors/muse.md + /api/v1/* (Muse connector)
-```
-
-Latency budget shown live in the UI: ASR final ≤ 400 ms · MT ≤ 700 ms · TTS first byte ≤ 400 ms · total p50 ≤ 2.0 s, p95 ≤ 3.0 s.
-
-## Phone bridge (optional)
-`ngrok http 8000`, put the hostname in `PUBLIC_WSS_HOST`, point the Twilio number's voice webhook at `https://<host>/twilio/voice`. The grandparent dials; the laptop hears English.
-
-## Docs
-[Demo script](docs/DEMO_SCRIPT.md) · [Devpost draft](docs/DEVPOST.md) · [Decisions](docs/DECISIONS.md) · [Eval results](backend/eval/results.md)
-
-## Phone calls (merge KIN into the call)
-
-The grandchild calls the grandparent as usual, taps **Add call**, dials KIN's Twilio number, and taps **Merge**.
-KIN greets both people, then interprets turn by turn into the call (heritage language for the grandparent, English
-for the grandchild). The grandchild's phone shows captions and who/what cards at `https://<host>/phone`.
+`scripts/seed_demo.py` plants two months of history for two demo worlds: part 1, two friends speaking English; part 2,
+a grandson and his grandmother, who speaks Tamil. Every card shown changes what KIN thinks each person knows, so save
+a snapshot right after seeding and restore it between runs:
 
 ```bash
-cloudflared tunnel --url http://localhost:8000      # gives https://<random>.trycloudflare.com
-# .env: PUBLIC_WSS_HOST=<random>.trycloudflare.com, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, ELEVENLABS_API_KEY
-# Twilio console: the number's "A call comes in" webhook -> POST https://<host>/twilio/buddy
+cd backend && KIN_BASE='http://127.0.0.1:8000' .venv/bin/python ../scripts/seed_demo.py --part 1
+.venv/bin/python ../scripts/demo_snapshot.py save       # after seeding
+.venv/bin/python ../scripts/demo_snapshot.py restore    # between runs, with no call live
 ```
 
-Desktop video calls (Zoom, Meet, FaceTime, WhatsApp desktop) use the overlay in `overlay/` instead.
+The in-app reset (People > gear > Demo) swaps in `kin.demo-part1.db` or `kin.demo-part2.db`, saved next to the
+server's database.
+
+The live script is in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+
+## Deploy on Vultr
+
+One VM runs the backend and LiveKit, reachable from any network. Step by step:
+[deploy/vultr/README.md](deploy/vultr/README.md).
+
+```bash
+deploy/vultr/deploy.sh root@<server-ip>
+```
+
+## Evaluation
+
+```bash
+cd backend && python -m eval.run_eval          # grounded captions vs the same model without KIN's graph
+cd backend && python -m eval.run_cg --live     # common-ground decisions vs one model call with the full history
+```
+
+## Repository
+
+| Path | What it is |
+| --- | --- |
+| `backend/` | FastAPI server: calls, speech, the common-ground engine, captions, texts, privacy |
+| `ios/` | The KIN iPhone app (SwiftUI) |
+| `deploy/vultr/` | Server setup, deploy script and systemd units |
+| `scripts/` | Demo seeding and snapshots, kinship-table builder |
+| `backend/eval/`, `eval_scenarios/` | Evaluation harness and its test data |
+| `design/` | Design source, brand assets and mockups |
+| `overlay/`, `frontend/`, `mobile/` | Earlier clients (desktop call overlay, web UI, React Native), kept for reference |

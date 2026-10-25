@@ -1,7 +1,7 @@
 """Per-language kinship tables for every Muse Voice Transcribe language (VERIFIED list of 25, dev.meta.ai/docs/speech-to-text).
 
 A table = the language's kin terms in the resolver's pattern grammar + the small amount of morphology the fast linker
-needs (script block, droppable finals, case suffixes, possessives, politeness markers). Tamil is hand-written (gold,
+needs (script block, droppable finals, case suffixes, possessives, politeness markers). One table is hand-written (gold,
 verified=True). The other 24 are Muse Spark drafts (scripts/make_kin_tables.py), validated mechanically here and flagged
 verified=False until a speaker checks them. Tables live in app/graph/kin_tables/<code>.json and are seeded into the DB.
 """

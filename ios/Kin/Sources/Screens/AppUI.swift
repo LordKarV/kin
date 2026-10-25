@@ -109,5 +109,5 @@ struct LoadError: View {
     }
 }
 
-/// Language name in my own language ("zh" -> "Chinese").
+/// Language name in my own language (a code like "zh" -> its localized name).
 func languageName(_ code: String) -> String { Locale.current.localizedString(forLanguageCode: code) ?? code }

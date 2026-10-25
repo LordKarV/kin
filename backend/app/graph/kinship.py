@@ -1,7 +1,7 @@
 """Family graph with kinship reasoning: paths, relation labels, kin-term resolution, address terms.
 
 Everything is computed relative to an ego (normally the listener), so the same person is rendered
-"your uncle Ravi mama (Mom's younger brother)" whether the speaker said "en magan", "un mama" or "Ravi".
+"your uncle Ravi mama (Mom's younger brother)" whether the speaker said "my son" or "your uncle" in the heritage language, or "Ravi".
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ SEX = {**dict.fromkeys(("father", "son", "husband", "brother", "elder_brother", 
 
 def _sex_fits(d: KinTermDef, sex: str | None) -> bool:
     """False when every gendered pattern of `d` names the other sex: drafted tables add generic steps to gendered
-    words (ja musuko = son, child), so a daughter would otherwise match 'son' through 'child'."""
+    words (son also given the pattern child), so a daughter would otherwise match 'son' through 'child'."""
     named = {SEX.get(p.split(".")[-1]) for p in d.patterns} - {None}
     return sex not in ("m", "f") or not named or sex in named
 

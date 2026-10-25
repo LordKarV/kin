@@ -275,7 +275,7 @@ def history_size(sc: Scenario) -> tuple[int, int]:
     from eval.run_cg import naive_system, render_user_message  # lazy: run_cg imports this module from main()
     user = render_user_message(sc.model_dump(mode="json"))
     text = naive_system() + user
-    # ponytail: ~4 ASCII chars per token, ~1 token per CJK/Tamil char; swap in a real tokenizer if the number matters
+    # ponytail: ~4 ASCII chars per token, ~1 token per non-ASCII char; swap in a real tokenizer if the number matters
     ascii_n = sum(ch.isascii() for ch in text)
     lines = user.split("\nHISTORY", 1)[1].split("\n\nCALL NOW", 1)[0].count("\n- ")
     return lines, ascii_n // 4 + (len(text) - ascii_n)

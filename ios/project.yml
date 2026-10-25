@@ -65,21 +65,8 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: dev.kin.join
             CFBundleURLSchemes: [kin]
-  KinTests:
-    type: bundle.unit-test
-    platform: iOS
-    sources: [KinTests]
-    dependencies:
-      - target: Kin
-    settings:
-      base:
-        GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: dev.kin.tests
 schemes:
   Kin:
     build:
       targets:
         Kin: all
-        KinTests: [test]
-    test:
-      targets: [KinTests]

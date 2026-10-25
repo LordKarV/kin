@@ -12,7 +12,12 @@ final class AppModel: ObservableObject {
         case ended(callId: Int)
     }
 
-    static let defaultBaseURL = "http://localhost:8000"
+    /// The build's server (KIN_DEFAULT_SERVER, for example the Vultr host), else a server on this Mac.
+    static let defaultBaseURL: String = {
+        let configured = ((Bundle.main.object(forInfoDictionaryKey: "KINDefaultServer") as? String) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return configured.isEmpty || configured.hasPrefix("$(") ? "http://localhost:8000" : configured
+    }()
     private static let baseURLDefaultsKey = "kin.baseURL"  // debug setting
 
     @Published private(set) var screen: Screen

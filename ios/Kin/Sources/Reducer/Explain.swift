@@ -95,7 +95,7 @@ func tappableTerms(in text: String, known: Set<String>) -> [String] {
 }
 
 /// Where `term` occurs in `text`. A term with Latin letters must stand as a whole word ("Lin" is not in "Linda");
-/// CJK and Thai have no spaces, so they match as plain substrings.
+/// Other terms match as plain substrings, since some scripts put no spaces between words.
 func termRanges(of term: String, in text: String) -> [Range<String.Index>] {
     guard !term.isEmpty else { return [] }
     let latin = term.unicodeScalars.contains { $0.isASCII && CharacterSet.letters.contains($0) }

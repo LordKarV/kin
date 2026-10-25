@@ -56,7 +56,7 @@ class ApplyResult:
 
 
 def world_slug(prefix: str, name: str, row_id: int) -> str:
-    """Section 1.1: prefix_<ascii fold>_<id>; an all-CJK name gives prefix_<id>."""
+    """Section 1.1: prefix_<ascii fold>_<id>; a name with no ASCII letters or digits gives prefix_<id>."""
     folded = _fold(name)
     return f"{prefix}_{folded}_{row_id}" if folded else f"{prefix}_{row_id}"
 

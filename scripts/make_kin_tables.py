@@ -1,4 +1,4 @@
-"""Draft a kinship table for every Muse Voice Transcribe language except Tamil (hand-written) with Muse Spark.
+"""Draft a kinship table for every Muse Voice Transcribe language except the hand-written gold one, with Muse Spark.
 Run from repo root: backend/.venv/bin/python scripts/make_kin_tables.py [codes...]   (needs MODEL_API_KEY)
 Each draft is validated by app.graph.kin_tables on load and stays verified=false until a speaker reviews it."""
 import json

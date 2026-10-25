@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     elevenlabs_model_live: str = "eleven_flash_v2_5"
     elevenlabs_model_glossary: str = "eleven_multilingual_v2"
     elevenlabs_default_voice_id: str = ""
+    elevenlabs_base_url: str = "https://api.elevenlabs.io"
     glossary_audio: bool = False  # per-card TTS clips cost ElevenLabs characters; opt in with GLOSSARY_AUDIO=1
 
     # Transport
@@ -40,6 +41,10 @@ class Settings(BaseSettings):
     livekit_url: str = ""
     livekit_api_key: str = ""
     livekit_api_secret: str = ""
+    # Fallbacks when LIVEKIT_* are unset: the credentials `livekit-server --dev` prints (local development only).
+    livekit_dev_url: str = "ws://localhost:7880"
+    livekit_dev_key: str = "devkey"
+    livekit_dev_secret: str = "secret"
 
     # Phone bridge
     twilio_account_sid: str = ""

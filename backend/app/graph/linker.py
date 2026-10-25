@@ -1,7 +1,7 @@
-"""Entity linker: ASR text (Tamil script and/or romanized) → spans resolved to family-graph nodes.
+"""Entity linker: ASR text (native script and/or romanized) → spans resolved to family-graph nodes.
 
 Pipeline: tokenize → n-gram alias / kin-term matches (longest first, suffix-tolerant) → compositional kin chains
-("amma-voda thambi", "mama paiyan") → name disambiguation (adjacent kin term, co-mentions, place/topic cues,
+("mother's younger brother", "uncle's son") → name disambiguation (adjacent kin term, co-mentions, place/topic cues,
 context salience, speaker proximity, honorific verb endings) → listener-relative rendering.
 """
 from __future__ import annotations
@@ -48,8 +48,8 @@ class _Tok:
     start: int
     end: int
     core: str           # punctuation-trimmed
-    norm: str           # alias matching: lowercase, dots removed, hyphen suffix dropped (NO vowel collapsing: ooru is not oru)
-    knorm: str = ""     # kin-term matching: ontology normalization (maamaa -> mama)
+    norm: str           # alias matching: lowercase, dots removed, hyphen suffix dropped (NO vowel collapsing: a doubled vowel can make a different word)
+    knorm: str = ""     # kin-term matching: ontology normalization (doubled vowels collapse)
 
 
 @dataclass
@@ -62,13 +62,13 @@ class _Match:
     term: KinTermDef | None = None
     exact: bool = False
     method: str = ""
-    bound: bool = False   # kin term bound to a possessive head that has no such relative ("amma-voda akka"): never resolve from the listener
+    bound: bool = False   # kin term bound to a possessive head that has no such relative ("mother's elder sister" when she has none): never resolve from the listener
 
 
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFC", s).lower().replace(".", "")
     s = s.strip("\"'“”‘’()[]{},;:!?।-–—、。，")
-    s = re.sub(r"-.*$", "", s) if NON_LATIN.search(s) is None and "-" in s else s  # Adyar-lerndhu → adyar
+    s = re.sub(r"-.*$", "", s) if NON_LATIN.search(s) is None and "-" in s else s  # romanized "name-suffix" → name
     return s
 
 
@@ -77,7 +77,7 @@ def _knorm(s: str) -> str:
 
 
 def _stem(alias_norm: str, final_strip=("ம்", "்")) -> str:
-    """Drop a droppable final (e.g. Tamil pulli / -ம்) so suffixed forms prefix-match."""
+    """Drop a droppable final (e.g. a final virama, or a final consonant with its virama) so suffixed forms prefix-match."""
     for f in sorted(final_strip, key=len, reverse=True):
         if f and alias_norm.endswith(f):
             return alias_norm[: -len(f)]
@@ -93,7 +93,7 @@ def _prefix_match(tok_norm: str, alias_norm: str, exact_only: bool = False, tabl
         return False
     if NON_LATIN.search(alias_norm):
         if table is not None and not table.final_strip and not table.suffixes:
-            return False  # isolating scripts (Chinese, Japanese, Thai...): no inflection, exact only
+            return False  # scripts written without spaces between words: no inflection, exact only
         return tok_norm.startswith(_stem(alias_norm, table.final_strip if table else ("ம்", "்")))
     sufs = ROMAN_SUFFIXES | set(table.roman_suffixes if table else [])
     if tok_norm.startswith(alias_norm) and tok_norm[len(alias_norm):] in sufs:
@@ -201,7 +201,7 @@ class Linker:
             if hit(alias, norms):
                 persons |= ids
                 exact = exact or (" ".join(norms) == alias)
-        # 2) kin terms (endearments/honorifics and very short terms must match exactly: "di" is not "Divya")
+        # 2) kin terms (endearments/honorifics and very short terms must match exactly: a two-letter term is not the start of a longer name)
         term = None
         term_exact = False
         for surf, d in self.kin_forms.items():
@@ -229,8 +229,8 @@ class Linker:
 
     def _chain(self, matches: list[_Match], toks: list[_Tok], sp: int | None, li: int | None) -> list[_Match]:
         """'HEAD kin' sequences: resolve HEAD to a person, then the kin term from that person's perspective.
-        Emits two resolved matches (head and referent) so both identities survive, e.g. "Ravi-yoda paiyan Vishnu"
-        pins Ravi to Ravi periyappa and paiyan to Vishnu."""
+        Emits two resolved matches (head and referent) so both identities survive, e.g. "Ravi's son Vishnu"
+        pins Ravi to the Ravi whose son is Vishnu, and the kin term to Vishnu."""
         out: list[_Match] = []
         k = 0
         while k < len(matches):
@@ -354,7 +354,7 @@ class Linker:
             return things[0]
         last = toks[mm.j].norm
         dative = last.endswith(("க்கு", "kku", "ukku"))
-        for t in things:  # dish vs event with the same name (pongal): dative/'for X' → event, else event unless a dish qualifier matched
+        for t in things:  # dish vs event with the same name: dative/'for X' → event, else event unless a dish qualifier matched
             if t.kind == "event" and (dative or mm.j == mm.i):
                 return t
         return things[0]
@@ -368,7 +368,7 @@ class Linker:
         prevk = toks[mm.i - 1].knorm if mm.i > 0 else ""
         if any(prev.endswith(_stem(h, self.table.final_strip)) or h in prev or h in prevk for h in self.generic_heads):
             return True
-        # two bare sibling terms in a row ("annan thambi") is a generic phrase, not two relatives
+        # two bare sibling terms in a row ("elder brother younger brother") is a generic phrase, not two relatives
         for other in matches:
             if other is not mm and other.kind == "kin" and other.term and other.term.term in SIBLING_TERMS and not other.persons and abs(other.i - mm.j) <= 1:
                 return True

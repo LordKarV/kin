@@ -7,7 +7,7 @@ VERIFIED 2026-10-24 (twilio.com/docs/voice/twiml/connect/conversationrelay + web
   App → relay: text{token,last,lang,interruptible} · play · sendDigits · language{ttsLanguage,transcriptionLanguage} · end
 Relay does STT (Deepgram nova-3) and TTS (ElevenLabs) itself; KIN supplies grounded text. Two legs = two independent
 relay sessions (or one relay leg + one laptop WebSocket) bridged through CallSession, as in Twilio's own
-human-to-human translation tutorial. VERIFY Tamil code `ta-IN` in the Relay voice-configuration page before the demo."""
+human-to-human translation tutorial. VERIFY the heritage code `ta-IN` in the Relay voice-configuration page before the demo."""
 from __future__ import annotations
 
 from xml.sax.saxutils import quoteattr
@@ -17,7 +17,7 @@ from .pipeline import CallSession, Side
 
 def relay_twiml(ws_url: str, role: str, language: str = "ta-IN", welcome: str = "", other_language: str = "en-US", voice: str = "") -> str:
     """Per-language providers (VERIFIED 2026-10-24, Relay voice-configuration page): ta-IN is listed with Google
-    transcription + ElevenLabs TTS, so the Tamil element keeps Twilio's default transcriber; the English element uses
+    transcription + ElevenLabs TTS, so the heritage element keeps Twilio's default transcriber; the English element uses
     Deepgram nova-3. No transcription provider is forced at the root."""
     v = f" voice={quoteattr(voice)}" if voice else ""
     greet = f" welcomeGreeting={quoteattr(welcome)}" if welcome else ""
