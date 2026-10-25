@@ -47,8 +47,11 @@ targets:
         NSMicrophoneUsageDescription: KIN uses the microphone so the people you call can hear you.
         NSCameraUsageDescription: KIN uses the camera so the people you call can see you.
         NSLocalNetworkUsageDescription: KIN connects to a KIN server on your local network (development builds).
+        # Demo build: plain http to a laptop on a hotspot (IPv6) or the Vultr IP. ATS blocks those even though they are
+        # IP literals, and NSAllowsLocalNetworking would make iOS ignore NSAllowsArbitraryLoads. Use HTTPS (domain + Caddy)
+        # before any real release.
         NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoads: true
         CFBundleURLTypes:
           - CFBundleURLName: dev.kin.join
             CFBundleURLSchemes: [kin]
