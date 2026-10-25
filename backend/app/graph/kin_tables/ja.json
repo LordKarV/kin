@@ -1,0 +1,717 @@
+{
+ "final_strip": [],
+ "suffixes": [
+  "から",
+  "まで",
+  "より",
+  "たち",
+  "がた",
+  "らは",
+  "には",
+  "では",
+  "とは",
+  "への",
+  "での",
+  "との",
+  "のも",
+  "は",
+  "が",
+  "を",
+  "に",
+  "へ",
+  "と",
+  "で",
+  "の",
+  "も",
+  "や",
+  "か",
+  "ね",
+  "よ"
+ ],
+ "roman_suffixes": [
+  "kara",
+  "made",
+  "yori",
+  "tachi",
+  "gata",
+  "rani",
+  "dewa",
+  "towa",
+  "eno",
+  "deno",
+  "tono",
+  "nomo",
+  "ha",
+  "ga",
+  "wo",
+  "ni",
+  "he",
+  "to",
+  "de",
+  "no",
+  "mo",
+  "ya",
+  "ka",
+  "ne",
+  "yo"
+ ],
+ "possessive_speaker": [
+  "私の",
+  "わたしの",
+  "僕の",
+  "ぼくの",
+  "俺の",
+  "おれの",
+  "うちの",
+  "私たちの",
+  "watashi no",
+  "watashino",
+  "boku no",
+  "bokuno",
+  "ore no",
+  "oreno",
+  "uchi no",
+  "uchino"
+ ],
+ "possessive_listener": [
+  "あなたの",
+  "貴方の",
+  "君の",
+  "きみの",
+  "お前の",
+  "おまえの",
+  "anata no",
+  "anatano",
+  "kimi no",
+  "kimino",
+  "omae no",
+  "omaeno"
+ ],
+ "respectful_markers": [
+  "さん",
+  "さま",
+  "様",
+  "氏",
+  "殿",
+  "お",
+  "ご",
+  "御",
+  "san",
+  "sama",
+  "shi",
+  "dono",
+  "o",
+  "go",
+  "on"
+ ],
+ "informal_markers": [
+  "ちゃん",
+  "くん",
+  "たん",
+  "chan",
+  "kun",
+  "tan"
+ ],
+ "generic_heads": [
+  "店",
+  "お店",
+  "運転手",
+  "隣",
+  "大家",
+  "先生",
+  "八百屋",
+  "魚屋",
+  "牛乳屋",
+  "mise",
+  "omise",
+  "untenshu",
+  "tonari",
+  "ooya",
+  "sensei",
+  "yaoya",
+  "sakana-ya",
+  "shop",
+  "driver",
+  "neighbour",
+  "teacher"
+ ],
+ "frozen": [
+  "今日",
+  "きょう",
+  "明日",
+  "あした",
+  "昨日",
+  "きのう",
+  "とても",
+  "すごく",
+  "非常に",
+  "たくさん",
+  "kyou",
+  "ashita",
+  "kinou",
+  "totemo",
+  "sugoku",
+  "takusan"
+ ],
+ "terms": [
+  {
+   "term": "haha",
+   "script": "母",
+   "variants": [
+    "hahaoya"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother (humble)",
+   "kind": "kin",
+   "notes": "Humble; used for one's own mother when speaking to outsiders. Polite form is okaasan."
+  },
+  {
+   "term": "okaasan",
+   "script": "お母さん",
+   "variants": [
+    "okaasan",
+    "okasan",
+    "oka-san",
+    "okaa-san"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother (polite)",
+   "kind": "kin",
+   "notes": "Normal polite address/reference; also used for others' mothers."
+  },
+  {
+   "term": "chichi",
+   "script": "父",
+   "variants": [
+    "chichioya"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father (humble)",
+   "kind": "kin",
+   "notes": "Humble; used for one's own father to outsiders. Polite form is otousan."
+  },
+  {
+   "term": "otousan",
+   "script": "お父さん",
+   "variants": [
+    "otousan",
+    "otosan",
+    "oto-san",
+    "otou-san"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father (polite)",
+   "kind": "kin",
+   "notes": "Normal polite address/reference; also used for others' fathers."
+  },
+  {
+   "term": "ryoushin",
+   "script": "両親",
+   "variants": [
+    "ryoshin",
+    "ryou shin",
+    "ryooshin"
+   ],
+   "patterns": [
+    "parent"
+   ],
+   "gloss": "parents",
+   "kind": "kin",
+   "notes": "Plural: both parents."
+  },
+  {
+   "term": "sofu",
+   "script": "祖父",
+   "variants": [
+    "sofu",
+    "sobu"
+   ],
+   "patterns": [
+    "father.father",
+    "mother.father"
+   ],
+   "gloss": "grandfather (formal)",
+   "kind": "kin",
+   "notes": "No maternal/paternal distinction in speech; chichi-kata/haha-kata no sofu if specified."
+  },
+  {
+   "term": "sobo",
+   "script": "祖母",
+   "variants": [
+    "sobo"
+   ],
+   "patterns": [
+    "father.mother",
+    "mother.mother"
+   ],
+   "gloss": "grandmother (formal)",
+   "kind": "kin",
+   "notes": "No maternal/paternal distinction in speech."
+  },
+  {
+   "term": "ojiisan",
+   "script": "おじいさん",
+   "variants": [
+    "ojiisan",
+    "oziisan",
+    "oji-san",
+    "ojii-san",
+    "jiiji"
+   ],
+   "patterns": [
+    "father.father",
+    "mother.father"
+   ],
+   "gloss": "grandfather (familiar)",
+   "kind": "kin",
+   "notes": "Familiar address; also used for unrelated elderly men."
+  },
+  {
+   "term": "obaasan",
+   "script": "おばあさん",
+   "variants": [
+    "obaasan",
+    "oba-san",
+    "obaa-san",
+    "baaba"
+   ],
+   "patterns": [
+    "father.mother",
+    "mother.mother"
+   ],
+   "gloss": "grandmother (familiar)",
+   "kind": "kin",
+   "notes": "Familiar address; also used for unrelated elderly women."
+  },
+  {
+   "term": "oji",
+   "script": "叔父・伯父",
+   "variants": [
+    "ozi",
+    "odi"
+   ],
+   "patterns": [
+    "father.brother",
+    "mother.brother",
+    "father.sister.husband",
+    "mother.sister.husband"
+   ],
+   "gloss": "uncle (formal)",
+   "kind": "kin",
+   "notes": "伯父 elder uncle vs 叔父 younger uncle in kanji, same reading oji."
+  },
+  {
+   "term": "oba",
+   "script": "叔母・伯母",
+   "variants": [
+    "oba"
+   ],
+   "patterns": [
+    "father.sister",
+    "mother.sister",
+    "father.brother.wife",
+    "mother.brother.wife"
+   ],
+   "gloss": "aunt (formal)",
+   "kind": "kin",
+   "notes": "伯母 elder aunt vs 叔母 younger aunt in kanji, same reading oba."
+  },
+  {
+   "term": "ani",
+   "script": "兄",
+   "variants": [
+    "ani"
+   ],
+   "patterns": [
+    "elder_brother",
+    "brother"
+   ],
+   "gloss": "elder brother (humble)",
+   "kind": "kin",
+   "notes": "Humble/plain; polite address is oniisan."
+  },
+  {
+   "term": "ane",
+   "script": "姉",
+   "variants": [
+    "ane"
+   ],
+   "patterns": [
+    "elder_sister",
+    "sister"
+   ],
+   "gloss": "elder sister (humble)",
+   "kind": "kin",
+   "notes": "Humble/plain; polite address is oneesan."
+  },
+  {
+   "term": "otouto",
+   "script": "弟",
+   "variants": [
+    "ototo",
+    "otouto",
+    "otooto"
+   ],
+   "patterns": [
+    "younger_brother",
+    "brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "imouto",
+   "script": "妹",
+   "variants": [
+    "imoto",
+    "imooto"
+   ],
+   "patterns": [
+    "younger_sister",
+    "sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kyoudai",
+   "script": "兄弟・きょうだい",
+   "variants": [
+    "kyodai",
+    "kyoudai",
+    "koudai"
+   ],
+   "patterns": [
+    "sibling",
+    "brother",
+    "sister",
+    "elder_brother",
+    "elder_sister",
+    "younger_brother",
+    "younger_sister"
+   ],
+   "gloss": "siblings; brothers and sisters",
+   "kind": "kin",
+   "notes": "Covers siblings generally; shimai for sisters only."
+  },
+  {
+   "term": "musuko",
+   "script": "息子",
+   "variants": [
+    "musuko"
+   ],
+   "patterns": [
+    "son",
+    "child"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "musume",
+   "script": "娘",
+   "variants": [
+    "musume"
+   ],
+   "patterns": [
+    "daughter",
+    "child"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kodomo",
+   "script": "子供",
+   "variants": [
+    "kodomo",
+    "kodomo-tachi"
+   ],
+   "patterns": [
+    "child",
+    "son",
+    "daughter"
+   ],
+   "gloss": "child",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mago",
+   "script": "孫",
+   "variants": [
+    "mago",
+    "magomusuko",
+    "magomusume"
+   ],
+   "patterns": [
+    "son.child",
+    "daughter.child",
+    "child.child"
+   ],
+   "gloss": "grandchild",
+   "kind": "kin",
+   "notes": "Covers grandson magomusuko and granddaughter magomusume."
+  },
+  {
+   "term": "otto",
+   "script": "夫",
+   "variants": [
+    "otto",
+    "danna",
+    "shujin"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": "Neutral; danna/shujin more colloquial."
+  },
+  {
+   "term": "tsuma",
+   "script": "妻",
+   "variants": [
+    "tsuma",
+    "kanai",
+    "yome"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": "Neutral; yome/kanai more colloquial/humble."
+  },
+  {
+   "term": "haiguusha",
+   "script": "配偶者",
+   "variants": [
+    "haigusha",
+    "haiguusha",
+    "haiguusya"
+   ],
+   "patterns": [
+    "spouse",
+    "husband",
+    "wife"
+   ],
+   "gloss": "spouse",
+   "kind": "kin",
+   "notes": "Formal gender-neutral spouse."
+  },
+  {
+   "term": "gifu",
+   "script": "義父",
+   "variants": [
+    "gifu",
+    "shuuto",
+    "shuto"
+   ],
+   "patterns": [
+    "spouse.father",
+    "spouse.parent"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": "Spouse's father; also shuuto."
+  },
+  {
+   "term": "gibo",
+   "script": "義母",
+   "variants": [
+    "gibo",
+    "shuutome",
+    "shutome"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "spouse.parent"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": "Spouse's mother; also shuutome."
+  },
+  {
+   "term": "yome",
+   "script": "嫁",
+   "variants": [
+    "yome",
+    "oyome"
+   ],
+   "patterns": [
+    "son.wife",
+    "brother.wife"
+   ],
+   "gloss": "daughter-in-law; bride",
+   "kind": "kin",
+   "notes": "Son's wife; also used for brother's wife."
+  },
+  {
+   "term": "muko",
+   "script": "婿",
+   "variants": [
+    "muko",
+    "omuko"
+   ],
+   "patterns": [
+    "daughter.husband",
+    "sister.husband"
+   ],
+   "gloss": "son-in-law; bridegroom",
+   "kind": "kin",
+   "notes": "Daughter's husband; also used for sister's husband."
+  },
+  {
+   "term": "oi",
+   "script": "甥",
+   "variants": [
+    "oi",
+    "oigo"
+   ],
+   "patterns": [
+    "brother.son",
+    "sister.son",
+    "sibling.son"
+   ],
+   "gloss": "nephew",
+   "kind": "kin",
+   "notes": "Sibling's son."
+  },
+  {
+   "term": "mei",
+   "script": "姪",
+   "variants": [
+    "mei",
+    "meigo"
+   ],
+   "patterns": [
+    "brother.daughter",
+    "sister.daughter",
+    "sibling.daughter"
+   ],
+   "gloss": "niece",
+   "kind": "kin",
+   "notes": "Sibling's daughter."
+  },
+  {
+   "term": "itoko",
+   "script": "いとこ",
+   "variants": [
+    "itoko",
+    "juukei",
+    "juukyoudai"
+   ],
+   "patterns": [
+    "parent.sibling.child",
+    "father.sibling.child",
+    "mother.sibling.child"
+   ],
+   "gloss": "cousin",
+   "kind": "kin",
+   "notes": "No gender/lineality distinction in speech; itoko."
+  },
+  {
+   "term": "gikei",
+   "script": "義兄",
+   "variants": [
+    "gikei",
+    "gike"
+   ],
+   "patterns": [
+    "spouse.elder_brother",
+    "spouse.brother",
+    "elder_sister.husband",
+    "sister.husband"
+   ],
+   "gloss": "elder brother-in-law",
+   "kind": "kin",
+   "notes": "Spouse's elder brother or elder sister's husband."
+  },
+  {
+   "term": "gishi",
+   "script": "義姉",
+   "variants": [
+    "gishi",
+    "gisi",
+    "aneshi"
+   ],
+   "patterns": [
+    "spouse.elder_sister",
+    "spouse.sister",
+    "elder_brother.wife",
+    "brother.wife"
+   ],
+   "gloss": "elder sister-in-law",
+   "kind": "kin",
+   "notes": "Spouse's elder sister or elder brother's wife."
+  },
+  {
+   "term": "san",
+   "script": "さん",
+   "variants": [
+    "san",
+    "-san"
+   ],
+   "patterns": [],
+   "gloss": "Mr./Ms. (respectful suffix)",
+   "kind": "honorific",
+   "notes": "General polite suffix attached to names and kin terms: Tanaka-san, okaasan."
+  },
+  {
+   "term": "sama",
+   "script": "さま",
+   "variants": [
+    "sama",
+    "-sama"
+   ],
+   "patterns": [],
+   "gloss": "honorific suffix (high respect)",
+   "kind": "honorific",
+   "notes": "Higher than -san; used for customers, deities, letters."
+  },
+  {
+   "term": "chan",
+   "script": "ちゃん",
+   "variants": [
+    "chan",
+    "-chan"
+   ],
+   "patterns": [],
+   "gloss": "diminutive/affectionate suffix",
+   "kind": "endearment",
+   "notes": "For children, close friends, cute address; A-chan."
+  },
+  {
+   "term": "kun",
+   "script": "くん",
+   "variants": [
+    "kun",
+    "-kun"
+   ],
+   "patterns": [],
+   "gloss": "familiar suffix for boys/juniors",
+   "kind": "endearment",
+   "notes": "For boys, juniors, male coworkers; affectionate but less intimate than -chan."
+  }
+ ],
+ "code": "ja",
+ "name": "Japanese",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

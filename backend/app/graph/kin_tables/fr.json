@@ -1,0 +1,709 @@
+{
+ "final_strip": [],
+ "suffixes": [],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "mon",
+  "ma",
+  "mes",
+  "notre",
+  "nos"
+ ],
+ "possessive_listener": [
+  "ton",
+  "ta",
+  "tes",
+  "votre",
+  "vos"
+ ],
+ "respectful_markers": [
+  "vous"
+ ],
+ "informal_markers": [
+  "tu",
+  "toi",
+  "te"
+ ],
+ "generic_heads": [
+  "chauffeur",
+  "voisin",
+  "voisine",
+  "boulanger",
+  "boulangère",
+  "epicier",
+  "épicier",
+  "commerçant",
+  "professeur",
+  "maître",
+  "maîtresse",
+  "docteur",
+  "patron",
+  "patronne",
+  "voisins",
+  "taxi"
+ ],
+ "frozen": [
+  "aujourd'hui",
+  "aujourdhui",
+  "hier",
+  "demain",
+  "maintenant",
+  "très",
+  "tres",
+  "beaucoup",
+  "peu",
+  "toujours",
+  "jamais",
+  "tout",
+  "tous"
+ ],
+ "terms": [
+  {
+   "term": "mère",
+   "script": "mère",
+   "variants": [
+    "mere",
+    "maman"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "maman",
+   "script": "maman",
+   "variants": [
+    "m'man",
+    "maman"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mum, mom",
+   "kind": "kin",
+   "notes": "Familiar spoken form for mother."
+  },
+  {
+   "term": "père",
+   "script": "père",
+   "variants": [
+    "pere",
+    "papa"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "papa",
+   "script": "papa",
+   "variants": [
+    "papa"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "dad",
+   "kind": "kin",
+   "notes": "Familiar spoken form for father."
+  },
+  {
+   "term": "grand-mère",
+   "script": "grand-mère",
+   "variants": [
+    "grand-mere",
+    "grand mere",
+    "grandmère",
+    "grands-mères",
+    "mamie",
+    "mémé"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "grand-père",
+   "script": "grand-père",
+   "variants": [
+    "grand-pere",
+    "grand père",
+    "grands-pères",
+    "papi",
+    "pépé"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "arrière-grand-mère",
+   "script": "arrière-grand-mère",
+   "variants": [
+    "arriere-grand-mere",
+    "arrière grand-mère",
+    "arriere grand-mere"
+   ],
+   "patterns": [
+    "mother.mother.mother",
+    "mother.father.mother",
+    "father.mother.mother",
+    "father.father.mother"
+   ],
+   "gloss": "great-grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "arrière-grand-père",
+   "script": "arrière-grand-père",
+   "variants": [
+    "arriere-grand-pere",
+    "arrière grand-père",
+    "arriere grand-pere"
+   ],
+   "patterns": [
+    "mother.mother.father",
+    "mother.father.father",
+    "father.mother.father",
+    "father.father.father"
+   ],
+   "gloss": "great-grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "oncle",
+   "script": "oncle",
+   "variants": [
+    "oncles",
+    "tonton"
+   ],
+   "patterns": [
+    "mother.brother",
+    "father.brother",
+    "parent.sibling",
+    "mother.sister.husband",
+    "father.sister.husband"
+   ],
+   "gloss": "uncle",
+   "kind": "kin",
+   "notes": "Includes blood uncle and uncle by marriage."
+  },
+  {
+   "term": "tante",
+   "script": "tante",
+   "variants": [
+    "tantes",
+    "tatie",
+    "tata"
+   ],
+   "patterns": [
+    "mother.sister",
+    "father.sister",
+    "parent.sibling",
+    "mother.brother.wife",
+    "father.brother.wife"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "Includes blood aunt and aunt by marriage."
+  },
+  {
+   "term": "grand-oncle",
+   "script": "grand-oncle",
+   "variants": [
+    "grand oncle",
+    "grands-oncles",
+    "grand-oncles"
+   ],
+   "patterns": [
+    "mother.mother.brother",
+    "mother.father.brother",
+    "father.mother.brother",
+    "father.father.brother"
+   ],
+   "gloss": "great-uncle",
+   "kind": "kin",
+   "notes": "Grandparent's brother."
+  },
+  {
+   "term": "grande-tante",
+   "script": "grande-tante",
+   "variants": [
+    "grand-tante",
+    "grande tante",
+    "grand tante",
+    "grandes-tantes"
+   ],
+   "patterns": [
+    "mother.mother.sister",
+    "mother.father.sister",
+    "father.mother.sister",
+    "father.father.sister"
+   ],
+   "gloss": "great-aunt",
+   "kind": "kin",
+   "notes": "Grandparent's sister."
+  },
+  {
+   "term": "frère",
+   "script": "frère",
+   "variants": [
+    "frere",
+    "frères",
+    "freres",
+    "frérot"
+   ],
+   "patterns": [
+    "brother",
+    "sibling"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sœur",
+   "script": "sœur",
+   "variants": [
+    "soeur",
+    "sœurs",
+    "soeurs",
+    "söeurette"
+   ],
+   "patterns": [
+    "sister",
+    "sibling"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "frère aîné",
+   "script": "frère aîné",
+   "variants": [
+    "frere aine",
+    "frère ainé",
+    "grand frère",
+    "grand-frère"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sœur aînée",
+   "script": "sœur aînée",
+   "variants": [
+    "soeur ainee",
+    "sœur ainée",
+    "grande sœur",
+    "grande-sœur",
+    "grande soeur"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "petit frère",
+   "script": "petit frère",
+   "variants": [
+    "petit frere",
+    "petit-frère"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "petite sœur",
+   "script": "petite sœur",
+   "variants": [
+    "petite soeur",
+    "petite-sœur"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "cousin",
+   "script": "cousin",
+   "variants": [
+    "cousins",
+    "cousin germain"
+   ],
+   "patterns": [
+    "parent.sibling.son",
+    "parent.sibling.child",
+    "father.brother.son",
+    "mother.brother.son",
+    "father.sister.son",
+    "mother.sister.son"
+   ],
+   "gloss": "male cousin",
+   "kind": "kin",
+   "notes": "Child of parent's sibling."
+  },
+  {
+   "term": "cousine",
+   "script": "cousine",
+   "variants": [
+    "cousines",
+    "cousine germaine"
+   ],
+   "patterns": [
+    "parent.sibling.daughter",
+    "parent.sibling.child",
+    "father.brother.daughter",
+    "mother.brother.daughter",
+    "father.sister.daughter",
+    "mother.sister.daughter"
+   ],
+   "gloss": "female cousin",
+   "kind": "kin",
+   "notes": "Child of parent's sibling."
+  },
+  {
+   "term": "fils",
+   "script": "fils",
+   "variants": [
+    "fiston"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "fille",
+   "script": "fille",
+   "variants": [
+    "filles",
+    "fillette"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "petit-fils",
+   "script": "petit-fils",
+   "variants": [
+    "petit fils",
+    "petits-fils",
+    "petitfils"
+   ],
+   "patterns": [
+    "son.son",
+    "daughter.son",
+    "child.son"
+   ],
+   "gloss": "grandson",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "petite-fille",
+   "script": "petite-fille",
+   "variants": [
+    "petite fille",
+    "petites-filles",
+    "petitefilles"
+   ],
+   "patterns": [
+    "son.daughter",
+    "daughter.daughter",
+    "child.daughter"
+   ],
+   "gloss": "granddaughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "neveu",
+   "script": "neveu",
+   "variants": [
+    "neveux"
+   ],
+   "patterns": [
+    "brother.son",
+    "sister.son",
+    "sibling.son",
+    "sibling.child"
+   ],
+   "gloss": "nephew",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nièce",
+   "script": "nièce",
+   "variants": [
+    "niece",
+    "nièces",
+    "nieces"
+   ],
+   "patterns": [
+    "brother.daughter",
+    "sister.daughter",
+    "sibling.daughter",
+    "sibling.child"
+   ],
+   "gloss": "niece",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "beau-père",
+   "script": "beau-père",
+   "variants": [
+    "beau-pere",
+    "beau père",
+    "beaux-pères"
+   ],
+   "patterns": [
+    "spouse.father",
+    "spouse.parent",
+    "mother.husband"
+   ],
+   "gloss": "father-in-law; stepfather",
+   "kind": "kin",
+   "notes": "Both spouse's father and mother's husband."
+  },
+  {
+   "term": "belle-mère",
+   "script": "belle-mère",
+   "variants": [
+    "belle-mere",
+    "belle mère",
+    "belles-mères"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "spouse.parent",
+    "father.wife"
+   ],
+   "gloss": "mother-in-law; stepmother",
+   "kind": "kin",
+   "notes": "Both spouse's mother and father's wife."
+  },
+  {
+   "term": "beau-fils",
+   "script": "beau-fils",
+   "variants": [
+    "beau fils",
+    "beaux-fils",
+    "gendre"
+   ],
+   "patterns": [
+    "daughter.husband",
+    "spouse.son",
+    "husband.son",
+    "wife.son"
+   ],
+   "gloss": "son-in-law; stepson",
+   "kind": "kin",
+   "notes": "Both daughter's husband and spouse's son."
+  },
+  {
+   "term": "belle-fille",
+   "script": "belle-fille",
+   "variants": [
+    "belle fille",
+    "belles-filles",
+    "bru"
+   ],
+   "patterns": [
+    "son.wife",
+    "spouse.daughter",
+    "husband.daughter",
+    "wife.daughter"
+   ],
+   "gloss": "daughter-in-law; stepdaughter",
+   "kind": "kin",
+   "notes": "Both son's wife and spouse's daughter."
+  },
+  {
+   "term": "beau-frère",
+   "script": "beau-frère",
+   "variants": [
+    "beau-frere",
+    "beau frère",
+    "beaux-frères"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "sister.husband",
+    "brother.husband"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "Spouse's brother or sibling's husband."
+  },
+  {
+   "term": "belle-sœur",
+   "script": "belle-sœur",
+   "variants": [
+    "belle-soeur",
+    "belle sœur",
+    "belles-sœurs"
+   ],
+   "patterns": [
+    "spouse.sister",
+    "brother.wife",
+    "sister.wife"
+   ],
+   "gloss": "sister-in-law",
+   "kind": "kin",
+   "notes": "Spouse's sister or sibling's wife."
+  },
+  {
+   "term": "mari",
+   "script": "mari",
+   "variants": [
+    "maris",
+    "époux",
+    "epoux",
+    "conjoint"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "femme",
+   "script": "femme",
+   "variants": [
+    "femmes",
+    "épouse",
+    "epouse",
+    "conjointe"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "conjoint",
+   "script": "conjoint",
+   "variants": [
+    "conjoints",
+    "conjointe",
+    "conjointes",
+    "époux",
+    "partenaire"
+   ],
+   "patterns": [
+    "spouse",
+    "husband",
+    "wife"
+   ],
+   "gloss": "spouse, partner",
+   "kind": "kin",
+   "notes": "Gender-neutral formal term."
+  },
+  {
+   "term": "monsieur",
+   "script": "monsieur",
+   "variants": [
+    "monsieur",
+    "messieurs",
+    "m.",
+    "mr"
+   ],
+   "patterns": [],
+   "gloss": "sir, mister",
+   "kind": "honorific",
+   "notes": "Respectful address to a man."
+  },
+  {
+   "term": "madame",
+   "script": "madame",
+   "variants": [
+    "madame",
+    "mesdames",
+    "mme"
+   ],
+   "patterns": [],
+   "gloss": "madam, Mrs",
+   "kind": "honorific",
+   "notes": "Respectful address to a woman."
+  },
+  {
+   "term": "mon chéri",
+   "script": "mon chéri",
+   "variants": [
+    "mon cheri",
+    "ma chérie",
+    "ma cherie",
+    "chéri",
+    "chérie"
+   ],
+   "patterns": [],
+   "gloss": "darling, sweetheart",
+   "kind": "endearment",
+   "notes": "Affectionate address to spouse or child; feminine ma chérie."
+  },
+  {
+   "term": "ma puce",
+   "script": "ma puce",
+   "variants": [
+    "ma puce",
+    "mon petit",
+    "ma puce d'amour"
+   ],
+   "patterns": [],
+   "gloss": "sweetie (lit. my flea)",
+   "kind": "endearment",
+   "notes": "Very common affectionate address to a small child."
+  }
+ ],
+ "code": "fr",
+ "name": "French",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

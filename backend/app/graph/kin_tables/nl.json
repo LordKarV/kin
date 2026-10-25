@@ -1,0 +1,671 @@
+{
+ "final_strip": [],
+ "suffixes": [
+  "'s"
+ ],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "mijn",
+  "mijne",
+  "m'n",
+  "ons",
+  "onze"
+ ],
+ "possessive_listener": [
+  "je",
+  "jou",
+  "jouw",
+  "jouwe",
+  "jullie",
+  "u",
+  "uw",
+  "uwe"
+ ],
+ "respectful_markers": [],
+ "informal_markers": [
+  "etje",
+  "kje",
+  "pje",
+  "tje",
+  "ie",
+  "je"
+ ],
+ "generic_heads": [
+  "bestuurder",
+  "buur",
+  "buurman",
+  "buurvrouw",
+  "chauffeur",
+  "collega",
+  "dokter",
+  "juf",
+  "leraar",
+  "lerares",
+  "meester",
+  "ober",
+  "verkoper",
+  "verkoopster",
+  "winkel"
+ ],
+ "frozen": [
+  "anders",
+  "eens",
+  "erg",
+  "gister",
+  "gisteren",
+  "heel",
+  "meisje",
+  "morgen",
+  "thuis",
+  "tijdens",
+  "vandaag",
+  "zeer"
+ ],
+ "terms": [
+  {
+   "term": "moeder",
+   "script": "moeder",
+   "variants": [
+    "ma",
+    "mam",
+    "mama",
+    "mams",
+    "moe",
+    "moederke",
+    "moeke"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "vader",
+   "script": "vader",
+   "variants": [
+    "pa",
+    "pap",
+    "papa",
+    "paps",
+    "vaderke",
+    "vake"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "ouders",
+   "script": "ouders",
+   "variants": [
+    "ouder",
+    "papa en mama"
+   ],
+   "patterns": [
+    "parent"
+   ],
+   "gloss": "parents",
+   "kind": "kin",
+   "notes": "plural; singular ouder = parent"
+  },
+  {
+   "term": "oma",
+   "script": "oma",
+   "variants": [
+    "grootma",
+    "grootmoeder",
+    "omaatje",
+    "omi",
+    "ommetje",
+    "opoe"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "informal everyday word"
+  },
+  {
+   "term": "opa",
+   "script": "opa",
+   "variants": [
+    "grootpa",
+    "grootvader",
+    "opaatje",
+    "opi"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "informal everyday word"
+  },
+  {
+   "term": "grootmoeder",
+   "script": "grootmoeder",
+   "variants": [
+    "grootma",
+    "oma",
+    "omi",
+    "omaatje",
+    "opoe"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "formal"
+  },
+  {
+   "term": "grootvader",
+   "script": "grootvader",
+   "variants": [
+    "grootpa",
+    "opa",
+    "opaatje",
+    "opi"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "formal"
+  },
+  {
+   "term": "overgrootmoeder",
+   "script": "overgrootmoeder",
+   "variants": [
+    "betovergrootmoeder",
+    "overgrootoma",
+    "overoma"
+   ],
+   "patterns": [
+    "father.father.mother",
+    "father.mother.mother",
+    "mother.father.mother",
+    "mother.mother.mother"
+   ],
+   "gloss": "great-grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "overgrootvader",
+   "script": "overgrootvader",
+   "variants": [
+    "betovergrootvader",
+    "overgrootopa",
+    "overopa"
+   ],
+   "patterns": [
+    "father.father.father",
+    "father.mother.father",
+    "mother.father.father",
+    "mother.mother.father"
+   ],
+   "gloss": "great-grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "oom",
+   "script": "oom",
+   "variants": [
+    "nonkel",
+    "ome",
+    "oompje"
+   ],
+   "patterns": [
+    "father.brother",
+    "father.sister.husband",
+    "mother.brother",
+    "mother.sister.husband",
+    "parent.sibling.husband"
+   ],
+   "gloss": "uncle",
+   "kind": "kin",
+   "notes": "parent's brother and aunt's husband"
+  },
+  {
+   "term": "tante",
+   "script": "tante",
+   "variants": [
+    "moei",
+    "tanteke",
+    "tantetje"
+   ],
+   "patterns": [
+    "father.brother.wife",
+    "father.sister",
+    "mother.brother.wife",
+    "mother.sister",
+    "parent.sibling.wife"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "parent's sister and uncle's wife"
+  },
+  {
+   "term": "oudoom",
+   "script": "oudoom",
+   "variants": [
+    "groot oom",
+    "grootoom",
+    "oud-oom"
+   ],
+   "patterns": [
+    "father.father.brother",
+    "father.mother.brother",
+    "mother.father.brother",
+    "mother.mother.brother"
+   ],
+   "gloss": "great-uncle",
+   "kind": "kin",
+   "notes": "grandparent's brother"
+  },
+  {
+   "term": "oudtante",
+   "script": "oudtante",
+   "variants": [
+    "groot tante",
+    "groottante",
+    "oud-tante"
+   ],
+   "patterns": [
+    "father.father.sister",
+    "father.mother.sister",
+    "mother.father.sister",
+    "mother.mother.sister"
+   ],
+   "gloss": "great-aunt",
+   "kind": "kin",
+   "notes": "grandparent's sister"
+  },
+  {
+   "term": "broer",
+   "script": "broer",
+   "variants": [
+    "bro",
+    "broeder",
+    "broertje"
+   ],
+   "patterns": [
+    "brother",
+    "elder_brother",
+    "younger_brother"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": "no lexical elder/younger distinction; oudere/jongere broer periphrastic"
+  },
+  {
+   "term": "zus",
+   "script": "zus",
+   "variants": [
+    "zusje",
+    "zuster"
+   ],
+   "patterns": [
+    "elder_sister",
+    "sister",
+    "younger_sister"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": "no lexical elder/younger distinction; oudere/jongere zus periphrastic"
+  },
+  {
+   "term": "zoon",
+   "script": "zoon",
+   "variants": [
+    "zonen",
+    "zoonlief",
+    "zoontje"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "dochter",
+   "script": "dochter",
+   "variants": [
+    "dochterlief",
+    "dochters",
+    "dochtertje"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kind",
+   "script": "kind",
+   "variants": [
+    "kinderen",
+    "kindje"
+   ],
+   "patterns": [
+    "child"
+   ],
+   "gloss": "child",
+   "kind": "kin",
+   "notes": "gender-neutral"
+  },
+  {
+   "term": "kleinkind",
+   "script": "kleinkind",
+   "variants": [
+    "kleinkinderen",
+    "kleinkindje"
+   ],
+   "patterns": [
+    "child.child",
+    "daughter.child",
+    "son.child"
+   ],
+   "gloss": "grandchild",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kleinzoon",
+   "script": "kleinzoon",
+   "variants": [
+    "kleinzonen",
+    "kleinzoontje"
+   ],
+   "patterns": [
+    "child.son",
+    "daughter.son",
+    "son.son"
+   ],
+   "gloss": "grandson",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kleindochter",
+   "script": "kleindochter",
+   "variants": [
+    "kleindochters",
+    "kleindochtertje"
+   ],
+   "patterns": [
+    "child.daughter",
+    "daughter.daughter",
+    "son.daughter"
+   ],
+   "gloss": "granddaughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "neef",
+   "script": "neef",
+   "variants": [
+    "kozijn",
+    "neefje",
+    "neven",
+    "volle neef"
+   ],
+   "patterns": [
+    "brother.son",
+    "father.brother.son",
+    "father.sister.son",
+    "mother.brother.son",
+    "mother.sister.son",
+    "parent.sibling.son",
+    "sibling.son",
+    "sister.son"
+   ],
+   "gloss": "nephew; male cousin",
+   "kind": "kin",
+   "notes": "sibling's son = nephew; parent's sibling's son = male cousin"
+  },
+  {
+   "term": "nicht",
+   "script": "nicht",
+   "variants": [
+    "kozijne",
+    "nichten",
+    "nichtje",
+    "volle nicht"
+   ],
+   "patterns": [
+    "brother.daughter",
+    "father.brother.daughter",
+    "father.sister.daughter",
+    "mother.brother.daughter",
+    "mother.sister.daughter",
+    "parent.sibling.daughter",
+    "sibling.daughter",
+    "sister.daughter"
+   ],
+   "gloss": "niece; female cousin",
+   "kind": "kin",
+   "notes": "sibling's daughter = niece; parent's sibling's daughter = female cousin"
+  },
+  {
+   "term": "schoonmoeder",
+   "script": "schoonmoeder",
+   "variants": [
+    "schoonma",
+    "schoonmama"
+   ],
+   "patterns": [
+    "husband.mother",
+    "spouse.mother",
+    "wife.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "schoonvader",
+   "script": "schoonvader",
+   "variants": [
+    "schoonpa",
+    "schoonpapa"
+   ],
+   "patterns": [
+    "husband.father",
+    "spouse.father",
+    "wife.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "schoondochter",
+   "script": "schoondochter",
+   "variants": [
+    "schoondochters"
+   ],
+   "patterns": [
+    "child.spouse",
+    "child.wife",
+    "son.spouse",
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "schoonzoon",
+   "script": "schoonzoon",
+   "variants": [
+    "schoonzonen"
+   ],
+   "patterns": [
+    "child.husband",
+    "child.spouse",
+    "daughter.husband",
+    "daughter.spouse"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "zwager",
+   "script": "zwager",
+   "variants": [
+    "schoonbroeder",
+    "schoonbroer",
+    "zwagers"
+   ],
+   "patterns": [
+    "brother.wife.brother",
+    "sister.husband",
+    "spouse.brother",
+    "spouse.sister.husband"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "also schoonbroer"
+  },
+  {
+   "term": "schoonzus",
+   "script": "schoonzus",
+   "variants": [
+    "schoonzussen",
+    "schoonzuster"
+   ],
+   "patterns": [
+    "brother.wife",
+    "spouse.brother.wife",
+    "spouse.sister"
+   ],
+   "gloss": "sister-in-law",
+   "kind": "kin",
+   "notes": "also schoonzuster"
+  },
+  {
+   "term": "echtgenoot",
+   "script": "echtgenoot",
+   "variants": [
+    "eega",
+    "gemaal",
+    "man",
+    "vent"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": "formal; everyday man"
+  },
+  {
+   "term": "echtgenote",
+   "script": "echtgenote",
+   "variants": [
+    "eega",
+    "gemalin",
+    "vrouw"
+   ],
+   "patterns": [
+    "spouse",
+    "wife"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": "formal; everyday vrouw"
+  },
+  {
+   "term": "partner",
+   "script": "partner",
+   "variants": [
+    "eega",
+    "levenspartner",
+    "man",
+    "vrouw"
+   ],
+   "patterns": [
+    "husband",
+    "spouse",
+    "wife"
+   ],
+   "gloss": "partner; spouse",
+   "kind": "kin",
+   "notes": "gender-neutral"
+  },
+  {
+   "term": "schat",
+   "script": "schat",
+   "variants": [
+    "schatje",
+    "schatteke"
+   ],
+   "patterns": [],
+   "gloss": "sweetheart",
+   "kind": "endearment",
+   "notes": "affectionate address, also for child"
+  },
+  {
+   "term": "lieverd",
+   "script": "lieverd",
+   "variants": [
+    "liefje",
+    "lieveling",
+    "lieverdje"
+   ],
+   "patterns": [],
+   "gloss": "darling",
+   "kind": "endearment",
+   "notes": "affectionate address, also for child"
+  },
+  {
+   "term": "meneer",
+   "script": "meneer",
+   "variants": [
+    "heer",
+    "mijnheer"
+   ],
+   "patterns": [],
+   "gloss": "sir; mister",
+   "kind": "honorific",
+   "notes": "respectful address to man"
+  },
+  {
+   "term": "mevrouw",
+   "script": "mevrouw",
+   "variants": [
+    "mw"
+   ],
+   "patterns": [],
+   "gloss": "madam; mrs",
+   "kind": "honorific",
+   "notes": "respectful address to woman"
+  }
+ ],
+ "code": "nl",
+ "name": "Dutch",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

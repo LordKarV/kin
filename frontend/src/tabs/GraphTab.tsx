@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { api, type Person, type Edge, type Thing } from '../lib/api'
 
+type Lang = { code: string; name: string; native_name: string; available: boolean; verified: boolean; kin_terms: number }
 type Graph = { learner: string; heritage_lang: string; people: (Person & { generation: number })[]; edges: Edge[]; things: Thing[] }
 
 export default function GraphTab() {
   const [g, setG] = useState<Graph | null>(null)
+  const [langs, setLangs] = useState<Lang[]>([])
   const [err, setErr] = useState('')
-  useEffect(() => { api<Graph>('/api/family/graph').then(setG).catch(e => setErr(String(e))) }, [])
+  const load = () => api<Graph>('/api/family/graph').then(setG).catch(e => setErr(String(e)))
+  useEffect(() => { load(); api<Lang[]>('/api/languages').then(setLangs).catch(() => {}) }, [])
+  async function setLang(code: string) { await api('/api/family/language', { method: 'PATCH', body: JSON.stringify({ code }) }); load() }
   if (err) return <div className="panel err">{err}</div>
   if (!g) return <div className="panel muted">Loading…</div>
   const gens = [...new Set(g.people.map(p => p.generation))].sort((a, b) => a - b)
@@ -14,6 +18,15 @@ export default function GraphTab() {
   const termFor = (p: Person) => p.render.match(/^your [a-z- ]+? ([A-Za-z]+ [a-z ]+?) \(/)?.[1] || ''
   return (
     <>
+      <div className="panel">
+        <h2>Heritage language</h2>
+        <div className="row">
+          <select value={g.heritage_lang} onChange={e => setLang(e.target.value)}>
+            {langs.filter(l => l.available).map(l => <option key={l.code} value={l.code}>{l.name} · {l.native_name} · {l.kin_terms} kin terms{l.verified ? ' ✓ verified' : ' · draft'}</option>)}
+          </select>
+          <span className="small muted">25 Muse Voice Transcribe languages. Tamil is hand-verified; the others are Muse Spark drafts awaiting a native speaker. The demo family's names and dishes stay Tamil.</span>
+        </div>
+      </div>
       <div className="panel">
         <h2>The family, as {g.people.find(p => p.id === g.learner)?.name} hears it</h2>
         <div className="tree">

@@ -1,0 +1,661 @@
+{
+ "final_strip": [],
+ "suffixes": [],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "mio",
+  "mia",
+  "miei",
+  "mie",
+  "nostro",
+  "nostra",
+  "nostri",
+  "nostre"
+ ],
+ "possessive_listener": [
+  "tuo",
+  "tua",
+  "tuoi",
+  "tue",
+  "vostro",
+  "vostra",
+  "vostri",
+  "vostre",
+  "suo",
+  "sua",
+  "suoi",
+  "sue"
+ ],
+ "respectful_markers": [
+  "Lei",
+  "Sua",
+  "Suo",
+  "Sue",
+  "Suoi"
+ ],
+ "informal_markers": [
+  "ino",
+  "ina",
+  "etto",
+  "etta",
+  "uccio",
+  "uccia"
+ ],
+ "generic_heads": [
+  "negozio",
+  "autista",
+  "vicino",
+  "vicina",
+  "professore",
+  "professoressa",
+  "dottore",
+  "dottoressa",
+  "commesso",
+  "cameriere",
+  "collega",
+  "signor"
+ ],
+ "frozen": [
+  "oggi",
+  "ieri",
+  "domani",
+  "molto",
+  "tanto",
+  "sempre",
+  "mai",
+  "bene",
+  "male",
+  "pronto"
+ ],
+ "terms": [
+  {
+   "term": "madre",
+   "script": "madre",
+   "variants": [
+    "mamma",
+    "mammina"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "Also mamma in address."
+  },
+  {
+   "term": "padre",
+   "script": "padre",
+   "variants": [
+    "papa",
+    "babbo",
+    "papà"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "Also papa, babbo in address."
+  },
+  {
+   "term": "genitore",
+   "script": "genitore",
+   "variants": [
+    "genitori"
+   ],
+   "patterns": [
+    "parent"
+   ],
+   "gloss": "parent",
+   "kind": "kin",
+   "notes": "Gender-neutral singular."
+  },
+  {
+   "term": "nonna",
+   "script": "nonna",
+   "variants": [
+    "nonnina",
+    "nonnetta"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "Both sides; materna/paterna added as phrase if needed."
+  },
+  {
+   "term": "nonno",
+   "script": "nonno",
+   "variants": [
+    "nonnino",
+    "nonnetto"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "Both sides."
+  },
+  {
+   "term": "bisnonna",
+   "script": "bisnonna",
+   "variants": [
+    "bis-nonna"
+   ],
+   "patterns": [
+    "mother.mother.mother",
+    "mother.father.mother",
+    "father.mother.mother",
+    "father.father.mother"
+   ],
+   "gloss": "great-grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bisnonno",
+   "script": "bisnonno",
+   "variants": [
+    "bis-nonno"
+   ],
+   "patterns": [
+    "mother.mother.father",
+    "mother.father.father",
+    "father.mother.father",
+    "father.father.father"
+   ],
+   "gloss": "great-grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "zio",
+   "script": "zio",
+   "variants": [
+    "zietto",
+    "ziuccio"
+   ],
+   "patterns": [
+    "mother.brother",
+    "father.brother",
+    "mother.sister.husband",
+    "father.sister.husband",
+    "mother.sister.spouse",
+    "father.sister.spouse"
+   ],
+   "gloss": "uncle",
+   "kind": "kin",
+   "notes": "Maternal and paternal; also aunt's husband."
+  },
+  {
+   "term": "zia",
+   "script": "zia",
+   "variants": [
+    "zietta",
+    "ziuccia"
+   ],
+   "patterns": [
+    "mother.sister",
+    "father.sister",
+    "mother.brother.wife",
+    "father.brother.wife",
+    "mother.brother.spouse",
+    "father.brother.spouse"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "Maternal and paternal; also uncle's wife."
+  },
+  {
+   "term": "prozio",
+   "script": "prozio",
+   "variants": [
+    "pro-zio"
+   ],
+   "patterns": [
+    "mother.mother.brother",
+    "father.mother.brother",
+    "mother.father.brother",
+    "father.father.brother",
+    "mother.mother.sister.husband",
+    "father.mother.sister.husband",
+    "mother.father.sister.husband",
+    "father.father.sister.husband"
+   ],
+   "gloss": "great-uncle",
+   "kind": "kin",
+   "notes": "Grandparent's brother or great-aunt's husband."
+  },
+  {
+   "term": "prozia",
+   "script": "prozia",
+   "variants": [
+    "pro-zia"
+   ],
+   "patterns": [
+    "mother.mother.sister",
+    "father.mother.sister",
+    "mother.father.sister",
+    "father.father.sister",
+    "mother.mother.brother.wife",
+    "father.mother.brother.wife",
+    "mother.father.brother.wife",
+    "father.father.brother.wife"
+   ],
+   "gloss": "great-aunt",
+   "kind": "kin",
+   "notes": "Grandparent's sister or great-uncle's wife."
+  },
+  {
+   "term": "fratello",
+   "script": "fratello",
+   "variants": [
+    "fratellino",
+    "frate"
+   ],
+   "patterns": [
+    "brother",
+    "elder_brother",
+    "younger_brother"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": "Elder/younger distinguished by maggiore/minore phrase, same noun."
+  },
+  {
+   "term": "sorella",
+   "script": "sorella",
+   "variants": [
+    "sorellina"
+   ],
+   "patterns": [
+    "sister",
+    "elder_sister",
+    "younger_sister"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": "Elder/younger distinguished by maggiore/minore phrase."
+  },
+  {
+   "term": "fratellastro",
+   "script": "fratellastro",
+   "variants": [],
+   "patterns": [
+    "brother",
+    "elder_brother",
+    "younger_brother"
+   ],
+   "gloss": "stepbrother; half-brother",
+   "kind": "kin",
+   "notes": "Step or half-brother."
+  },
+  {
+   "term": "sorellastra",
+   "script": "sorellastra",
+   "variants": [],
+   "patterns": [
+    "sister",
+    "elder_sister",
+    "younger_sister"
+   ],
+   "gloss": "stepsister; half-sister",
+   "kind": "kin",
+   "notes": "Step or half-sister."
+  },
+  {
+   "term": "figlio",
+   "script": "figlio",
+   "variants": [
+    "figliolo",
+    "figliuolo"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "figlia",
+   "script": "figlia",
+   "variants": [
+    "figliola",
+    "figliuola"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nipote",
+   "script": "nipote",
+   "variants": [
+    "nipotino",
+    "nipotina"
+   ],
+   "patterns": [
+    "son.child",
+    "daughter.child",
+    "brother.child",
+    "sister.child",
+    "elder_brother.child",
+    "younger_brother.child",
+    "elder_sister.child",
+    "younger_sister.child"
+   ],
+   "gloss": "grandchild; nephew; niece",
+   "kind": "kin",
+   "notes": "Covers both grandchildren and nephews/nieces; gender shown by article la/il."
+  },
+  {
+   "term": "pronipote",
+   "script": "pronipote",
+   "variants": [
+    "pro-nipote"
+   ],
+   "patterns": [
+    "son.child.child",
+    "daughter.child.child",
+    "brother.child.child",
+    "sister.child.child"
+   ],
+   "gloss": "great-grandchild; great-nephew; great-niece",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "cugino",
+   "script": "cugino",
+   "variants": [
+    "cuginetto"
+   ],
+   "patterns": [
+    "parent.sibling.son",
+    "father.brother.son",
+    "mother.brother.son",
+    "father.sister.son",
+    "mother.sister.son"
+   ],
+   "gloss": "male cousin",
+   "kind": "kin",
+   "notes": "No elder/younger or cross/parallel distinction."
+  },
+  {
+   "term": "cugina",
+   "script": "cugina",
+   "variants": [
+    "cuginetta"
+   ],
+   "patterns": [
+    "parent.sibling.daughter",
+    "father.brother.daughter",
+    "mother.brother.daughter",
+    "father.sister.daughter",
+    "mother.sister.daughter"
+   ],
+   "gloss": "female cousin",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "marito",
+   "script": "marito",
+   "variants": [
+    "maritino",
+    "sposo"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "moglie",
+   "script": "moglie",
+   "variants": [
+    "mogliettina",
+    "sposa"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "coniuge",
+   "script": "coniuge",
+   "variants": [
+    "consorte"
+   ],
+   "patterns": [
+    "spouse",
+    "husband",
+    "wife"
+   ],
+   "gloss": "spouse",
+   "kind": "kin",
+   "notes": "Gender-neutral formal."
+  },
+  {
+   "term": "suocero",
+   "script": "suocero",
+   "variants": [],
+   "patterns": [
+    "spouse.father",
+    "husband.father",
+    "wife.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "suocera",
+   "script": "suocera",
+   "variants": [],
+   "patterns": [
+    "spouse.mother",
+    "husband.mother",
+    "wife.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "genero",
+   "script": "genero",
+   "variants": [],
+   "patterns": [
+    "daughter.husband",
+    "daughter.spouse",
+    "son.husband",
+    "son.spouse",
+    "child.husband",
+    "child.spouse"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": "Husband of child."
+  },
+  {
+   "term": "nuora",
+   "script": "nuora",
+   "variants": [],
+   "patterns": [
+    "son.wife",
+    "son.spouse",
+    "daughter.wife",
+    "daughter.spouse",
+    "child.wife",
+    "child.spouse"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": "Wife of child."
+  },
+  {
+   "term": "cognato",
+   "script": "cognato",
+   "variants": [
+    "cognatino"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "spouse.elder_brother",
+    "spouse.younger_brother",
+    "sister.husband",
+    "sister.spouse",
+    "elder_sister.husband",
+    "younger_sister.husband",
+    "spouse.sister.husband",
+    "brother.husband"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "Spouse's brother, sibling's husband, spouse's sibling's husband."
+  },
+  {
+   "term": "cognata",
+   "script": "cognata",
+   "variants": [
+    "cognatina"
+   ],
+   "patterns": [
+    "spouse.sister",
+    "spouse.elder_sister",
+    "spouse.younger_sister",
+    "brother.wife",
+    "brother.spouse",
+    "elder_brother.wife",
+    "younger_brother.wife",
+    "spouse.brother.wife",
+    "sister.wife"
+   ],
+   "gloss": "sister-in-law",
+   "kind": "kin",
+   "notes": "Spouse's sister, sibling's wife."
+  },
+  {
+   "term": "patrigno",
+   "script": "patrigno",
+   "variants": [],
+   "patterns": [
+    "mother.husband",
+    "mother.spouse",
+    "parent.spouse"
+   ],
+   "gloss": "stepfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "matrigna",
+   "script": "matrigna",
+   "variants": [],
+   "patterns": [
+    "father.wife",
+    "father.spouse",
+    "parent.spouse"
+   ],
+   "gloss": "stepmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "figliastro",
+   "script": "figliastro",
+   "variants": [],
+   "patterns": [
+    "spouse.son",
+    "husband.son",
+    "wife.son",
+    "spouse.child"
+   ],
+   "gloss": "stepson",
+   "kind": "kin",
+   "notes": "Partner's son."
+  },
+  {
+   "term": "figliastra",
+   "script": "figliastra",
+   "variants": [],
+   "patterns": [
+    "spouse.daughter",
+    "husband.daughter",
+    "wife.daughter"
+   ],
+   "gloss": "stepdaughter",
+   "kind": "kin",
+   "notes": "Partner's daughter."
+  },
+  {
+   "term": "amore",
+   "script": "amore",
+   "variants": [
+    "amorino",
+    "amore mio"
+   ],
+   "patterns": [],
+   "gloss": "love; darling",
+   "kind": "endearment",
+   "notes": "Affectionate address to spouse, partner or child."
+  },
+  {
+   "term": "tesoro",
+   "script": "tesoro",
+   "variants": [
+    "tesorino",
+    "tesoro mio"
+   ],
+   "patterns": [],
+   "gloss": "treasure; sweetheart",
+   "kind": "endearment",
+   "notes": "Affectionate address, often to child."
+  },
+  {
+   "term": "signore",
+   "script": "signore",
+   "variants": [
+    "signor",
+    "sig."
+   ],
+   "patterns": [],
+   "gloss": "sir; Mr.",
+   "kind": "honorific",
+   "notes": "Respectful address; signor + name."
+  },
+  {
+   "term": "signora",
+   "script": "signora",
+   "variants": [
+    "sig.ra",
+    "sigora"
+   ],
+   "patterns": [],
+   "gloss": "madam; Mrs.",
+   "kind": "honorific",
+   "notes": "Respectful address; signora + name."
+  }
+ ],
+ "code": "it",
+ "name": "Italian",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

@@ -30,8 +30,16 @@ def _row(s, learner_id: int, lm: str) -> m.Mastery:
     return r
 
 
-def record_exposures(learner: str, text: str) -> list[str]:
-    lms = heritage_lemmas(text)
+def _lang_of(s, learner: str) -> str:
+    p = s.scalar(select(m.Person).where(m.Person.slug == learner))
+    fam = s.get(m.Family, p.family_id) if p else None
+    return fam.heritage_lang if fam else "ta"
+
+
+def record_exposures(learner: str, text: str, lang: str | None = None) -> list[str]:
+    with session_scope() as s:
+        lang = lang or _lang_of(s, learner)
+    lms = heritage_lemmas(text, lang)
     with session_scope() as s:
         lid = _learner_id(s, learner)
         for lm in lms:
@@ -51,7 +59,7 @@ def record_verification(data: dict) -> dict:
             text = u.src_text if u else ""
             if u and u.listener_id:
                 learner = s.get(m.Person, u.listener_id).slug
-        lms = heritage_lemmas(text)
+        lms = heritage_lemmas(text, _lang_of(s, learner))
         lid = _learner_id(s, learner)
         for lm in lms:
             r = _row(s, lid, lm)
@@ -86,6 +94,7 @@ def passthrough_tokens(learner: str, text: str, family_id: int | None = None, kn
     if not known:
         return []
     tr = get_translator(family_id) if family_id else None
+    lang = tr.g.heritage_lang if tr is not None else "ta"
     protected: list[tuple[int, int]] = []
     if tr is not None:
         g = tr.g
@@ -94,7 +103,7 @@ def passthrough_tokens(learner: str, text: str, family_id: int | None = None, kn
     out: list[str] = []
     for mt in re.finditer(r"\S+", text):
         tok = mt.group(0).strip("\"'“”‘’()[]{},;:!?।.")
-        if not tok or lemma(tok) not in known:
+        if not tok or lemma(tok, lang) not in known:
             continue
         if any(a <= mt.start() < b or a < mt.end() <= b for a, b in protected):
             continue

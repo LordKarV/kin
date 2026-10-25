@@ -1,0 +1,575 @@
+{
+ "final_strip": [],
+ "suffixes": [
+  "nya",
+  "kah",
+  "lah",
+  "pun",
+  "ku",
+  "mu"
+ ],
+ "roman_suffixes": [],
+ "possessive_speaker": [],
+ "possessive_listener": [],
+ "respectful_markers": [],
+ "informal_markers": [],
+ "generic_heads": [
+  "toko",
+  "warung",
+  "sopir",
+  "supir",
+  "tetangga",
+  "guru",
+  "dokter",
+  "tukang",
+  "ojek",
+  "satpam",
+  "perawat",
+  "kasir",
+  "suster",
+  "montir"
+ ],
+ "frozen": [
+  "aku",
+  "kamu",
+  "kami",
+  "kita",
+  "beliau",
+  "hari ini",
+  "kemarin",
+  "besok",
+  "sangat",
+  "sekali",
+  "sudah",
+  "belum"
+ ],
+ "terms": [
+  {
+   "term": "ibu",
+   "script": "ibu",
+   "variants": [
+    "ibunda"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "standard; also polite address for older woman"
+  },
+  {
+   "term": "ayah",
+   "script": "ayah",
+   "variants": [
+    "ayahanda"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "standard"
+  },
+  {
+   "term": "bapak",
+   "script": "bapak",
+   "variants": [
+    "bapa",
+    "bapake"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father; dad",
+   "kind": "kin",
+   "notes": "common colloquial/formal; also polite address for older man"
+  },
+  {
+   "term": "nenek",
+   "script": "nenek",
+   "variants": [
+    "nek",
+    "nini"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kakek",
+   "script": "kakek",
+   "variants": [
+    "kek",
+    "aki",
+    "eyang"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kakak",
+   "script": "kakak",
+   "variants": [
+    "kak",
+    "kaka"
+   ],
+   "patterns": [
+    "elder_brother",
+    "elder_sister"
+   ],
+   "gloss": "elder sibling",
+   "kind": "kin",
+   "notes": "gender-neutral elder sibling"
+  },
+  {
+   "term": "abang",
+   "script": "abang",
+   "variants": [
+    "bang",
+    "abg"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "Betawi/Jakarta usage; also respectful address to older young man"
+  },
+  {
+   "term": "mas",
+   "script": "mas",
+   "variants": [
+    "masnya",
+    "kangmas"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "Javanese loan, widely used nationally as polite address"
+  },
+  {
+   "term": "mbak",
+   "script": "mbak",
+   "variants": [
+    "mba",
+    "mbakyu"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "Javanese loan, widely used nationally as polite address"
+  },
+  {
+   "term": "adik",
+   "script": "adik",
+   "variants": [
+    "dik",
+    "adek",
+    "adekku"
+   ],
+   "patterns": [
+    "younger_brother",
+    "younger_sister"
+   ],
+   "gloss": "younger sibling",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "saudara",
+   "script": "saudara",
+   "variants": [
+    "sodara"
+   ],
+   "patterns": [
+    "sibling",
+    "brother",
+    "sister"
+   ],
+   "gloss": "sibling; brother/sister; relative",
+   "kind": "kin",
+   "notes": "general sibling; also means relative/kinsman"
+  },
+  {
+   "term": "anak",
+   "script": "anak",
+   "variants": [
+    "anakku"
+   ],
+   "patterns": [
+    "child",
+    "son",
+    "daughter"
+   ],
+   "gloss": "child",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "cucu",
+   "script": "cucu",
+   "variants": [
+    "cucuku"
+   ],
+   "patterns": [
+    "son.child",
+    "daughter.child",
+    "child.child"
+   ],
+   "gloss": "grandchild",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "cicit",
+   "script": "cicit",
+   "variants": [
+    "cicitku"
+   ],
+   "patterns": [
+    "son.child.child",
+    "daughter.child.child",
+    "child.child.child"
+   ],
+   "gloss": "great-grandchild",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "paman",
+   "script": "paman",
+   "variants": [
+    "pamananda"
+   ],
+   "patterns": [
+    "father.brother",
+    "mother.brother",
+    "father.sister.husband",
+    "mother.sister.husband"
+   ],
+   "gloss": "uncle",
+   "kind": "kin",
+   "notes": "parent's brother or aunt's husband"
+  },
+  {
+   "term": "om",
+   "script": "om",
+   "variants": [
+    "oom"
+   ],
+   "patterns": [
+    "father.brother",
+    "mother.brother",
+    "father.sister.husband",
+    "mother.sister.husband"
+   ],
+   "gloss": "uncle",
+   "kind": "kin",
+   "notes": "colloquial Dutch loan, same as paman"
+  },
+  {
+   "term": "bibi",
+   "script": "bibi",
+   "variants": [
+    "bik",
+    "bibik"
+   ],
+   "patterns": [
+    "father.sister",
+    "mother.sister",
+    "father.brother.wife",
+    "mother.brother.wife"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "parent's sister or uncle's wife"
+  },
+  {
+   "term": "tante",
+   "script": "tante",
+   "variants": [
+    "tanta"
+   ],
+   "patterns": [
+    "father.sister",
+    "mother.sister",
+    "father.brother.wife",
+    "mother.brother.wife"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "colloquial Dutch loan, same as bibi"
+  },
+  {
+   "term": "pakde",
+   "script": "pakde",
+   "variants": [
+    "pakdhe",
+    "pak gede"
+   ],
+   "patterns": [
+    "father.elder_brother",
+    "mother.elder_brother"
+   ],
+   "gloss": "elder uncle",
+   "kind": "kin",
+   "notes": "Javanese: parent's elder brother"
+  },
+  {
+   "term": "bude",
+   "script": "bude",
+   "variants": [
+    "budhe",
+    "bu gede"
+   ],
+   "patterns": [
+    "father.elder_sister",
+    "mother.elder_sister",
+    "father.elder_brother.wife",
+    "mother.elder_brother.wife"
+   ],
+   "gloss": "elder aunt",
+   "kind": "kin",
+   "notes": "Javanese: parent's elder sister or elder uncle's wife"
+  },
+  {
+   "term": "paklik",
+   "script": "paklik",
+   "variants": [
+    "paklek",
+    "pak lik",
+    "pak kecil"
+   ],
+   "patterns": [
+    "father.younger_brother",
+    "mother.younger_brother"
+   ],
+   "gloss": "younger uncle",
+   "kind": "kin",
+   "notes": "Javanese: parent's younger brother"
+  },
+  {
+   "term": "bulik",
+   "script": "bulik",
+   "variants": [
+    "bulek",
+    "bu lik",
+    "bu kecil"
+   ],
+   "patterns": [
+    "father.younger_sister",
+    "mother.younger_sister",
+    "father.younger_brother.wife",
+    "mother.younger_brother.wife"
+   ],
+   "gloss": "younger aunt",
+   "kind": "kin",
+   "notes": "Javanese: parent's younger sister or younger uncle's wife"
+  },
+  {
+   "term": "sepupu",
+   "script": "sepupu",
+   "variants": [
+    "sepupuku"
+   ],
+   "patterns": [
+    "parent.sibling.child",
+    "father.brother.child",
+    "father.sister.child",
+    "mother.brother.child",
+    "mother.sister.child"
+   ],
+   "gloss": "cousin",
+   "kind": "kin",
+   "notes": "gender-neutral; no elder/younger distinction in standard"
+  },
+  {
+   "term": "keponakan",
+   "script": "keponakan",
+   "variants": [
+    "ponakan",
+    "keponakanku"
+   ],
+   "patterns": [
+    "sibling.child",
+    "brother.child",
+    "sister.child",
+    "elder_brother.child",
+    "elder_sister.child",
+    "younger_brother.child",
+    "younger_sister.child",
+    "spouse.sibling.child"
+   ],
+   "gloss": "nephew; niece",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "suami",
+   "script": "suami",
+   "variants": [
+    "suamiku"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "istri",
+   "script": "istri",
+   "variants": [
+    "isteri",
+    "istriku"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mertua",
+   "script": "mertua",
+   "variants": [
+    "ibu mertua",
+    "ayah mertua",
+    "mertuaku"
+   ],
+   "patterns": [
+    "spouse.father",
+    "spouse.mother",
+    "spouse.parent"
+   ],
+   "gloss": "parent-in-law",
+   "kind": "kin",
+   "notes": "covers father-in-law and mother-in-law"
+  },
+  {
+   "term": "menantu",
+   "script": "menantu",
+   "variants": [
+    "menantuku",
+    "anak menantu"
+   ],
+   "patterns": [
+    "son.wife",
+    "daughter.husband",
+    "child.spouse"
+   ],
+   "gloss": "child-in-law",
+   "kind": "kin",
+   "notes": "covers son-in-law and daughter-in-law"
+  },
+  {
+   "term": "ipar",
+   "script": "ipar",
+   "variants": [
+    "kakak ipar",
+    "adik ipar",
+    "iparku"
+   ],
+   "patterns": [
+    "spouse.sibling",
+    "spouse.brother",
+    "spouse.sister",
+    "sibling.spouse",
+    "brother.wife",
+    "sister.husband"
+   ],
+   "gloss": "sibling-in-law",
+   "kind": "kin",
+   "notes": "spouse's sibling or sibling's spouse"
+  },
+  {
+   "term": "besan",
+   "script": "besan",
+   "variants": [
+    "besanku",
+    "besanan"
+   ],
+   "patterns": [
+    "son.wife.father",
+    "son.wife.mother",
+    "daughter.husband.father",
+    "daughter.husband.mother"
+   ],
+   "gloss": "co-parent-in-law; child's spouse's parent",
+   "kind": "kin",
+   "notes": "relationship between parents of a married couple"
+  },
+  {
+   "term": "orang tua",
+   "script": "orang tua",
+   "variants": [
+    "orangtua",
+    "ortu"
+   ],
+   "patterns": [
+    "father",
+    "mother"
+   ],
+   "gloss": "parents",
+   "kind": "kin",
+   "notes": "plural/collective"
+  },
+  {
+   "term": "pak",
+   "script": "pak",
+   "variants": [
+    "bpk"
+   ],
+   "patterns": [],
+   "gloss": "Mr; sir; polite address for older man",
+   "kind": "honorific",
+   "notes": "short for bapak; used with names and roles: pak guru, pak sopir"
+  },
+  {
+   "term": "bu",
+   "script": "bu",
+   "variants": [
+    "buk",
+    "ibuk"
+   ],
+   "patterns": [],
+   "gloss": "Mrs; ma'am; polite address for older woman",
+   "kind": "honorific",
+   "notes": "short for ibu; used with names and roles: bu guru, bu dokter"
+  },
+  {
+   "term": "sayang",
+   "script": "sayang",
+   "variants": [
+    "say",
+    "sayangku"
+   ],
+   "patterns": [],
+   "gloss": "dear; darling; sweetheart",
+   "kind": "endearment",
+   "notes": "affectionate address for child, spouse, loved one"
+  }
+ ],
+ "code": "id",
+ "name": "Indonesian",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

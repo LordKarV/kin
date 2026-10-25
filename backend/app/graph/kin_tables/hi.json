@@ -1,0 +1,747 @@
+{
+ "final_strip": [],
+ "suffixes": [
+  "ियों",
+  "ियाँ",
+  "यों",
+  "याँ",
+  "ों",
+  "ाँ",
+  "ें",
+  "े",
+  "ो"
+ ],
+ "roman_suffixes": [
+  "iyon",
+  "iyaan",
+  "yon",
+  "yaan",
+  "on",
+  "aan",
+  "en",
+  "e",
+  "o"
+ ],
+ "possessive_speaker": [
+  "मेरा",
+  "मेरी",
+  "मेरे",
+  "हमारा",
+  "हमारी",
+  "हमारे",
+  "mera",
+  "meri",
+  "mere",
+  "hamara",
+  "hamari",
+  "hamare"
+ ],
+ "possessive_listener": [
+  "तेरा",
+  "तेरी",
+  "तेरे",
+  "तुम्हारा",
+  "तुम्हारी",
+  "तुम्हारे",
+  "आपका",
+  "आपकी",
+  "आपके",
+  "tera",
+  "teri",
+  "tere",
+  "tumhara",
+  "tumhari",
+  "tumhare",
+  "aapka",
+  "aapki",
+  "aapke"
+ ],
+ "respectful_markers": [
+  "जी",
+  "साहब",
+  "श्री",
+  "ji",
+  "sahab",
+  "saheb",
+  "shri",
+  "aap"
+ ],
+ "informal_markers": [
+  "तू",
+  "तुझे",
+  "तुझ",
+  "tu",
+  "tujhe",
+  "tujh",
+  "tera"
+ ],
+ "generic_heads": [
+  "दुकान",
+  "दुकानदार",
+  "ड्राइवर",
+  "पड़ोसी",
+  "मास्टर",
+  "ऑटो",
+  "स्कूल",
+  "दफ्तर",
+  "dukaan",
+  "dukandaar",
+  "driver",
+  "padosi",
+  "master",
+  "teacher",
+  "shop",
+  "auto",
+  "school",
+  "neighbour"
+ ],
+ "frozen": [
+  "आज",
+  "कल",
+  "परसों",
+  "बहुत",
+  "अभी",
+  "कभी",
+  "यही",
+  "वही",
+  "aaj",
+  "kal",
+  "bahut",
+  "abhi",
+  "kabhi",
+  "yahi",
+  "wahi"
+ ],
+ "terms": [
+  {
+   "term": "maa",
+   "script": "माँ",
+   "variants": [
+    "maan",
+    "ma",
+    "mata",
+    "मां",
+    "माता",
+    "mummy"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "pita",
+   "script": "पिता",
+   "variants": [
+    "pitaji",
+    "papa",
+    "पिताजी",
+    "पापा",
+    "baap"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "dada",
+   "script": "दादा",
+   "variants": [
+    "dadaji",
+    "दादाजी"
+   ],
+   "patterns": [
+    "father.father"
+   ],
+   "gloss": "paternal grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "dadi",
+   "script": "दादी",
+   "variants": [
+    "dadiji",
+    "दादीजी"
+   ],
+   "patterns": [
+    "father.mother"
+   ],
+   "gloss": "paternal grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nana",
+   "script": "नाना",
+   "variants": [
+    "nanaji",
+    "नानाजी"
+   ],
+   "patterns": [
+    "mother.father"
+   ],
+   "gloss": "maternal grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nani",
+   "script": "नानी",
+   "variants": [
+    "naniji",
+    "नानीजी"
+   ],
+   "patterns": [
+    "mother.mother"
+   ],
+   "gloss": "maternal grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "chacha",
+   "script": "चाचा",
+   "variants": [
+    "chachaji",
+    "kaka",
+    "चाचाजी"
+   ],
+   "patterns": [
+    "father.younger_brother"
+   ],
+   "gloss": "father's younger brother",
+   "kind": "kin",
+   "notes": "paternal uncle younger than father"
+  },
+  {
+   "term": "chachi",
+   "script": "चाची",
+   "variants": [
+    "chachiji",
+    "kaki",
+    "चाचीजी"
+   ],
+   "patterns": [
+    "father.younger_brother.wife"
+   ],
+   "gloss": "father's younger brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "tau",
+   "script": "ताऊ",
+   "variants": [
+    "taau",
+    "tauji",
+    "bade papa",
+    "ताऊजी"
+   ],
+   "patterns": [
+    "father.elder_brother"
+   ],
+   "gloss": "father's elder brother",
+   "kind": "kin",
+   "notes": "paternal uncle elder than father"
+  },
+  {
+   "term": "tai",
+   "script": "ताई",
+   "variants": [
+    "taiji",
+    "badi mummy",
+    "ताईजी"
+   ],
+   "patterns": [
+    "father.elder_brother.wife"
+   ],
+   "gloss": "father's elder brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bua",
+   "script": "बुआ",
+   "variants": [
+    "buaji",
+    "phua",
+    "bhua",
+    "बुआजी",
+    "फुआ"
+   ],
+   "patterns": [
+    "father.sister"
+   ],
+   "gloss": "father's sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "phupha",
+   "script": "फूफा",
+   "variants": [
+    "phuphaji",
+    "fufa",
+    "bhupha",
+    "फूफाजी"
+   ],
+   "patterns": [
+    "father.sister.husband"
+   ],
+   "gloss": "father's sister's husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mama",
+   "script": "मामा",
+   "variants": [
+    "mamaji",
+    "मामाजी"
+   ],
+   "patterns": [
+    "mother.brother"
+   ],
+   "gloss": "mother's brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mami",
+   "script": "मामी",
+   "variants": [
+    "mamiji",
+    "मामीजी"
+   ],
+   "patterns": [
+    "mother.brother.wife"
+   ],
+   "gloss": "mother's brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mausi",
+   "script": "मौसी",
+   "variants": [
+    "mausiji",
+    "mousi",
+    "khala",
+    "मौसीजी"
+   ],
+   "patterns": [
+    "mother.sister"
+   ],
+   "gloss": "mother's sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mausa",
+   "script": "मौसा",
+   "variants": [
+    "mausaji",
+    "mousa",
+    "khalu",
+    "मौसाजी"
+   ],
+   "patterns": [
+    "mother.sister.husband"
+   ],
+   "gloss": "mother's sister's husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bhai",
+   "script": "भाई",
+   "variants": [
+    "bhaya",
+    "bhaiya as general"
+   ],
+   "patterns": [
+    "brother",
+    "younger_brother"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": "general brother, also younger brother"
+  },
+  {
+   "term": "behen",
+   "script": "बहन",
+   "variants": [
+    "bahan",
+    "bahin",
+    "behna",
+    "behan"
+   ],
+   "patterns": [
+    "sister",
+    "younger_sister"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": "general sister, also younger sister"
+  },
+  {
+   "term": "bhaiya",
+   "script": "भैया",
+   "variants": [
+    "bhaiyya",
+    "bhayya",
+    "bhaiji"
+   ],
+   "patterns": [
+    "elder_brother",
+    "brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "respectful for elder brother, also polite address to unrelated male"
+  },
+  {
+   "term": "didi",
+   "script": "दीदी",
+   "variants": [
+    "didi ji",
+    "deedee",
+    "didi"
+   ],
+   "patterns": [
+    "elder_sister",
+    "sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "respectful for elder sister, also polite address"
+  },
+  {
+   "term": "beta",
+   "script": "बेटा",
+   "variants": [
+    "betaji",
+    "putra",
+    "ladka"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "beti",
+   "script": "बेटी",
+   "variants": [
+    "putri",
+    "ladki",
+    "bitiya"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "pota",
+   "script": "पोता",
+   "variants": [
+    "potra"
+   ],
+   "patterns": [
+    "son.son"
+   ],
+   "gloss": "son's son",
+   "kind": "kin",
+   "notes": "paternal grandson"
+  },
+  {
+   "term": "poti",
+   "script": "पोती",
+   "variants": [
+    "potri"
+   ],
+   "patterns": [
+    "son.daughter"
+   ],
+   "gloss": "son's daughter",
+   "kind": "kin",
+   "notes": "paternal granddaughter"
+  },
+  {
+   "term": "nati",
+   "script": "नाती",
+   "variants": [
+    "nawasa",
+    "natii",
+    "नवासा"
+   ],
+   "patterns": [
+    "daughter.son"
+   ],
+   "gloss": "daughter's son",
+   "kind": "kin",
+   "notes": "maternal grandson"
+  },
+  {
+   "term": "natin",
+   "script": "नातिन",
+   "variants": [
+    "nawasin",
+    "nathin",
+    "नवासी"
+   ],
+   "patterns": [
+    "daughter.daughter"
+   ],
+   "gloss": "daughter's daughter",
+   "kind": "kin",
+   "notes": "maternal granddaughter"
+  },
+  {
+   "term": "pati",
+   "script": "पति",
+   "variants": [
+    "shohar",
+    "dulha",
+    "miyan"
+   ],
+   "patterns": [
+    "husband"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "patni",
+   "script": "पत्नी",
+   "variants": [
+    "biwi",
+    "dulhan",
+    "begum",
+    "बीवी"
+   ],
+   "patterns": [
+    "wife"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sasur",
+   "script": "ससुर",
+   "variants": [
+    "sasurji",
+    "susar"
+   ],
+   "patterns": [
+    "spouse.father",
+    "husband.father",
+    "wife.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "saas",
+   "script": "सास",
+   "variants": [
+    "sasuji",
+    "sas"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "husband.mother",
+    "wife.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "damad",
+   "script": "दामाद",
+   "variants": [
+    "damaad",
+    "jamai"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bahu",
+   "script": "बहू",
+   "variants": [
+    "bahuji",
+    "putravadhu"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bhabhi",
+   "script": "भाभी",
+   "variants": [
+    "bhabhiji",
+    "bhaujai",
+    "bhabi"
+   ],
+   "patterns": [
+    "brother.wife",
+    "elder_brother.wife",
+    "younger_brother.wife"
+   ],
+   "gloss": "brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "jija",
+   "script": "जीजा",
+   "variants": [
+    "jijaji",
+    "jeeja",
+    "jija ji"
+   ],
+   "patterns": [
+    "sister.husband",
+    "elder_sister.husband",
+    "younger_sister.husband"
+   ],
+   "gloss": "sister's husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sala",
+   "script": "साला",
+   "variants": [
+    "sale sahab"
+   ],
+   "patterns": [
+    "wife.brother"
+   ],
+   "gloss": "wife's brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sali",
+   "script": "साली",
+   "variants": [
+    "saliji",
+    "saali"
+   ],
+   "patterns": [
+    "wife.sister"
+   ],
+   "gloss": "wife's sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "devar",
+   "script": "देवर",
+   "variants": [
+    "devarji"
+   ],
+   "patterns": [
+    "husband.younger_brother"
+   ],
+   "gloss": "husband's younger brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nanad",
+   "script": "ननद",
+   "variants": [
+    "nanand",
+    "nandoi wife? no"
+   ],
+   "patterns": [
+    "husband.sister"
+   ],
+   "gloss": "husband's sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "chachera bhai",
+   "script": "चचेरा भाई",
+   "variants": [
+    "chachere bhai",
+    "tau-zad bhai"
+   ],
+   "patterns": [
+    "father.younger_brother.son",
+    "father.elder_brother.son"
+   ],
+   "gloss": "paternal uncle's son",
+   "kind": "kin",
+   "notes": "cousin, Hindi uses bhai for cousins with chachera/tau-zad modifier"
+  },
+  {
+   "term": "munna",
+   "script": "मुन्ना",
+   "variants": [
+    "munnu",
+    "munne"
+   ],
+   "patterns": [],
+   "gloss": "dear little boy",
+   "kind": "endearment",
+   "notes": "affectionate address for small boy or son"
+  },
+  {
+   "term": "gudiya",
+   "script": "गुड़िया",
+   "variants": [
+    "guriya",
+    "guddi"
+   ],
+   "patterns": [],
+   "gloss": "dear little girl",
+   "kind": "endearment",
+   "notes": "affectionate address for small girl or daughter"
+  },
+  {
+   "term": "ji",
+   "script": "जी",
+   "variants": [
+    "jee",
+    "jii"
+   ],
+   "patterns": [],
+   "gloss": "respectful address particle",
+   "kind": "honorific",
+   "notes": "added after name or kin term for respect, e.g. pitaji, mataji, han ji"
+  }
+ ],
+ "code": "hi",
+ "name": "Hindi",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

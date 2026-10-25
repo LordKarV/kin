@@ -1,0 +1,687 @@
+{
+ "final_strip": [
+  "್"
+ ],
+ "suffixes": [
+  "ಗಳೊಂದಿಗೆ",
+  "ಗಳಿಗಾಗಿ",
+  "ಗಳಿಂದ",
+  "ಗಳನ್ನು",
+  "ಗಳಿಗೆ",
+  "ಗಳಲ್ಲಿ",
+  "ಗೋಸ್ಕರ",
+  "ಒಡನೆ",
+  "ಗಾಗಿ",
+  "ನಿಂದ",
+  "ರಿಂದ",
+  "ಇಂದ",
+  "ಅನ್ನು",
+  "ನ್ನು",
+  "ಇಗೆ",
+  "ಕ್ಕೆ",
+  "ಗೆ",
+  "ಅಲ್ಲಿ",
+  "ಲ್ಲಿ",
+  "ಅವರ",
+  "ರಲ್ಲಿ",
+  "ದ",
+  "ನ",
+  "ರ",
+  "ಅ",
+  "ು",
+  "ಏ",
+  "ೇ",
+  "ೂ",
+  "ೋ"
+ ],
+ "roman_suffixes": [
+  "galondige",
+  "galigagi",
+  "galinda",
+  "galannu",
+  "galige",
+  "galalli",
+  "goskara",
+  "odane",
+  "gagi",
+  "inda",
+  "ninda",
+  "rinda",
+  "annu",
+  "nnu",
+  "ige",
+  "kke",
+  "ge",
+  "lli",
+  "alli",
+  "avara",
+  "ralli",
+  "da",
+  "na",
+  "ra",
+  "a",
+  "u",
+  "i",
+  "e",
+  "o",
+  "oo"
+ ],
+ "possessive_speaker": [
+  "ನನ್ನ",
+  "ನಮ್ಮ",
+  "ನನ್",
+  "ನಮ್",
+  "nanna",
+  "namma",
+  "nan",
+  "nam"
+ ],
+ "possessive_listener": [
+  "ನಿನ್ನ",
+  "ನಿಮ್ಮ",
+  "ನಿನ್",
+  "ನಿಮ್",
+  "ninna",
+  "nimma",
+  "nin",
+  "nim"
+ ],
+ "respectful_markers": [
+  "ಅವರು",
+  "ಅವರೇ",
+  "ಅವ್ರು",
+  "ರೀ",
+  "ರೇ",
+  "ರು",
+  "avaru",
+  "avare",
+  "avru",
+  "ri",
+  "re",
+  "ru"
+ ],
+ "informal_markers": [
+  "ಕಣೋ",
+  "ಕಣೇ",
+  "ನೋ",
+  "ಳೋ",
+  "ಲೋ",
+  "ಲೇ",
+  "ಮ್ಮ",
+  "kanno",
+  "kanne",
+  "no",
+  "lo",
+  "le"
+ ],
+ "generic_heads": [
+  "ಅಂಗಡಿ",
+  "ಡ್ರೈವರ್",
+  "ಆಟೋ",
+  "ಪಕ್ಕದ",
+  "ನೆರೆ",
+  "ಮನೆ",
+  "ಸ್ಕೂಲ್",
+  "ಆಫೀಸ್",
+  "ಟೀಚರ್",
+  "ಮೇಷ್ಟ್ರು",
+  "ಹೋಟೆಲ್",
+  "ಬಸ್",
+  "angadi",
+  "driver",
+  "auto",
+  "pakkada",
+  "nere",
+  "mane",
+  "school",
+  "office",
+  "teacher",
+  "meshtru",
+  "shop"
+ ],
+ "frozen": [
+  "ಇಂದು",
+  "ಇವತ್ತು",
+  "ನಿನ್ನೆ",
+  "ನಾಳೆ",
+  "ತುಂಬಾ",
+  "ಬಹಳ",
+  "ಸ್ವಲ್ಪ",
+  "ಈಗ",
+  "ಆಗ",
+  "ಚೆನ್ನಾಗಿ",
+  "ಇಲ್ಲಿ",
+  "ಅಲ್ಲಿ",
+  "indu",
+  "ivattu",
+  "ninne",
+  "naale",
+  "tumba",
+  "bahala",
+  "swalpa",
+  "eega",
+  "aaga",
+  "chennagi"
+ ],
+ "terms": [
+  {
+   "term": "amma",
+   "script": "ಅಮ್ಮ",
+   "variants": [
+    "ammaa"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "appa",
+   "script": "ಅಪ್ಪ",
+   "variants": [
+    "appaa"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "taayi",
+   "script": "ತಾಯಿ",
+   "variants": [
+    "thayi",
+    "thaayi",
+    "tayi"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother (formal)",
+   "kind": "kin",
+   "notes": "Formal/literary."
+  },
+  {
+   "term": "tande",
+   "script": "ತಂದೆ",
+   "variants": [
+    "thande",
+    "tande"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father (formal)",
+   "kind": "kin",
+   "notes": "Formal/literary."
+  },
+  {
+   "term": "ajji",
+   "script": "ಅಜ್ಜಿ",
+   "variants": [
+    "azzi",
+    "ajji"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "Both sides."
+  },
+  {
+   "term": "ajja",
+   "script": "ಅಜ್ಜ",
+   "variants": [
+    "azza",
+    "ajja"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "Both sides."
+  },
+  {
+   "term": "tata",
+   "script": "ತಾತ",
+   "variants": [
+    "taata",
+    "thatha",
+    "thata"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "Variant, common address."
+  },
+  {
+   "term": "doddappa",
+   "script": "ದೊಡ್ಡಪ್ಪ",
+   "variants": [
+    "doddapa",
+    "doddappa"
+   ],
+   "patterns": [
+    "father.elder_brother",
+    "mother.elder_sister.husband"
+   ],
+   "gloss": "father's elder brother",
+   "kind": "kin",
+   "notes": "Also mother's elder sister's husband."
+  },
+  {
+   "term": "chikkappa",
+   "script": "ಚಿಕ್ಕಪ್ಪ",
+   "variants": [
+    "chikkapa",
+    "cikkappa",
+    "chikkappa"
+   ],
+   "patterns": [
+    "father.younger_brother",
+    "mother.younger_sister.husband"
+   ],
+   "gloss": "father's younger brother",
+   "kind": "kin",
+   "notes": "Also mother's younger sister's husband."
+  },
+  {
+   "term": "doddamma",
+   "script": "ದೊಡ್ಡಮ್ಮ",
+   "variants": [
+    "doddama",
+    "doddamma"
+   ],
+   "patterns": [
+    "mother.elder_sister",
+    "father.elder_brother.wife"
+   ],
+   "gloss": "mother's elder sister",
+   "kind": "kin",
+   "notes": "Also father's elder brother's wife."
+  },
+  {
+   "term": "chikkamma",
+   "script": "ಚಿಕ್ಕಮ್ಮ",
+   "variants": [
+    "chikkama",
+    "chikkamma",
+    "chikkmma"
+   ],
+   "patterns": [
+    "mother.younger_sister",
+    "father.younger_brother.wife"
+   ],
+   "gloss": "mother's younger sister",
+   "kind": "kin",
+   "notes": "Also father's younger brother's wife."
+  },
+  {
+   "term": "mama",
+   "script": "ಮಾಮ",
+   "variants": [
+    "maama",
+    "mava",
+    "maava"
+   ],
+   "patterns": [
+    "mother.brother",
+    "father.sister.husband",
+    "spouse.father",
+    "wife.father",
+    "husband.father"
+   ],
+   "gloss": "maternal uncle; paternal aunt's husband; father-in-law",
+   "kind": "kin",
+   "notes": "Conflates mother.brother and spouse.father."
+  },
+  {
+   "term": "atte",
+   "script": "ಅತ್ತೆ",
+   "variants": [
+    "athe",
+    "aththe"
+   ],
+   "patterns": [
+    "father.sister",
+    "mother.brother.wife",
+    "spouse.mother",
+    "wife.mother",
+    "husband.mother"
+   ],
+   "gloss": "paternal aunt; maternal uncle's wife; mother-in-law",
+   "kind": "kin",
+   "notes": "Conflates father.sister and spouse.mother."
+  },
+  {
+   "term": "anna",
+   "script": "ಅಣ್ಣ",
+   "variants": [
+    "ana"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "akka",
+   "script": "ಅಕ್ಕ",
+   "variants": [
+    "akka"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "tamma",
+   "script": "ತಮ್ಮ",
+   "variants": [
+    "thamma"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "tangi",
+   "script": "ತಂಗಿ",
+   "variants": [
+    "thangi"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "maga",
+   "script": "ಮಗ",
+   "variants": [
+    "maga"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "magalu",
+   "script": "ಮಗಳು",
+   "variants": [
+    "magaLu",
+    "magalu"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mommaga",
+   "script": "ಮೊಮ್ಮಗ",
+   "variants": [
+    "mommaga"
+   ],
+   "patterns": [
+    "son.son",
+    "daughter.son"
+   ],
+   "gloss": "grandson",
+   "kind": "kin",
+   "notes": "Son's or daughter's son."
+  },
+  {
+   "term": "mommagalu",
+   "script": "ಮೊಮ್ಮಗಳು",
+   "variants": [
+    "mommagaLu",
+    "mommagalu"
+   ],
+   "patterns": [
+    "son.daughter",
+    "daughter.daughter"
+   ],
+   "gloss": "granddaughter",
+   "kind": "kin",
+   "notes": "Son's or daughter's daughter."
+  },
+  {
+   "term": "ganda",
+   "script": "ಗಂಡ",
+   "variants": [
+    "ganda"
+   ],
+   "patterns": [
+    "husband"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": "Colloquial."
+  },
+  {
+   "term": "hendati",
+   "script": "ಹೆಂಡತಿ",
+   "variants": [
+    "hendathi",
+    "henDati"
+   ],
+   "patterns": [
+    "wife"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": "Colloquial."
+  },
+  {
+   "term": "pati",
+   "script": "ಪತಿ",
+   "variants": [
+    "pathi"
+   ],
+   "patterns": [
+    "husband"
+   ],
+   "gloss": "husband (formal)",
+   "kind": "kin",
+   "notes": "Formal."
+  },
+  {
+   "term": "patni",
+   "script": "ಪತ್ನಿ",
+   "variants": [
+    "pathni"
+   ],
+   "patterns": [
+    "wife"
+   ],
+   "gloss": "wife (formal)",
+   "kind": "kin",
+   "notes": "Formal."
+  },
+  {
+   "term": "aliya",
+   "script": "ಅಳಿಯ",
+   "variants": [
+    "aLiya",
+    "aliya"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sose",
+   "script": "ಸೊಸೆ",
+   "variants": [
+    "sose"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bava",
+   "script": "ಬಾವ",
+   "variants": [
+    "baava",
+    "bhava"
+   ],
+   "patterns": [
+    "sister.husband",
+    "wife.brother",
+    "wife.sister.husband",
+    "husband.sister.husband"
+   ],
+   "gloss": "sister's husband; wife's brother",
+   "kind": "kin",
+   "notes": "Cross-cousin / co-brother-in-law term."
+  },
+  {
+   "term": "attige",
+   "script": "ಅತ್ತಿಗೆ",
+   "variants": [
+    "athige",
+    "atthige"
+   ],
+   "patterns": [
+    "elder_brother.wife",
+    "brother.wife",
+    "husband.sister",
+    "wife.sister"
+   ],
+   "gloss": "elder brother's wife; husband's/wife's sister",
+   "kind": "kin",
+   "notes": "Sister-in-law."
+  },
+  {
+   "term": "nadini",
+   "script": "ನಾದಿನಿ",
+   "variants": [
+    "naadini",
+    "nadini"
+   ],
+   "patterns": [
+    "husband.sister",
+    "husband.younger_sister"
+   ],
+   "gloss": "husband's sister (sister-in-law)",
+   "kind": "kin",
+   "notes": "Especially husband's younger sister."
+  },
+  {
+   "term": "bamaida",
+   "script": "ಭಾಮೈದ",
+   "variants": [
+    "bhaamaida",
+    "bhamaida"
+   ],
+   "patterns": [
+    "wife.younger_brother",
+    "husband.younger_brother",
+    "wife.brother",
+    "husband.brother"
+   ],
+   "gloss": "brother-in-law (younger)",
+   "kind": "kin",
+   "notes": "Wife's / husband's younger brother."
+  },
+  {
+   "term": "kasin",
+   "script": "ಕಸಿನ್",
+   "variants": [
+    "cousin",
+    "kazin"
+   ],
+   "patterns": [
+    "parent.sibling.child"
+   ],
+   "gloss": "cousin",
+   "kind": "kin",
+   "notes": "Modern loanword; parallel cousins often called anna/akka/tamma/tangi."
+  },
+  {
+   "term": "kanna",
+   "script": "ಕಣ್ಣಾ",
+   "variants": [
+    "kannaa"
+   ],
+   "patterns": [],
+   "gloss": "darling! dear!",
+   "kind": "endearment",
+   "notes": "Affectionate vocative for child."
+  },
+  {
+   "term": "putta",
+   "script": "ಪುಟ್ಟ",
+   "variants": [
+    "putta"
+   ],
+   "patterns": [],
+   "gloss": "little one! dear little",
+   "kind": "endearment",
+   "notes": "For small child."
+  },
+  {
+   "term": "avare",
+   "script": "ಅವರೇ",
+   "variants": [
+    "avare",
+    "avaru"
+   ],
+   "patterns": [],
+   "gloss": "respectful address particle",
+   "kind": "honorific",
+   "notes": "Added after name/kin term for respect."
+  },
+  {
+   "term": "ri",
+   "script": "ರೀ",
+   "variants": [
+    "ri",
+    "ree"
+   ],
+   "patterns": [],
+   "gloss": "respectful address particle",
+   "kind": "honorific",
+   "notes": "Polite suffix, e.g. banni-ri."
+  }
+ ],
+ "code": "kn",
+ "name": "Kannada",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

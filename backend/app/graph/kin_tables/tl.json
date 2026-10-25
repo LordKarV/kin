@@ -1,0 +1,572 @@
+{
+ "final_strip": [],
+ "suffixes": [],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "aking",
+  "aming",
+  "ating"
+ ],
+ "possessive_listener": [
+  "iyong",
+  "inyong"
+ ],
+ "respectful_markers": [
+  "po",
+  "ho",
+  "opo",
+  "oho"
+ ],
+ "informal_markers": [],
+ "generic_heads": [
+  "tindero",
+  "tindera",
+  "tsuper",
+  "driver",
+  "kapitbahay",
+  "guro",
+  "doktor",
+  "nars",
+  "mama",
+  "ale"
+ ],
+ "frozen": [
+  "ngayon",
+  "kahapon",
+  "bukas",
+  "kanina",
+  "mamaya",
+  "sobra",
+  "talaga",
+  "marami",
+  "napaka"
+ ],
+ "terms": [
+  {
+   "term": "nanay",
+   "script": "nanay",
+   "variants": [
+    "nay",
+    "nana",
+    "inay"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "common everyday term"
+  },
+  {
+   "term": "tatay",
+   "script": "tatay",
+   "variants": [
+    "tay",
+    "tata",
+    "itay"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "common everyday term"
+  },
+  {
+   "term": "ina",
+   "script": "ina",
+   "variants": [],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother (formal)",
+   "kind": "kin",
+   "notes": "formal/literary"
+  },
+  {
+   "term": "ama",
+   "script": "ama",
+   "variants": [],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father (formal)",
+   "kind": "kin",
+   "notes": "formal/literary"
+  },
+  {
+   "term": "magulang",
+   "script": "magulang",
+   "variants": [],
+   "patterns": [
+    "parent",
+    "father",
+    "mother"
+   ],
+   "gloss": "parent",
+   "kind": "kin",
+   "notes": "usually plural magulang parents"
+  },
+  {
+   "term": "lolo",
+   "script": "lolo",
+   "variants": [
+    "lolo",
+    "lo",
+    "ingko"
+   ],
+   "patterns": [
+    "father.father",
+    "mother.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "both paternal and maternal"
+  },
+  {
+   "term": "lola",
+   "script": "lola",
+   "variants": [
+    "lola",
+    "la",
+    "imba"
+   ],
+   "patterns": [
+    "father.mother",
+    "mother.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "both paternal and maternal"
+  },
+  {
+   "term": "lolo sa tuhod",
+   "script": "lolo sa tuhod",
+   "variants": [
+    "lolong tuhod"
+   ],
+   "patterns": [
+    "father.father.father",
+    "mother.father.father",
+    "father.mother.father",
+    "mother.mother.father"
+   ],
+   "gloss": "great-grandfather",
+   "kind": "kin",
+   "notes": "lit. grandfather at the knee"
+  },
+  {
+   "term": "lola sa tuhod",
+   "script": "lola sa tuhod",
+   "variants": [
+    "lolang tuhod"
+   ],
+   "patterns": [
+    "father.father.mother",
+    "mother.father.mother",
+    "father.mother.mother",
+    "mother.mother.mother"
+   ],
+   "gloss": "great-grandmother",
+   "kind": "kin",
+   "notes": "lit. grandmother at the knee"
+  },
+  {
+   "term": "kuya",
+   "script": "kuya",
+   "variants": [
+    "koya",
+    "koy"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "also polite address to older man, older male cousin"
+  },
+  {
+   "term": "ate",
+   "script": "ate",
+   "variants": [
+    "ati",
+    "te"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "also polite address to older woman, older female cousin"
+  },
+  {
+   "term": "kapatid",
+   "script": "kapatid",
+   "variants": [],
+   "patterns": [
+    "sibling",
+    "brother",
+    "sister",
+    "elder_brother",
+    "elder_sister",
+    "younger_brother",
+    "younger_sister"
+   ],
+   "gloss": "sibling",
+   "kind": "kin",
+   "notes": "gender-neutral sibling"
+  },
+  {
+   "term": "bunso",
+   "script": "bunso",
+   "variants": [
+    "bunsoy"
+   ],
+   "patterns": [
+    "child",
+    "son",
+    "daughter",
+    "sibling",
+    "brother",
+    "sister",
+    "younger_brother",
+    "younger_sister"
+   ],
+   "gloss": "youngest child; youngest sibling",
+   "kind": "kin",
+   "notes": "birth-order term"
+  },
+  {
+   "term": "anak",
+   "script": "anak",
+   "variants": [],
+   "patterns": [
+    "child",
+    "son",
+    "daughter"
+   ],
+   "gloss": "child",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "anak na lalaki",
+   "script": "anak na lalaki",
+   "variants": [],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "anak na babae",
+   "script": "anak na babae",
+   "variants": [],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "apo",
+   "script": "apo",
+   "variants": [],
+   "patterns": [
+    "child.child",
+    "son.child",
+    "daughter.child",
+    "child.son",
+    "child.daughter",
+    "son.son",
+    "son.daughter",
+    "daughter.son",
+    "daughter.daughter"
+   ],
+   "gloss": "grandchild",
+   "kind": "kin",
+   "notes": "gender-neutral"
+  },
+  {
+   "term": "apo sa tuhod",
+   "script": "apo sa tuhod",
+   "variants": [],
+   "patterns": [
+    "child.child.child",
+    "son.child.child",
+    "daughter.child.child"
+   ],
+   "gloss": "great-grandchild",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "asawa",
+   "script": "asawa",
+   "variants": [],
+   "patterns": [
+    "spouse",
+    "husband",
+    "wife"
+   ],
+   "gloss": "spouse",
+   "kind": "kin",
+   "notes": "gender-neutral husband/wife"
+  },
+  {
+   "term": "mister",
+   "script": "mister",
+   "variants": [
+    "mister",
+    "banang lalaki"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": "from Spanish/English mister"
+  },
+  {
+   "term": "misis",
+   "script": "misis",
+   "variants": [
+    "misus"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": "from Spanish/English missus"
+  },
+  {
+   "term": "biyenan",
+   "script": "biyenan",
+   "variants": [
+    "biyenang",
+    "byenan"
+   ],
+   "patterns": [
+    "spouse.father",
+    "spouse.mother",
+    "spouse.parent",
+    "husband.father",
+    "husband.mother",
+    "wife.father",
+    "wife.mother"
+   ],
+   "gloss": "parent-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "manugang",
+   "script": "manugang",
+   "variants": [
+    "manugang"
+   ],
+   "patterns": [
+    "son.wife",
+    "daughter.husband",
+    "child.spouse",
+    "son.spouse",
+    "daughter.spouse"
+   ],
+   "gloss": "child-in-law",
+   "kind": "kin",
+   "notes": "son-in-law or daughter-in-law"
+  },
+  {
+   "term": "bayaw",
+   "script": "bayaw",
+   "variants": [
+    "bayao"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "spouse.elder_brother",
+    "spouse.younger_brother",
+    "sister.husband",
+    "elder_sister.husband",
+    "younger_sister.husband",
+    "wife.brother",
+    "husband.brother"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "spouse's brother or sister's husband"
+  },
+  {
+   "term": "hipag",
+   "script": "hipag",
+   "variants": [],
+   "patterns": [
+    "spouse.sister",
+    "spouse.elder_sister",
+    "spouse.younger_sister",
+    "brother.wife",
+    "elder_brother.wife",
+    "younger_brother.wife",
+    "wife.sister",
+    "husband.sister"
+   ],
+   "gloss": "sister-in-law",
+   "kind": "kin",
+   "notes": "spouse's sister or brother's wife"
+  },
+  {
+   "term": "bilas",
+   "script": "bilas",
+   "variants": [],
+   "patterns": [
+    "husband.brother.wife",
+    "wife.sister.husband",
+    "spouse.brother.wife",
+    "spouse.sister.husband",
+    "spouse.sibling.spouse"
+   ],
+   "gloss": "co-sister-in-law; co-brother-in-law",
+   "kind": "kin",
+   "notes": "spouse of sibling-in-law, e.g. husband's brother's wife"
+  },
+  {
+   "term": "tiyo",
+   "script": "tiyo",
+   "variants": [
+    "tito",
+    "tiyuhin",
+    "tyuhin"
+   ],
+   "patterns": [
+    "father.brother",
+    "mother.brother",
+    "father.elder_brother",
+    "father.younger_brother",
+    "mother.elder_brother",
+    "mother.younger_brother",
+    "father.sister.husband",
+    "mother.sister.husband"
+   ],
+   "gloss": "uncle",
+   "kind": "kin",
+   "notes": "parent's brother or aunt's husband; no paternal/maternal or elder/younger distinction"
+  },
+  {
+   "term": "tiya",
+   "script": "tiya",
+   "variants": [
+    "tita",
+    "tiyahin",
+    "tyahin"
+   ],
+   "patterns": [
+    "father.sister",
+    "mother.sister",
+    "father.elder_sister",
+    "father.younger_sister",
+    "mother.elder_sister",
+    "mother.younger_sister",
+    "father.brother.wife",
+    "mother.brother.wife"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "parent's sister or uncle's wife; no paternal/maternal or elder/younger distinction"
+  },
+  {
+   "term": "pinsan",
+   "script": "pinsan",
+   "variants": [
+    "pinsang",
+    "insan"
+   ],
+   "patterns": [
+    "parent.sibling.child",
+    "parent.sibling.son",
+    "parent.sibling.daughter",
+    "father.brother.child",
+    "father.sister.child",
+    "mother.brother.child",
+    "mother.sister.child"
+   ],
+   "gloss": "cousin",
+   "kind": "kin",
+   "notes": "gender-neutral; no parallel/cross or elder/younger distinction"
+  },
+  {
+   "term": "pamangkin",
+   "script": "pamangkin",
+   "variants": [],
+   "patterns": [
+    "brother.child",
+    "sister.child",
+    "sibling.child",
+    "elder_brother.child",
+    "younger_brother.child",
+    "elder_sister.child",
+    "younger_sister.child",
+    "brother.son",
+    "brother.daughter",
+    "sister.son",
+    "sister.daughter"
+   ],
+   "gloss": "nephew; niece",
+   "kind": "kin",
+   "notes": "gender-neutral sibling's child"
+  },
+  {
+   "term": "po",
+   "script": "po",
+   "variants": [
+    "po"
+   ],
+   "patterns": [],
+   "gloss": "respectful particle",
+   "kind": "honorific",
+   "notes": "marks respect to referent/listener, used with kin terms e.g. nanay po"
+  },
+  {
+   "term": "ho",
+   "script": "ho",
+   "variants": [],
+   "patterns": [],
+   "gloss": "respectful particle (variant)",
+   "kind": "honorific",
+   "notes": "variant of po"
+  },
+  {
+   "term": "mahal",
+   "script": "mahal",
+   "variants": [
+    "mahal ko"
+   ],
+   "patterns": [],
+   "gloss": "my love; dear",
+   "kind": "endearment",
+   "notes": "affectionate address to spouse or child"
+  },
+  {
+   "term": "baby",
+   "script": "baby",
+   "variants": [
+    "bebe",
+    "beybi"
+   ],
+   "patterns": [],
+   "gloss": "baby; darling",
+   "kind": "endearment",
+   "notes": "affectionate address to small child or sweetheart"
+  }
+ ],
+ "code": "tl",
+ "name": "Tagalog",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

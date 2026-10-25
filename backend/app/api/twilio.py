@@ -23,6 +23,18 @@ def _ws_url(call_id: int, role: str) -> str:
     return f"wss://{host}/twilio/relay?call_id={call_id}&role={role}"
 
 
+def _heritage_locale() -> str:
+    s = get_settings()
+    if s.twilio_heritage_lang:
+        return s.twilio_heritage_lang
+    from ..graph.kin_tables import load_table
+    from ..mt.translate import get_translator
+    try:
+        return load_table(get_translator(s.demo_family_id).g.heritage_lang).locale
+    except Exception:  # noqa: BLE001
+        return "ta-IN"
+
+
 def _new_call() -> int:
     with session_scope() as s:
         c = m.Call(family_id=get_settings().demo_family_id, transport="twilio")
@@ -53,8 +65,9 @@ async def voice(request: Request, role: str = "grandparent", call_id: int | None
     s = get_settings()
     log.info("inbound call %s from %s → call %s", form.get("CallSid"), form.get("From"), cid)
     welcome = "வணக்கம். KIN இணைக்கிறது." if role == "grandparent" else "Connecting you to KIN."
-    xml = relay_twiml(_ws_url(cid, role), role, language=s.twilio_heritage_lang if role == "grandparent" else "en-US",
-                      other_language="en-US" if role == "grandparent" else s.twilio_heritage_lang, welcome=welcome)
+    loc = _heritage_locale()
+    xml = relay_twiml(_ws_url(cid, role), role, language=loc if role == "grandparent" else "en-US",
+                      other_language="en-US" if role == "grandparent" else loc, welcome=welcome)
     return Response(content=xml, media_type="application/xml")
 
 
@@ -73,8 +86,9 @@ def dial(body: Dial) -> dict:
     from twilio.rest import Client
 
     cid = body.call_id or _new_call()
-    xml = relay_twiml(_ws_url(cid, body.role), body.role, language=s.twilio_heritage_lang if body.role == "grandparent" else "en-US",
-                      other_language="en-US" if body.role == "grandparent" else s.twilio_heritage_lang)
+    loc = _heritage_locale()
+    xml = relay_twiml(_ws_url(cid, body.role), body.role, language=loc if body.role == "grandparent" else "en-US",
+                      other_language="en-US" if body.role == "grandparent" else loc)
     call = Client(s.twilio_account_sid, s.twilio_auth_token).calls.create(to=body.to, from_=s.twilio_number, twiml=xml)
     return {"call_id": cid, "sid": call.sid}
 
@@ -86,7 +100,7 @@ async def relay(ws: WebSocket, call_id: int = Query(...), role: str = Query("gra
     g = session.translator.g
     person = (next((p.slug for p in g.people.values() if p.slug == "p_kamala"), None) or next(p.slug for p in g.people.values() if not p.is_learner)) \
         if role == "grandparent" else next(p.slug for p in g.people.values() if p.is_learner)
-    leg = PhoneLeg(ws, role, person, get_settings().twilio_heritage_lang)
+    leg = PhoneLeg(ws, role, person, _heritage_locale())
     joined = False
     try:
         while True:

@@ -1,0 +1,735 @@
+{
+ "final_strip": [],
+ "suffixes": [
+  "owie",
+  "ami",
+  "ach",
+  "ego",
+  "emu",
+  "imi",
+  "owi",
+  "ich",
+  "ów",
+  "om",
+  "ej",
+  "ie",
+  "ą",
+  "ę",
+  "a",
+  "u",
+  "i",
+  "y",
+  "e",
+  "o"
+ ],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "mój",
+  "moja",
+  "moje",
+  "moi",
+  "moim",
+  "moją",
+  "mojego",
+  "mojej",
+  "moich",
+  "nasz",
+  "nasza",
+  "nasze",
+  "nasi",
+  "naszego",
+  "naszej",
+  "moj"
+ ],
+ "possessive_listener": [
+  "twój",
+  "twoja",
+  "twoje",
+  "twoi",
+  "twoim",
+  "twój",
+  "twoją",
+  "twojego",
+  "twojej",
+  "twoich",
+  "wasz",
+  "wasza",
+  "wasze",
+  "wasi",
+  "twoj",
+  "twoją"
+ ],
+ "respectful_markers": [
+  "Pan",
+  "Pani",
+  "Państwo",
+  "proszę"
+ ],
+ "informal_markers": [
+  "uś",
+  "usia",
+  "uniu",
+  "eńka",
+  "eńko",
+  "ek",
+  "ka",
+  "cia",
+  "sia"
+ ],
+ "generic_heads": [
+  "pan",
+  "pani",
+  "państwo",
+  "sprzedawca",
+  "kierowca",
+  "sąsiad",
+  "sąsiadka",
+  "nauczyciel",
+  "nauczycielka",
+  "lekarz",
+  "ksiądz",
+  "sasiad",
+  "sasiadka",
+  "ksiadz"
+ ],
+ "frozen": [
+  "dzisiaj",
+  "wczoraj",
+  "jutro",
+  "bardzo",
+  "teraz",
+  "tutaj",
+  "tam",
+  "jeszcze",
+  "juz",
+  "już",
+  "wciąż",
+  "zawsze"
+ ],
+ "terms": [
+  {
+   "term": "mama",
+   "script": "mama",
+   "variants": [
+    "mamusia",
+    "mamuśka",
+    "mamo"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mum; mom",
+   "kind": "kin",
+   "notes": "Informal everyday address for mother."
+  },
+  {
+   "term": "matka",
+   "script": "matka",
+   "variants": [
+    "matko",
+    "mateczka"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "Neutral/formal term."
+  },
+  {
+   "term": "tata",
+   "script": "tata",
+   "variants": [
+    "tatuś",
+    "tatusiek",
+    "tato"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "dad",
+   "kind": "kin",
+   "notes": "Informal everyday address for father."
+  },
+  {
+   "term": "ojciec",
+   "script": "ojciec",
+   "variants": [
+    "ojcze",
+    "ojczulek"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "Neutral/formal term."
+  },
+  {
+   "term": "babcia",
+   "script": "babcia",
+   "variants": [
+    "babciu",
+    "babunia",
+    "babuśka"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "Both maternal and paternal; specified as babcia od strony mamy/taty if needed."
+  },
+  {
+   "term": "dziadek",
+   "script": "dziadek",
+   "variants": [
+    "dziadku",
+    "dziadzio",
+    "dziadziu"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "Both maternal and paternal."
+  },
+  {
+   "term": "prababcia",
+   "script": "prababcia",
+   "variants": [
+    "prababciu",
+    "prababunia"
+   ],
+   "patterns": [
+    "mother.mother.mother",
+    "father.mother.mother",
+    "mother.father.mother",
+    "father.father.mother"
+   ],
+   "gloss": "great-grandmother",
+   "kind": "kin",
+   "notes": "Mother or father of a grandparent."
+  },
+  {
+   "term": "pradziadek",
+   "script": "pradziadek",
+   "variants": [
+    "pradziadku",
+    "pradziadzio"
+   ],
+   "patterns": [
+    "mother.mother.father",
+    "father.mother.father",
+    "mother.father.father",
+    "father.father.father"
+   ],
+   "gloss": "great-grandfather",
+   "kind": "kin",
+   "notes": "Father or mother of a grandparent."
+  },
+  {
+   "term": "wujek",
+   "script": "wujek",
+   "variants": [
+    "wuj",
+    "wuju",
+    "wujku",
+    "wujaszek"
+   ],
+   "patterns": [
+    "mother.brother",
+    "mother.sister.husband",
+    "father.sister.husband"
+   ],
+   "gloss": "uncle; maternal uncle",
+   "kind": "kin",
+   "notes": "Originally mother's brother; now general uncle, also husband of aunt."
+  },
+  {
+   "term": "stryj",
+   "script": "stryj",
+   "variants": [
+    "stryjek",
+    "stryju",
+    "stryjaszek"
+   ],
+   "patterns": [
+    "father.brother",
+    "father.elder_brother",
+    "father.younger_brother"
+   ],
+   "gloss": "paternal uncle",
+   "kind": "kin",
+   "notes": "Father's brother; traditional distinction, still used especially outside cities."
+  },
+  {
+   "term": "ciocia",
+   "script": "ciocia",
+   "variants": [
+    "ciotka",
+    "ciociu",
+    "cioteczka"
+   ],
+   "patterns": [
+    "mother.sister",
+    "father.sister",
+    "mother.brother.wife",
+    "father.brother.wife"
+   ],
+   "gloss": "aunt",
+   "kind": "kin",
+   "notes": "Parent's sister and uncle's wife."
+  },
+  {
+   "term": "wujenka",
+   "script": "wujenka",
+   "variants": [
+    "wujenka",
+    "wujenko"
+   ],
+   "patterns": [
+    "mother.brother.wife",
+    "mother.elder_brother.wife",
+    "mother.younger_brother.wife"
+   ],
+   "gloss": "uncle's wife",
+   "kind": "kin",
+   "notes": "Wife of wujek, maternal uncle's wife."
+  },
+  {
+   "term": "brat",
+   "script": "brat",
+   "variants": [
+    "bracie",
+    "braciszek"
+   ],
+   "patterns": [
+    "brother",
+    "elder_brother",
+    "younger_brother"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": "General; age specified with starszy/młodszy."
+  },
+  {
+   "term": "starszy brat",
+   "script": "starszy brat",
+   "variants": [
+    "starszy braciszek"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "Age distinction by adjective."
+  },
+  {
+   "term": "mlodszy brat",
+   "script": "młodszy brat",
+   "variants": [
+    "młodszy brat",
+    "młodszy braciszek"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": "Age distinction by adjective."
+  },
+  {
+   "term": "siostra",
+   "script": "siostra",
+   "variants": [
+    "siostro",
+    "siostrzyczka"
+   ],
+   "patterns": [
+    "sister",
+    "elder_sister",
+    "younger_sister"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": "General; age specified with starsza/młodsza."
+  },
+  {
+   "term": "starsza siostra",
+   "script": "starsza siostra",
+   "variants": [
+    "starsza siostrzyczka"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "Age distinction by adjective."
+  },
+  {
+   "term": "mlodsza siostra",
+   "script": "młodsza siostra",
+   "variants": [
+    "młodsza siostra",
+    "młodsza siostrzyczka"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": "Age distinction by adjective."
+  },
+  {
+   "term": "syn",
+   "script": "syn",
+   "variants": [
+    "synu",
+    "synek",
+    "synunio"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "corka",
+   "script": "córka",
+   "variants": [
+    "córka",
+    "córko",
+    "córeczka"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "wnuk",
+   "script": "wnuk",
+   "variants": [
+    "wnuczku",
+    "wnuczek",
+    "wnusio"
+   ],
+   "patterns": [
+    "son.son",
+    "daughter.son"
+   ],
+   "gloss": "grandson",
+   "kind": "kin",
+   "notes": "Son's or daughter's son."
+  },
+  {
+   "term": "wnuczka",
+   "script": "wnuczka",
+   "variants": [
+    "wnuczko",
+    "wnusia"
+   ],
+   "patterns": [
+    "son.daughter",
+    "daughter.daughter"
+   ],
+   "gloss": "granddaughter",
+   "kind": "kin",
+   "notes": "Son's or daughter's daughter."
+  },
+  {
+   "term": "kuzyn",
+   "script": "kuzyn",
+   "variants": [
+    "kuzynie",
+    "kuzynek"
+   ],
+   "patterns": [
+    "parent.sibling.son",
+    "mother.brother.son",
+    "father.brother.son",
+    "mother.sister.son",
+    "father.sister.son"
+   ],
+   "gloss": "male cousin",
+   "kind": "kin",
+   "notes": "Child of parent's sibling."
+  },
+  {
+   "term": "kuzynka",
+   "script": "kuzynka",
+   "variants": [
+    "kuzynko",
+    "kuzyneczka"
+   ],
+   "patterns": [
+    "parent.sibling.daughter",
+    "mother.brother.daughter",
+    "father.brother.daughter",
+    "mother.sister.daughter",
+    "father.sister.daughter"
+   ],
+   "gloss": "female cousin",
+   "kind": "kin",
+   "notes": "Child of parent's sibling."
+  },
+  {
+   "term": "bratanek",
+   "script": "bratanek",
+   "variants": [
+    "bratanku",
+    "brataneczku"
+   ],
+   "patterns": [
+    "brother.son",
+    "elder_brother.son",
+    "younger_brother.son"
+   ],
+   "gloss": "brother's son",
+   "kind": "kin",
+   "notes": "Distinct from sister's son."
+  },
+  {
+   "term": "bratanica",
+   "script": "bratanica",
+   "variants": [
+    "bratanico",
+    "brataniczko"
+   ],
+   "patterns": [
+    "brother.daughter",
+    "elder_brother.daughter",
+    "younger_brother.daughter"
+   ],
+   "gloss": "brother's daughter",
+   "kind": "kin",
+   "notes": "Distinct from sister's daughter."
+  },
+  {
+   "term": "siostrzeniec",
+   "script": "siostrzeniec",
+   "variants": [
+    "siostrzeńcu"
+   ],
+   "patterns": [
+    "sister.son",
+    "elder_sister.son",
+    "younger_sister.son"
+   ],
+   "gloss": "sister's son",
+   "kind": "kin",
+   "notes": "Distinct from brother's son."
+  },
+  {
+   "term": "siostrzenica",
+   "script": "siostrzenica",
+   "variants": [
+    "siostrzenico"
+   ],
+   "patterns": [
+    "sister.daughter",
+    "elder_sister.daughter",
+    "younger_sister.daughter"
+   ],
+   "gloss": "sister's daughter",
+   "kind": "kin",
+   "notes": "Distinct from brother's daughter."
+  },
+  {
+   "term": "maz",
+   "script": "mąż",
+   "variants": [
+    "mąż",
+    "mężu",
+    "mężusiu",
+    "małżonek"
+   ],
+   "patterns": [
+    "husband"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "zona",
+   "script": "żona",
+   "variants": [
+    "żona",
+    "żono",
+    "żoneczka",
+    "małżonka"
+   ],
+   "patterns": [
+    "wife"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "tesc",
+   "script": "teść",
+   "variants": [
+    "teść",
+    "teściu",
+    "test"
+   ],
+   "patterns": [
+    "spouse.father",
+    "wife.father",
+    "husband.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": "Father of spouse."
+  },
+  {
+   "term": "tesciowa",
+   "script": "teściowa",
+   "variants": [
+    "teściowa",
+    "teściowo",
+    "tesciowo"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "wife.mother",
+    "husband.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": "Mother of spouse."
+  },
+  {
+   "term": "ziec",
+   "script": "zięć",
+   "variants": [
+    "zięć",
+    "zięciu",
+    "zieciu"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": "Daughter's husband."
+  },
+  {
+   "term": "synowa",
+   "script": "synowa",
+   "variants": [
+    "synowo",
+    "synoweńka"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": "Son's wife."
+  },
+  {
+   "term": "szwagier",
+   "script": "szwagier",
+   "variants": [
+    "szwagrze",
+    "szwagierek"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "spouse.elder_brother",
+    "spouse.younger_brother",
+    "sister.husband",
+    "wife.brother",
+    "husband.brother"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "Spouse's brother or sister's husband."
+  },
+  {
+   "term": "szwagierka",
+   "script": "szwagierka",
+   "variants": [
+    "szwagierko",
+    "bratowa"
+   ],
+   "patterns": [
+    "spouse.sister",
+    "spouse.elder_sister",
+    "spouse.younger_sister",
+    "wife.sister",
+    "husband.sister",
+    "brother.wife"
+   ],
+   "gloss": "sister-in-law",
+   "kind": "kin",
+   "notes": "Spouse's sister or brother's wife; brother's wife also bratowa."
+  },
+  {
+   "term": "kochanie",
+   "script": "kochanie",
+   "variants": [
+    "kochanko",
+    "kochaniutkie"
+   ],
+   "patterns": [],
+   "gloss": "sweetheart; darling",
+   "kind": "endearment",
+   "notes": "Affectionate address to child or partner."
+  },
+  {
+   "term": "skarbie",
+   "script": "skarbie",
+   "variants": [
+    "skarb",
+    "skarbeczku",
+    "skarbenku"
+   ],
+   "patterns": [],
+   "gloss": "sweetie (treasure)",
+   "kind": "endearment",
+   "notes": "Affectionate address, often to child."
+  },
+  {
+   "term": "pan",
+   "script": "pan",
+   "variants": [
+    "panie",
+    "panu"
+   ],
+   "patterns": [],
+   "gloss": "sir; Mr.",
+   "kind": "honorific",
+   "notes": "Respectful address to a man; used with 3rd-person verbs."
+  },
+  {
+   "term": "pani",
+   "script": "pani",
+   "variants": [
+    "paniu"
+   ],
+   "patterns": [],
+   "gloss": "madam; Mrs.",
+   "kind": "honorific",
+   "notes": "Respectful address to a woman; used with 3rd-person verbs."
+  }
+ ],
+ "code": "pl",
+ "name": "Polish",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

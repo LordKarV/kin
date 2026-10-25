@@ -10,7 +10,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..graph.ontology import KIN_TERMS
+from ..graph.kin_tables import available_codes, load_table
 from . import models as m
 
 FAMILY_NAME = "Krishnan family"
@@ -132,10 +132,7 @@ def seed_demo_family(session: Session) -> m.Family:
         if slug not in existing_things:
             session.add(m.Thing(family_id=fam.id, slug=slug, kind=kind, name=name, lang_name=ta, aliases=aliases, note=note))
 
-    if session.scalar(select(m.KinTerm).where(m.KinTerm.lang == "ta", m.KinTerm.family_id.is_(None))) is None:
-        for t in KIN_TERMS:
-            session.add(m.KinTerm(family_id=None, lang="ta", term=t.term, script_form=t.script, kind=t.kind,
-                                  relation_patterns=list(t.patterns), gloss=t.gloss, notes=t.notes))
+    seed_languages(session)
 
     # consent record for the demo grandparent (voice clone uses a teammate's voice in the demo; see plan §9)
     kamala = by_slug["p_kamala"]
@@ -143,3 +140,22 @@ def seed_demo_family(session: Session) -> m.Family:
         session.add(m.Consent(person_id=kamala.id, voice_clone=False, memory=True))
     session.flush()
     return fam
+
+
+def seed_languages(session: Session) -> int:
+    """Upsert every available language table (Tamil gold + Muse Spark drafts) into `languages` and `kin_terms`. Idempotent."""
+    n = 0
+    for code in available_codes():
+        t = load_table(code)
+        row = session.scalar(select(m.Language).where(m.Language.code == code))
+        if row is None:
+            row = m.Language(code=code, name=t.name)
+            session.add(row)
+        row.native_name, row.locale, row.verified, row.source, row.data = t.native_name, t.locale, t.verified, t.source, t.to_json()
+        if session.scalar(select(m.KinTerm).where(m.KinTerm.lang == code, m.KinTerm.family_id.is_(None))) is None:
+            for d in t.terms:
+                session.add(m.KinTerm(family_id=None, lang=code, term=d.term, script_form=d.script, kind=d.kind, relation_patterns=list(d.patterns),
+                                      variants=list(d.variants), gloss=d.gloss, notes=d.notes, verified=t.verified))
+        n += 1
+    session.flush()
+    return n

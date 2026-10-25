@@ -1,0 +1,705 @@
+{
+ "final_strip": [
+  "ة"
+ ],
+ "suffixes": [
+  "هما",
+  "كما",
+  "كم",
+  "كن",
+  "هم",
+  "هن",
+  "كي",
+  "نا",
+  "ها",
+  "ية",
+  "ون",
+  "ين",
+  "ان",
+  "ات",
+  "ة",
+  "ه",
+  "ك",
+  "ي"
+ ],
+ "roman_suffixes": [
+  "iyya",
+  "huma",
+  "kuma",
+  "kum",
+  "kun",
+  "hum",
+  "hun",
+  "ki",
+  "na",
+  "ha",
+  "un",
+  "in",
+  "an",
+  "at",
+  "ah",
+  "h",
+  "k",
+  "i"
+ ],
+ "possessive_speaker": [],
+ "possessive_listener": [],
+ "respectful_markers": [
+  "حضرتك",
+  "حضرتكم",
+  "حضرتكما",
+  "سيادتك",
+  "فضيلتك",
+  "hadratak",
+  "hadretak",
+  "hadratkum",
+  "siyadtak"
+ ],
+ "informal_markers": [],
+ "generic_heads": [
+  "محل",
+  "دكان",
+  "سائق",
+  "سواق",
+  "جار",
+  "جارة",
+  "مدرس",
+  "معلم",
+  "دكتور",
+  "أستاذ",
+  "شيخ",
+  "mahal",
+  "dukkan",
+  "saiq",
+  "sawwaq",
+  "jaar",
+  "mudarris",
+  "muallim",
+  "duktur",
+  "ustadh",
+  "sheikh",
+  "shop",
+  "driver",
+  "neighbour",
+  "teacher"
+ ],
+ "frozen": [
+  "اليوم",
+  "أمس",
+  "غدا",
+  "جدا",
+  "الآن",
+  "كثير",
+  "alyawm",
+  "ams",
+  "ghadan",
+  "jiddan",
+  "alaan",
+  "kathir"
+ ],
+ "terms": [
+  {
+   "term": "umm",
+   "script": "أم",
+   "variants": [
+    "omm",
+    "em",
+    "walida",
+    "mama"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "Also walida in formal address."
+  },
+  {
+   "term": "ab",
+   "script": "أب",
+   "variants": [
+    "abb",
+    "walid",
+    "baba"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "Formal walid."
+  },
+  {
+   "term": "jadd",
+   "script": "جد",
+   "variants": [
+    "jedd",
+    "gadd",
+    "jiddu",
+    "babajiddu"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "Both paternal and maternal in MSA."
+  },
+  {
+   "term": "jadda",
+   "script": "جدة",
+   "variants": [
+    "jedda",
+    "gadda",
+    "sitta",
+    "teta"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "Both sides; dialectal sitto, teta."
+  },
+  {
+   "term": "akh",
+   "script": "أخ",
+   "variants": [
+    "akhkh",
+    "khu"
+   ],
+   "patterns": [
+    "brother",
+    "sibling"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": "Generic; age unspecified."
+  },
+  {
+   "term": "ukht",
+   "script": "أخت",
+   "variants": [
+    "okht",
+    "ukhet",
+    "kht"
+   ],
+   "patterns": [
+    "sister",
+    "sibling"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": "Generic."
+  },
+  {
+   "term": "akh kabir",
+   "script": "أخ كبير",
+   "variants": [
+    "akh kabeer",
+    "al-akh al-akbar"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "Descriptive phrase; no lexical distinction."
+  },
+  {
+   "term": "ukht kabira",
+   "script": "أخت كبيرة",
+   "variants": [
+    "okht kebira",
+    "al-ukht al-kubra"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "Descriptive phrase."
+  },
+  {
+   "term": "akh saghir",
+   "script": "أخ صغير",
+   "variants": [
+    "akh sagheer",
+    "al-akh al-asghar"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": "Descriptive phrase."
+  },
+  {
+   "term": "ukht saghira",
+   "script": "أخت صغيرة",
+   "variants": [
+    "okht sagheera",
+    "al-ukht al-sughra"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": "Descriptive phrase."
+  },
+  {
+   "term": "amm",
+   "script": "عم",
+   "variants": [
+    "am",
+    "3amm",
+    "ammo"
+   ],
+   "patterns": [
+    "father.brother"
+   ],
+   "gloss": "paternal uncle, father's brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "amma",
+   "script": "عمة",
+   "variants": [
+    "3amma",
+    "amti"
+   ],
+   "patterns": [
+    "father.sister"
+   ],
+   "gloss": "paternal aunt, father's sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "khal",
+   "script": "خال",
+   "variants": [
+    "khaal",
+    "7al",
+    "khalo"
+   ],
+   "patterns": [
+    "mother.brother"
+   ],
+   "gloss": "maternal uncle, mother's brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "khala",
+   "script": "خالة",
+   "variants": [
+    "khaala",
+    "7ala",
+    "khalto"
+   ],
+   "patterns": [
+    "mother.sister"
+   ],
+   "gloss": "maternal aunt, mother's sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "zawjat al-amm",
+   "script": "زوجة العم",
+   "variants": [
+    "zawjat al-am",
+    "mart al-amm",
+    "mrat ammo"
+   ],
+   "patterns": [
+    "father.brother.wife"
+   ],
+   "gloss": "paternal uncle's wife",
+   "kind": "kin",
+   "notes": "Dialectal mart ammo."
+  },
+  {
+   "term": "zawj al-amma",
+   "script": "زوج العمة",
+   "variants": [
+    "zawj al-amma",
+    "goz al-amma"
+   ],
+   "patterns": [
+    "father.sister.husband"
+   ],
+   "gloss": "paternal aunt's husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "zawjat al-khal",
+   "script": "زوجة الخال",
+   "variants": [
+    "mart al-khal",
+    "mrat khalo"
+   ],
+   "patterns": [
+    "mother.brother.wife"
+   ],
+   "gloss": "maternal uncle's wife",
+   "kind": "kin",
+   "notes": "Dialectal mart khalo."
+  },
+  {
+   "term": "zawj al-khala",
+   "script": "زوج الخالة",
+   "variants": [
+    "goz al-khala",
+    "zawj al-khalah"
+   ],
+   "patterns": [
+    "mother.sister.husband"
+   ],
+   "gloss": "maternal aunt's husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "ibn",
+   "script": "ابن",
+   "variants": [
+    "ebn",
+    "bin",
+    "walad"
+   ],
+   "patterns": [
+    "son",
+    "child"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bint",
+   "script": "بنت",
+   "variants": [
+    "bent",
+    "ibna",
+    "ibnat"
+   ],
+   "patterns": [
+    "daughter",
+    "child"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": "Also ibna, bint."
+  },
+  {
+   "term": "hafeed",
+   "script": "حفيد",
+   "variants": [
+    "hafid",
+    "hafeid"
+   ],
+   "patterns": [
+    "son.son",
+    "daughter.son"
+   ],
+   "gloss": "grandson",
+   "kind": "kin",
+   "notes": "Son's son or daughter's son."
+  },
+  {
+   "term": "hafeeda",
+   "script": "حفيدة",
+   "variants": [
+    "hafida",
+    "hafeida"
+   ],
+   "patterns": [
+    "son.daughter",
+    "daughter.daughter"
+   ],
+   "gloss": "granddaughter",
+   "kind": "kin",
+   "notes": "Son's daughter or daughter's daughter."
+  },
+  {
+   "term": "zawj",
+   "script": "زوج",
+   "variants": [
+    "zoj",
+    "goz",
+    "juz"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "zawja",
+   "script": "زوجة",
+   "variants": [
+    "zawjah",
+    "zoja",
+    "mara",
+    "goza"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "hamu",
+   "script": "حمو",
+   "variants": [
+    "hamo",
+    "ham",
+    "abo al-zawj"
+   ],
+   "patterns": [
+    "spouse.father",
+    "husband.father",
+    "wife.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": "Spouse's father."
+  },
+  {
+   "term": "hamah",
+   "script": "حماة",
+   "variants": [
+    "hama",
+    "hamat"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "husband.mother",
+    "wife.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": "Spouse's mother."
+  },
+  {
+   "term": "kanna",
+   "script": "كنة",
+   "variants": [
+    "kenna",
+    "kinnah",
+    "mart al-ibn"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law, son's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sihr",
+   "script": "صهر",
+   "variants": [
+    "sehr",
+    "sahr",
+    "goz al-bint"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "son-in-law, daughter's husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "ibn amm",
+   "script": "ابن عم",
+   "variants": [
+    "ebn amm",
+    "ibn am"
+   ],
+   "patterns": [
+    "father.brother.son"
+   ],
+   "gloss": "paternal cousin, paternal uncle's son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bint amm",
+   "script": "بنت عم",
+   "variants": [
+    "bint am",
+    "bent amm"
+   ],
+   "patterns": [
+    "father.brother.daughter"
+   ],
+   "gloss": "paternal cousin, paternal uncle's daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "ibn khal",
+   "script": "ابن خال",
+   "variants": [
+    "ebn khal",
+    "ibn al-khal"
+   ],
+   "patterns": [
+    "mother.brother.son"
+   ],
+   "gloss": "maternal cousin, maternal uncle's son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bint khala",
+   "script": "بنت خالة",
+   "variants": [
+    "bent khala",
+    "bint al-khala"
+   ],
+   "patterns": [
+    "mother.sister.daughter"
+   ],
+   "gloss": "maternal cousin, maternal aunt's daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "ibn amma",
+   "script": "ابن عمة",
+   "variants": [
+    "ebn amma",
+    "ibn al-amma"
+   ],
+   "patterns": [
+    "father.sister.son"
+   ],
+   "gloss": "paternal cousin, paternal aunt's son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "salaf",
+   "script": "سلف",
+   "variants": [
+    "self",
+    "salef"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "husband.brother"
+   ],
+   "gloss": "husband's brother, brother-in-law",
+   "kind": "kin",
+   "notes": "Also spouse's brother generally."
+  },
+  {
+   "term": "salfa",
+   "script": "سلفة",
+   "variants": [
+    "selfa",
+    "salfa",
+    "salfah",
+    "mart al-salaf"
+   ],
+   "patterns": [
+    "brother.wife",
+    "spouse.brother.wife",
+    "husband.brother.wife"
+   ],
+   "gloss": "brother's wife, sister-in-law",
+   "kind": "kin",
+   "notes": "Husband's brother's wife; brother's wife."
+  },
+  {
+   "term": "adeel",
+   "script": "عديل",
+   "variants": [
+    "3adeel",
+    "adil",
+    "adeil"
+   ],
+   "patterns": [
+    "spouse.sister.husband",
+    "wife.sister.husband"
+   ],
+   "gloss": "co-brother-in-law, wife's sister's husband",
+   "kind": "kin",
+   "notes": "Husbands of sisters to each other."
+  },
+  {
+   "term": "habibi",
+   "script": "حبيبي",
+   "variants": [
+    "habibti",
+    "habib albi",
+    "ya habibi"
+   ],
+   "patterns": [],
+   "gloss": "my dear, darling",
+   "kind": "endearment",
+   "notes": "To child, spouse; fem habibti."
+  },
+  {
+   "term": "ya ibni",
+   "script": "يا ابني",
+   "variants": [
+    "ya binti",
+    "ya bnayya",
+    "ibni",
+    "binti"
+   ],
+   "patterns": [],
+   "gloss": "my son / my daughter",
+   "kind": "endearment",
+   "notes": "Affectionate address to child."
+  },
+  {
+   "term": "hajj",
+   "script": "حاج",
+   "variants": [
+    "hag",
+    "haj",
+    "hajja"
+   ],
+   "patterns": [],
+   "gloss": "pilgrim elder, respectful address",
+   "kind": "honorific",
+   "notes": "For older man/woman; fem hajja."
+  },
+  {
+   "term": "ustadh",
+   "script": "أستاذ",
+   "variants": [
+    "ostaz",
+    "ustaz",
+    "estaaz"
+   ],
+   "patterns": [],
+   "gloss": "sir, teacher, mister",
+   "kind": "honorific",
+   "notes": "Polite address to non-relative male."
+  }
+ ],
+ "code": "ar",
+ "name": "Arabic",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

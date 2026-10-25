@@ -24,9 +24,12 @@ async def lifespan(app: FastAPI):
 
     check_startup()
     init_db()
+    from .db.seed import seed_languages
+
     with session_scope() as s:  # demo family is always present (plan Phase 1); idempotent
         if s.scalar(select(m.Family)) is None:
             seed_demo_family(s)
+        seed_languages(s)
     yield
 
 
@@ -54,7 +57,7 @@ async def api_key_gate(request, call_next):
 
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-from .api import calls, connector, fade, glossary, graph, latency, translate, twilio, ws  # noqa: E402
+from .api import calls, connector, fade, glossary, graph, languages, latency, translate, twilio, ws  # noqa: E402
 from .audio.glossary_audio import media_dir  # noqa: E402
 
 app.include_router(calls.router)
@@ -64,6 +67,7 @@ app.include_router(fade.router)
 app.include_router(connector.router)
 app.include_router(twilio.router)
 app.include_router(latency.router)
+app.include_router(languages.router)
 app.mount("/media", StaticFiles(directory=str(media_dir())), name="media")
 app.include_router(translate.router)
 app.include_router(ws.router)

@@ -82,6 +82,19 @@ class Thing(Base):
     note: Mapped[str] = mapped_column(Text, default="")  # the family-specific meaning
 
 
+class Language(Base):
+    """One row per supported heritage language: the full kin table + morphology, as seeded from app/graph/kin_tables."""
+    __tablename__ = "languages"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(8), unique=True)
+    name: Mapped[str] = mapped_column(String(64))
+    native_name: Mapped[str] = mapped_column(String(64), default="")
+    locale: Mapped[str] = mapped_column(String(12), default="")
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    source: Mapped[str] = mapped_column(String(40), default="")
+    data: Mapped[dict] = mapped_column(JSON, default=dict)  # the table JSON (morphology + terms)
+
+
 class KinTerm(Base):
     __tablename__ = "kin_terms"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -91,8 +104,10 @@ class KinTerm(Base):
     script_form: Mapped[str] = mapped_column(String(64), default="")
     kind: Mapped[str] = mapped_column(String(16), default="kin")  # kin | endearment | honorific
     relation_patterns: Mapped[list] = mapped_column(JSON, default=list)
+    variants: Mapped[list] = mapped_column(JSON, default=list)
     gloss: Mapped[str] = mapped_column(String(200), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Call(Base):

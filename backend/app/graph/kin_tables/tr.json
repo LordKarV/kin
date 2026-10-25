@@ -1,0 +1,693 @@
+{
+ "final_strip": [],
+ "suffixes": [
+  "larımızdan",
+  "lerimizden",
+  "larımızda",
+  "lerimizde",
+  "larımıza",
+  "lerimize",
+  "larımızı",
+  "lerimizi",
+  "larımız",
+  "lerimiz",
+  "lardan",
+  "lerden",
+  "larda",
+  "lerde",
+  "ları",
+  "leri",
+  "mız",
+  "miz",
+  "muz",
+  "müz",
+  "nız",
+  "niz",
+  "nuz",
+  "nüz",
+  "dan",
+  "den",
+  "tan",
+  "ten",
+  "yla",
+  "yle",
+  "nın",
+  "nin",
+  "nun",
+  "nün",
+  "sı",
+  "si",
+  "su",
+  "sü",
+  "ım",
+  "im",
+  "um",
+  "üm",
+  "ın",
+  "in",
+  "un",
+  "ün",
+  "da",
+  "de",
+  "ta",
+  "te",
+  "la",
+  "le",
+  "ya",
+  "ye",
+  "ca",
+  "ce",
+  "ki",
+  "m",
+  "n",
+  "ı",
+  "i",
+  "u",
+  "ü",
+  "a",
+  "e"
+ ],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "benim",
+  "bizim"
+ ],
+ "possessive_listener": [
+  "senin",
+  "sizin"
+ ],
+ "respectful_markers": [
+  "siniz",
+  "sınız",
+  "sununuz",
+  "sünüz",
+  "nız",
+  "niz",
+  "nuz",
+  "nüz"
+ ],
+ "informal_markers": [
+  "sın",
+  "sin",
+  "sun",
+  "sün"
+ ],
+ "generic_heads": [
+  "bakkal",
+  "market",
+  "manav",
+  "kasap",
+  "sofor",
+  "şoför",
+  "komsu",
+  "komşu",
+  "ogretmen",
+  "öğretmen",
+  "doktor",
+  "hemsire",
+  "hemşire",
+  "garson",
+  "esnaf",
+  "kasiyer"
+ ],
+ "frozen": [
+  "bugün",
+  "dün",
+  "yarın",
+  "simdi",
+  "şimdi",
+  "cok",
+  "çok",
+  "daha",
+  "en",
+  "hep",
+  "hic",
+  "hiç"
+ ],
+ "terms": [
+  {
+   "term": "anne",
+   "script": "anne",
+   "variants": [
+    "annem",
+    "anacığım"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "baba",
+   "script": "baba",
+   "variants": [
+    "babam"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "anneanne",
+   "script": "anneanne",
+   "variants": [
+    "anane"
+   ],
+   "patterns": [
+    "mother.mother"
+   ],
+   "gloss": "maternal grandmother",
+   "kind": "kin",
+   "notes": "mother's mother"
+  },
+  {
+   "term": "babaanne",
+   "script": "babaanne",
+   "variants": [
+    "babaanem",
+    "babanne"
+   ],
+   "patterns": [
+    "father.mother"
+   ],
+   "gloss": "paternal grandmother",
+   "kind": "kin",
+   "notes": "father's mother"
+  },
+  {
+   "term": "buyukanne",
+   "script": "büyükanne",
+   "variants": [
+    "büyükanne",
+    "buyuk anne",
+    "büyük anne"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "generic grandmother, both sides"
+  },
+  {
+   "term": "buyukbaba",
+   "script": "büyükbaba",
+   "variants": [
+    "büyükbaba",
+    "buyuk baba",
+    "büyük baba"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "generic grandfather, both sides"
+  },
+  {
+   "term": "dede",
+   "script": "dede",
+   "variants": [
+    "dedem"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather, grandpa",
+   "kind": "kin",
+   "notes": "affectionate generic grandfather"
+  },
+  {
+   "term": "amca",
+   "script": "amca",
+   "variants": [
+    "amcam"
+   ],
+   "patterns": [
+    "father.brother",
+    "father.elder_brother",
+    "father.younger_brother"
+   ],
+   "gloss": "paternal uncle",
+   "kind": "kin",
+   "notes": "father's brother"
+  },
+  {
+   "term": "dayi",
+   "script": "dayı",
+   "variants": [
+    "dayı",
+    "dayım"
+   ],
+   "patterns": [
+    "mother.brother",
+    "mother.elder_brother",
+    "mother.younger_brother"
+   ],
+   "gloss": "maternal uncle",
+   "kind": "kin",
+   "notes": "mother's brother"
+  },
+  {
+   "term": "hala",
+   "script": "hala",
+   "variants": [
+    "halam"
+   ],
+   "patterns": [
+    "father.sister",
+    "father.elder_sister",
+    "father.younger_sister"
+   ],
+   "gloss": "paternal aunt",
+   "kind": "kin",
+   "notes": "father's sister"
+  },
+  {
+   "term": "teyze",
+   "script": "teyze",
+   "variants": [
+    "teyzem"
+   ],
+   "patterns": [
+    "mother.sister",
+    "mother.elder_sister",
+    "mother.younger_sister"
+   ],
+   "gloss": "maternal aunt",
+   "kind": "kin",
+   "notes": "mother's sister"
+  },
+  {
+   "term": "yenge",
+   "script": "yenge",
+   "variants": [
+    "yengem"
+   ],
+   "patterns": [
+    "father.brother.wife",
+    "mother.brother.wife",
+    "brother.wife",
+    "elder_brother.wife",
+    "younger_brother.wife"
+   ],
+   "gloss": "aunt by marriage",
+   "kind": "kin",
+   "notes": "uncle's wife; also brother's wife"
+  },
+  {
+   "term": "eniste",
+   "script": "enişte",
+   "variants": [
+    "enişte",
+    "eniştem"
+   ],
+   "patterns": [
+    "father.sister.husband",
+    "mother.sister.husband",
+    "sister.husband",
+    "elder_sister.husband",
+    "younger_sister.husband"
+   ],
+   "gloss": "uncle by marriage",
+   "kind": "kin",
+   "notes": "aunt's husband; also sister's husband"
+  },
+  {
+   "term": "abi",
+   "script": "ağabi",
+   "variants": [
+    "ağabi",
+    "agabey",
+    "ağabey",
+    "abim"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "also polite address to older male non-relative"
+  },
+  {
+   "term": "abla",
+   "script": "abla",
+   "variants": [
+    "ablam"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "also polite address to older female non-relative"
+  },
+  {
+   "term": "kardes",
+   "script": "kardeş",
+   "variants": [
+    "kardeş",
+    "kardeşim",
+    "gardaş"
+   ],
+   "patterns": [
+    "sibling",
+    "brother",
+    "sister",
+    "younger_brother",
+    "younger_sister"
+   ],
+   "gloss": "sibling",
+   "kind": "kin",
+   "notes": "generic sibling, often younger sibling"
+  },
+  {
+   "term": "ogul",
+   "script": "oğul",
+   "variants": [
+    "oğul",
+    "oğlum"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kiz",
+   "script": "kız",
+   "variants": [
+    "kız",
+    "kızım"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": "also means girl"
+  },
+  {
+   "term": "cocuk",
+   "script": "çocuk",
+   "variants": [
+    "çocuk",
+    "çocuğum"
+   ],
+   "patterns": [
+    "child"
+   ],
+   "gloss": "child",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "torun",
+   "script": "torun",
+   "variants": [
+    "torunum"
+   ],
+   "patterns": [
+    "son.child",
+    "daughter.child",
+    "son.son",
+    "son.daughter",
+    "daughter.son",
+    "daughter.daughter"
+   ],
+   "gloss": "grandchild",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "yegen",
+   "script": "yeğen",
+   "variants": [
+    "yeğen",
+    "yeğenim"
+   ],
+   "patterns": [
+    "sibling.child",
+    "brother.child",
+    "sister.child",
+    "brother.son",
+    "brother.daughter",
+    "sister.son",
+    "sister.daughter"
+   ],
+   "gloss": "nephew/niece",
+   "kind": "kin",
+   "notes": "sibling's child"
+  },
+  {
+   "term": "kuzen",
+   "script": "kuzen",
+   "variants": [
+    "kuzenim"
+   ],
+   "patterns": [
+    "parent.sibling.child",
+    "father.brother.child",
+    "father.sister.child",
+    "mother.brother.child",
+    "mother.sister.child"
+   ],
+   "gloss": "cousin",
+   "kind": "kin",
+   "notes": "loanword, covers all cousins"
+  },
+  {
+   "term": "gelin",
+   "script": "gelin",
+   "variants": [
+    "gelinim"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law, bride",
+   "kind": "kin",
+   "notes": "son's wife"
+  },
+  {
+   "term": "damat",
+   "script": "damat",
+   "variants": [
+    "damadım",
+    "güveyi"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "son-in-law, bridegroom",
+   "kind": "kin",
+   "notes": "daughter's husband"
+  },
+  {
+   "term": "kayinvalide",
+   "script": "kayınvalide",
+   "variants": [
+    "kayınvalide",
+    "kaynana",
+    "kayınanne",
+    "kayın validem"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "husband.mother",
+    "wife.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kayinpeder",
+   "script": "kayınpeder",
+   "variants": [
+    "kayınpeder",
+    "kaynıpeder",
+    "kaynata",
+    "kayınpeder"
+   ],
+   "patterns": [
+    "spouse.father",
+    "husband.father",
+    "wife.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kayinbirader",
+   "script": "kayınbirader",
+   "variants": [
+    "kayınbirader",
+    "kayınço",
+    "kayınbiraderim"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "wife.brother",
+    "husband.brother"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "spouse's brother"
+  },
+  {
+   "term": "baldiz",
+   "script": "baldız",
+   "variants": [
+    "baldız",
+    "baldızım"
+   ],
+   "patterns": [
+    "wife.sister",
+    "wife.elder_sister",
+    "wife.younger_sister"
+   ],
+   "gloss": "sister-in-law (wife's sister)",
+   "kind": "kin",
+   "notes": "wife's sister"
+  },
+  {
+   "term": "gorumce",
+   "script": "görümce",
+   "variants": [
+    "görümce",
+    "görümcem"
+   ],
+   "patterns": [
+    "husband.sister",
+    "husband.elder_sister",
+    "husband.younger_sister"
+   ],
+   "gloss": "sister-in-law (husband's sister)",
+   "kind": "kin",
+   "notes": "husband's sister"
+  },
+  {
+   "term": "elti",
+   "script": "elti",
+   "variants": [
+    "eltim"
+   ],
+   "patterns": [
+    "husband.brother.wife",
+    "spouse.brother.wife"
+   ],
+   "gloss": "co-sister-in-law",
+   "kind": "kin",
+   "notes": "husband's brother's wife"
+  },
+  {
+   "term": "es",
+   "script": "eş",
+   "variants": [
+    "eş",
+    "eşim"
+   ],
+   "patterns": [
+    "spouse",
+    "husband",
+    "wife"
+   ],
+   "gloss": "spouse",
+   "kind": "kin",
+   "notes": "gender-neutral spouse"
+  },
+  {
+   "term": "koca",
+   "script": "koca",
+   "variants": [
+    "kocam"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "kari",
+   "script": "karı",
+   "variants": [
+    "karı",
+    "karım"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": "colloquial; hanım/eş more polite"
+  },
+  {
+   "term": "canim",
+   "script": "canım",
+   "variants": [
+    "canım",
+    "canim benim"
+   ],
+   "patterns": [],
+   "gloss": "my dear, darling",
+   "kind": "endearment",
+   "notes": "affectionate address, often to child or spouse"
+  },
+  {
+   "term": "yavrum",
+   "script": "yavrum",
+   "variants": [
+    "yavrum",
+    "yavrucuğum"
+   ],
+   "patterns": [],
+   "gloss": "my child, dearie",
+   "kind": "endearment",
+   "notes": "affectionate address to child"
+  },
+  {
+   "term": "bey",
+   "script": "bey",
+   "variants": [
+    "beyefendi"
+   ],
+   "patterns": [],
+   "gloss": "Mr, sir",
+   "kind": "honorific",
+   "notes": "respectful male address, after name"
+  },
+  {
+   "term": "hanim",
+   "script": "hanım",
+   "variants": [
+    "hanım",
+    "hanımefendi"
+   ],
+   "patterns": [],
+   "gloss": "Mrs, ma'am",
+   "kind": "honorific",
+   "notes": "respectful female address, after name"
+  }
+ ],
+ "code": "tr",
+ "name": "Turkish",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

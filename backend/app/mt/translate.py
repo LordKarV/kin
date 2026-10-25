@@ -12,7 +12,7 @@ from functools import lru_cache
 
 from ..graph.kinship import FamilyGraph
 from ..graph.linker import Linker, Span
-from ..graph.ontology import KIN_TERMS
+from ..graph.kin_tables import load_table
 from ..llm import LLM, StructuredOutputError, get_llm
 from .pragmatics import filter_cards
 from .schemas import GroundedSpan, TranslationOut
@@ -55,7 +55,11 @@ class Translator:
         self.g = graph
         self.linker = Linker(graph)
         self._llm = llm
-        self.lang = LANG_NAMES.get(graph.heritage_lang, graph.heritage_lang)
+        try:
+            self.table = load_table(graph.heritage_lang)
+        except (KeyError, FileNotFoundError):
+            self.table = load_table("ta")
+        self.lang = self.table.name
         self._system_cache: dict[str, str] = {}
 
     @property
@@ -78,7 +82,7 @@ class Translator:
         lines += ["", "DISHES / PLACES / EVENTS (keep the family's names):"]
         for t in self.g.things:
             lines.append(f"- {t.slug} [{t.kind}]: {t.name} ({t.lang_name}); also {', '.join(a for a in t.aliases[:6])}. {t.note}")
-        lines += ["", f"{self.lang.upper()} KIN TERMS: " + "; ".join(f"{d.term}={d.gloss}" for d in KIN_TERMS if d.kind == "kin")]
+        lines += ["", f"{self.lang.upper()} KIN TERMS: " + "; ".join(f"{d.term}={d.gloss}" for d in self.table.terms if d.kind == "kin")]
         s = "\n".join(lines)
         self._system_cache[listener] = s
         return s

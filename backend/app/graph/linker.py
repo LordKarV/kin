@@ -12,22 +12,16 @@ from dataclasses import dataclass, field
 
 from rapidfuzz import fuzz
 
+from .kin_tables import LanguageTable, load_table
 from .kinship import FamilyGraph
-from .ontology import KinTermDef, all_surface_forms, lookup, normalize_term
+from .ontology import KinTermDef, normalize_term
 
-VIRAMA = "்"
-TAMIL = re.compile(r"[஀-௿]")
-POSSESSIVE_SPEAKER = {"என்", "எங்க", "en", "enga", "ennoda", "என்னோட"}
-POSSESSIVE_LISTENER = {"உன்", "உங்க", "un", "unga", "unnoda", "உன்னோட", "ungaloda"}
-RESPECTFUL = re.compile(r"(ாரு|ாரா|ாங்க|ீங்க|ாரே|aaru|aaraa|aanga|eenga|aare)\b")
-INFORMAL = re.compile(r"(ான்|ாள்|ானா|ாளா|aan|aal|aanaa)\b")
-GENERIC_HEADS = {"கடை", "கடைக்காரர்", "கடைக்காரி", "டிரைவர்", "ஆட்டோ", "பக்கத்து", "வீட்டு", "பூக்காரி", "பால்காரன்", "ஸ்கூல்", "ஆபீஸ்",
-                 "kadai", "driver", "auto", "pakkathu", "veettu", "shop", "school", "office"}
+NON_LATIN = re.compile(r"[^\x00-\x7f]")
+GENERIC_HEADS_EN = {"shop", "driver", "auto", "school", "office", "neighbour", "neighbor", "teacher", "doctor", "nurse"}
 SIBLING_TERMS = {"anna", "akka", "thambi", "thangai", "mama", "mami"}
 COMPOSITIONAL_ONLY = {"paiyan", "ponnu"}
-# romanized case/clitic suffixes that may follow an alias ("ravikku", "madurai-la"); anything else is a different word ("appam" is not appa)
-ROMAN_SUFFIXES = {"kku", "ukku", "kkum", "la", "le", "ila", "yila", "lerndhu", "lirundhu", "oda", "voda", "yoda", "um", "yum", "vum", "ai", "yai", "vai",
-                  "kitta", "kkitta", "kkaaga", "nnu", "a", "aa", "va", "vaa", "ya", "yaa", "ku", "ukkum", "laam"}
+# romanized suffixes common across the Indic languages; each language table adds its own (ROMAN_SUFFIXES ∪ table.roman_suffixes)
+ROMAN_SUFFIXES = {"kku", "ukku", "la", "le", "um", "ai", "a", "aa", "ku", "ka", "ki", "ko", "ne", "se", "me", "ya", "s", "es"}
 
 
 @dataclass
@@ -73,8 +67,8 @@ class _Match:
 
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFC", s).lower().replace(".", "")
-    s = s.strip("\"'“”‘’()[]{},;:!?।-–—")
-    s = re.sub(r"-.*$", "", s) if TAMIL.search(s) is None and "-" in s else s  # Adyar-lerndhu → adyar
+    s = s.strip("\"'“”‘’()[]{},;:!?।-–—、。，")
+    s = re.sub(r"-.*$", "", s) if NON_LATIN.search(s) is None and "-" in s else s  # Adyar-lerndhu → adyar
     return s
 
 
@@ -82,25 +76,27 @@ def _knorm(s: str) -> str:
     return normalize_term(_norm(s))
 
 
-def _stem(alias_norm: str) -> str:
-    """Tamil: drop the final pulli (or -ம்) so suffixed forms prefix-match."""
-    if alias_norm.endswith("ம" + VIRAMA):
-        return alias_norm[:-2]
-    if alias_norm.endswith(VIRAMA):
-        return alias_norm[:-1]
+def _stem(alias_norm: str, final_strip=("ம்", "்")) -> str:
+    """Drop a droppable final (e.g. Tamil pulli / -ம்) so suffixed forms prefix-match."""
+    for f in sorted(final_strip, key=len, reverse=True):
+        if f and alias_norm.endswith(f):
+            return alias_norm[: -len(f)]
     return alias_norm
 
 
-def _prefix_match(tok_norm: str, alias_norm: str, exact_only: bool = False) -> bool:
+def _prefix_match(tok_norm: str, alias_norm: str, exact_only: bool = False, table: LanguageTable | None = None) -> bool:
     if not tok_norm or not alias_norm:
         return False
     if tok_norm == alias_norm:
         return True
     if exact_only:
         return False
-    if TAMIL.search(alias_norm):
-        return tok_norm.startswith(_stem(alias_norm))
-    if tok_norm.startswith(alias_norm) and tok_norm[len(alias_norm):] in ROMAN_SUFFIXES:
+    if NON_LATIN.search(alias_norm):
+        if table is not None and not table.final_strip and not table.suffixes:
+            return False  # isolating scripts (Chinese, Japanese, Thai...): no inflection, exact only
+        return tok_norm.startswith(_stem(alias_norm, table.final_strip if table else ("ம்", "்")))
+    sufs = ROMAN_SUFFIXES | set(table.roman_suffixes if table else [])
+    if tok_norm.startswith(alias_norm) and tok_norm[len(alias_norm):] in sufs:
         return True
     # fuzzy only for long aliases, same initial, strict ratio (spelling variants like lakshmi/lakshmy), never short words
     return len(alias_norm) >= 6 and tok_norm[0] == alias_norm[0] and fuzz.ratio(tok_norm, alias_norm) >= 90
@@ -109,6 +105,16 @@ def _prefix_match(tok_norm: str, alias_norm: str, exact_only: bool = False) -> b
 class Linker:
     def __init__(self, graph: FamilyGraph):
         self.g = graph
+        try:
+            self.table = load_table(graph.heritage_lang)
+        except (KeyError, FileNotFoundError):
+            self.table = load_table("ta")
+        t = self.table
+        self.possessive_speaker = set(t.possessive_speaker)
+        self.possessive_listener = set(t.possessive_listener)
+        self.respectful = re.compile("(" + "|".join(re.escape(x) for x in t.respectful_markers) + r")\b") if t.respectful_markers else None
+        self.informal = re.compile("(" + "|".join(re.escape(x) for x in t.informal_markers) + r")\b") if t.informal_markers else None
+        self.generic_heads = GENERIC_HEADS_EN | set(t.generic_heads)
         # alias index: normalized alias → set of person ids / list of things
         self.person_alias: dict[str, set[int]] = {}
         for pid, p in graph.people.items():
@@ -122,7 +128,7 @@ class Linker:
             for alias in [t.name, t.lang_name, *t.aliases]:
                 if alias:
                     self.thing_alias.setdefault(_norm(alias), []).append(t)
-        self.kin_forms: dict[str, KinTermDef] = dict(all_surface_forms())  # keys are normalize_term()-ed
+        self.kin_forms: dict[str, KinTermDef] = self.table.surface_forms()  # keys are normalize_term()-ed
         self.max_n = 3
 
     # ---- public --------------------------------------------------------------
@@ -141,9 +147,9 @@ class Linker:
         """Latin-script names/dishes/places to bias the ASR (Deepgram keyterm / Muse keywords)."""
         out: list[str] = []
         for p in self.g.people.values():
-            out += [a for a, _l, k in p.aliases if not TAMIL.search(a)]
+            out += [a for a, _l, k in p.aliases if not NON_LATIN.search(a)]
         for t in self.g.things:
-            out += [a for a in [t.name, *t.aliases] if a and not TAMIL.search(a)]
+            out += [a for a in [t.name, *t.aliases] if a and not NON_LATIN.search(a)]
         seen, uniq = set(), []
         for w in out:
             if w.lower() not in seen:
@@ -185,7 +191,7 @@ class Linker:
             parts = alias.split(" ")
             if len(parts) != len(toks_norm):
                 return False
-            return all(a == b for a, b in zip(parts[:-1], toks_norm[:-1])) and _prefix_match(toks_norm[-1], parts[-1], exact_only)
+            return all(a == b for a, b in zip(parts[:-1], toks_norm[:-1])) and _prefix_match(toks_norm[-1], parts[-1], exact_only, self.table)
 
         # 1) person aliases
         persons: set[int] = set()
@@ -279,9 +285,9 @@ class Linker:
         if term is None or not term.patterns:
             return set()
         prev = toks[mm.i - 1].norm if mm.i > 0 else ""
-        if prev in POSSESSIVE_SPEAKER and sp is not None:
+        if prev in self.possessive_speaker and sp is not None:
             return self.g.resolve_kin_term(term, sp)
-        if prev in POSSESSIVE_LISTENER and li is not None:
+        if prev in self.possessive_listener and li is not None:
             return self.g.resolve_kin_term(term, li)
         if term.term in COMPOSITIONAL_ONLY:
             return set()
@@ -355,10 +361,10 @@ class Linker:
         if mm.term is None or mm.term.term not in SIBLING_TERMS or mm.persons:
             return False
         prev = toks[mm.i - 1].norm if mm.i > 0 else ""
-        if prev in POSSESSIVE_SPEAKER | POSSESSIVE_LISTENER:
+        if prev in self.possessive_speaker | self.possessive_listener:
             return False
         prevk = toks[mm.i - 1].knorm if mm.i > 0 else ""
-        if any(prev.endswith(_stem(h)) or h in prev or h in prevk for h in GENERIC_HEADS):
+        if any(prev.endswith(_stem(h, self.table.final_strip)) or h in prev or h in prevk for h in self.generic_heads):
             return True
         # two bare sibling terms in a row ("annan thambi") is a generic phrase, not two relatives
         for other in matches:
@@ -369,7 +375,7 @@ class Linker:
     def _pick_person(self, cands: set[int], toks, i, j, sp, li, salience, co_mentions, place_things=(), vocative=False) -> int:
         scores: dict[int, float] = {c: 0.0 for c in cands}
         sent = " ".join(t.norm for t in toks)
-        resp = bool(RESPECTFUL.search(sent)); inf = bool(INFORMAL.search(sent))
+        resp = bool(self.respectful and self.respectful.search(sent)); inf = bool(self.informal and self.informal.search(sent))
         for c in cands:
             node = self.g.people[c]
             if vocative and li is not None and c == li and (i == 0 or toks[j + 1].core.startswith(("நீ", "nee")) if j + 1 < len(toks) else True):
@@ -381,13 +387,13 @@ class Linker:
                     d = self.g.distance(c, other)
                     scores[c] += 2.5 if d == 1 else 1.0 if d == 2 else 0.0
             for t in place_things:
-                if any(a.lower() in node.notes.lower() for a in [t.name, *t.aliases] if a and not TAMIL.search(a) and len(a) > 3):
+                if any(a.lower() in node.notes.lower() for a in [t.name, *t.aliases] if a and not NON_LATIN.search(a) and len(a) > 3):
                     scores[c] += 2
                 if any(a.lower() in t.note.lower() for a, _l, k in node.aliases if k == "address"):
                     scores[c] += 2
             for cue in node.cues:
                 cn = _norm(cue)
-                if any(_prefix_match(t.norm, cn) or (len(cn) >= 5 and cn in t.norm) for t in toks) or (" " in cn and cn in sent):
+                if any(_prefix_match(t.norm, cn, table=self.table) or (len(cn) >= 5 and cn in t.norm) for t in toks) or (" " in cn and cn in sent):
                     scores[c] += 1
             w = salience.get(c, 0.0)
             scores[c] += 1.5 * w

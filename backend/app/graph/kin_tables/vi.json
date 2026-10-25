@@ -1,0 +1,735 @@
+{
+ "final_strip": [],
+ "suffixes": [],
+ "roman_suffixes": [],
+ "possessive_speaker": [],
+ "possessive_listener": [],
+ "respectful_markers": [
+  "ạ",
+  "dạ"
+ ],
+ "informal_markers": [
+  "ơi"
+ ],
+ "generic_heads": [
+  "hàng xóm",
+  "hang xom",
+  "lái xe",
+  "lai xe",
+  "tài xế",
+  "tai xe",
+  "bán hàng",
+  "ban hang",
+  "giao hàng",
+  "giao hang",
+  "giáo",
+  "giao",
+  "bảo vệ",
+  "bao ve",
+  "phục vụ",
+  "phuc vu",
+  "xe ôm",
+  "xe om",
+  "giúp việc",
+  "giup viec"
+ ],
+ "frozen": [
+  "hôm nay",
+  "hom nay",
+  "hôm qua",
+  "hom qua",
+  "ngày mai",
+  "ngay mai",
+  "bây giờ",
+  "bay gio",
+  "rất",
+  "rat",
+  "lắm",
+  "lam",
+  "quá",
+  "qua",
+  "hôm kia",
+  "hom kia"
+ ],
+ "terms": [
+  {
+   "term": "mẹ",
+   "script": "mẹ",
+   "variants": [
+    "me",
+    "má",
+    "ma",
+    "mạ",
+    "u",
+    "bu"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "Northern and general; Southern also má. Used as pronoun for address."
+  },
+  {
+   "term": "bố",
+   "script": "bố",
+   "variants": [
+    "bo",
+    "bố",
+    "ba",
+    "cha",
+    "tía",
+    "tia",
+    "thầy",
+    "thay"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "Northern general; Southern ba, formal cha."
+  },
+  {
+   "term": "ông nội",
+   "script": "ông nội",
+   "variants": [
+    "ong noi",
+    "ông nôi",
+    "ong noi"
+   ],
+   "patterns": [
+    "father.father"
+   ],
+   "gloss": "paternal grandfather",
+   "kind": "kin",
+   "notes": "Father's father."
+  },
+  {
+   "term": "bà nội",
+   "script": "bà nội",
+   "variants": [
+    "ba noi",
+    "bà nôi",
+    "ba noi"
+   ],
+   "patterns": [
+    "father.mother"
+   ],
+   "gloss": "paternal grandmother",
+   "kind": "kin",
+   "notes": "Father's mother."
+  },
+  {
+   "term": "ông ngoại",
+   "script": "ông ngoại",
+   "variants": [
+    "ong ngoai",
+    "ông ngoai"
+   ],
+   "patterns": [
+    "mother.father"
+   ],
+   "gloss": "maternal grandfather",
+   "kind": "kin",
+   "notes": "Mother's father."
+  },
+  {
+   "term": "bà ngoại",
+   "script": "bà ngoại",
+   "variants": [
+    "ba ngoai",
+    "bà ngoai"
+   ],
+   "patterns": [
+    "mother.mother"
+   ],
+   "gloss": "maternal grandmother",
+   "kind": "kin",
+   "notes": "Mother's mother."
+  },
+  {
+   "term": "ông",
+   "script": "ông",
+   "variants": [
+    "ong"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": "Generic grandfather, also polite address to old man."
+  },
+  {
+   "term": "bà",
+   "script": "bà",
+   "variants": [
+    "ba"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": "Generic grandmother, also polite address to old woman."
+  },
+  {
+   "term": "bác",
+   "script": "bác",
+   "variants": [
+    "bac",
+    "bác trai",
+    "bac trai",
+    "bác gái",
+    "bac gai"
+   ],
+   "patterns": [
+    "father.elder_brother",
+    "father.elder_sister",
+    "mother.elder_brother",
+    "mother.elder_sister"
+   ],
+   "gloss": "parent's elder sibling",
+   "kind": "kin",
+   "notes": "Parent's elder brother or sister, male bác trai, female bác gái; also spouse of parent's elder sibling."
+  },
+  {
+   "term": "chú",
+   "script": "chú",
+   "variants": [
+    "chu",
+    "chú ruột",
+    "chu ruot"
+   ],
+   "patterns": [
+    "father.younger_brother"
+   ],
+   "gloss": "father's younger brother",
+   "kind": "kin",
+   "notes": "Northern; also polite address to younger middle-aged man."
+  },
+  {
+   "term": "cô",
+   "script": "cô",
+   "variants": [
+    "co",
+    "cô ruột",
+    "co ruot",
+    "o"
+   ],
+   "patterns": [
+    "father.sister",
+    "father.younger_sister"
+   ],
+   "gloss": "father's sister",
+   "kind": "kin",
+   "notes": "Father's sister, typically younger; elder may be bác gái. Also polite address / teacher."
+  },
+  {
+   "term": "thím",
+   "script": "thím",
+   "variants": [
+    "thim",
+    "tím",
+    "tim"
+   ],
+   "patterns": [
+    "father.younger_brother.wife"
+   ],
+   "gloss": "father's younger brother's wife",
+   "kind": "kin",
+   "notes": "Wife of chú."
+  },
+  {
+   "term": "cậu",
+   "script": "cậu",
+   "variants": [
+    "cau",
+    "cậu ruột",
+    "cau ruot"
+   ],
+   "patterns": [
+    "mother.brother",
+    "mother.younger_brother"
+   ],
+   "gloss": "mother's brother",
+   "kind": "kin",
+   "notes": "Mother's brother; northern younger, southern general. Elder may be bác."
+  },
+  {
+   "term": "mợ",
+   "script": "mợ",
+   "variants": [
+    "mo",
+    "mợ ruột",
+    "mo ruot"
+   ],
+   "patterns": [
+    "mother.brother.wife",
+    "mother.younger_brother.wife"
+   ],
+   "gloss": "mother's brother's wife",
+   "kind": "kin",
+   "notes": "Wife of cậu."
+  },
+  {
+   "term": "dì",
+   "script": "dì",
+   "variants": [
+    "di",
+    "dì ruột",
+    "di ruot",
+    "gì",
+    "gi"
+   ],
+   "patterns": [
+    "mother.sister",
+    "mother.younger_sister"
+   ],
+   "gloss": "mother's sister",
+   "kind": "kin",
+   "notes": "Mother's sister, typically younger; elder may be bác gái."
+  },
+  {
+   "term": "dượng",
+   "script": "dượng",
+   "variants": [
+    "duong",
+    "giượng",
+    "giong",
+    "dượng út",
+    "chú dượng",
+    "chu duong"
+   ],
+   "patterns": [
+    "mother.sister.husband",
+    "mother.younger_sister.husband"
+   ],
+   "gloss": "mother's sister's husband",
+   "kind": "kin",
+   "notes": "Husband of dì; also chú dượng. Variant giượng southern."
+  },
+  {
+   "term": "anh",
+   "script": "anh",
+   "variants": [
+    "a",
+    "anh trai",
+    "anh ruot"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "Elder brother; also polite address to slightly older man and husband's elder brother."
+  },
+  {
+   "term": "chị",
+   "script": "chị",
+   "variants": [
+    "chi",
+    "chį",
+    "chị gái",
+    "chi gai"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "Elder sister; also polite address to slightly older woman."
+  },
+  {
+   "term": "em trai",
+   "script": "em trai",
+   "variants": [
+    "em trai",
+    "e trai"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": "Younger brother."
+  },
+  {
+   "term": "em gái",
+   "script": "em gái",
+   "variants": [
+    "em gai",
+    "e gai"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": "Younger sister."
+  },
+  {
+   "term": "con",
+   "script": "con",
+   "variants": [],
+   "patterns": [
+    "child",
+    "son",
+    "daughter"
+   ],
+   "gloss": "child",
+   "kind": "kin",
+   "notes": "Generic child; also first-person pronoun used to parents and elders."
+  },
+  {
+   "term": "con trai",
+   "script": "con trai",
+   "variants": [
+    "con trai"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "con gái",
+   "script": "con gái",
+   "variants": [
+    "con gai"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "cháu",
+   "script": "cháu",
+   "variants": [
+    "chau",
+    "cháu trai",
+    "chau trai",
+    "cháu gái",
+    "chau gai"
+   ],
+   "patterns": [
+    "son.child",
+    "daughter.child",
+    "child.child",
+    "sibling.child",
+    "brother.child",
+    "sister.child"
+   ],
+   "gloss": "grandchild; nephew; niece",
+   "kind": "kin",
+   "notes": "Child's child and sibling's child; also self-pronoun to grandparents."
+  },
+  {
+   "term": "chắt",
+   "script": "chắt",
+   "variants": [
+    "chat",
+    "chắc",
+    "chac"
+   ],
+   "patterns": [
+    "child.child.child",
+    "son.child.child",
+    "daughter.child.child"
+   ],
+   "gloss": "great-grandchild",
+   "kind": "kin",
+   "notes": "Child of cháu."
+  },
+  {
+   "term": "bố chồng",
+   "script": "bố chồng",
+   "variants": [
+    "bo chong",
+    "ba chồng",
+    "ba chong",
+    "bố chồng"
+   ],
+   "patterns": [
+    "husband.father",
+    "spouse.father"
+   ],
+   "gloss": "husband's father; father-in-law",
+   "kind": "kin",
+   "notes": "Wife's term for husband's father."
+  },
+  {
+   "term": "mẹ chồng",
+   "script": "mẹ chồng",
+   "variants": [
+    "me chong",
+    "má chồng",
+    "ma chong"
+   ],
+   "patterns": [
+    "husband.mother",
+    "spouse.mother"
+   ],
+   "gloss": "husband's mother; mother-in-law",
+   "kind": "kin",
+   "notes": "Wife's term for husband's mother."
+  },
+  {
+   "term": "bố vợ",
+   "script": "bố vợ",
+   "variants": [
+    "bo vo",
+    "ba vợ",
+    "ba vo",
+    "bố vơ"
+   ],
+   "patterns": [
+    "wife.father",
+    "spouse.father"
+   ],
+   "gloss": "wife's father; father-in-law",
+   "kind": "kin",
+   "notes": "Husband's term for wife's father."
+  },
+  {
+   "term": "mẹ vợ",
+   "script": "mẹ vợ",
+   "variants": [
+    "me vo",
+    "má vợ",
+    "ma vo"
+   ],
+   "patterns": [
+    "wife.mother",
+    "spouse.mother"
+   ],
+   "gloss": "wife's mother; mother-in-law",
+   "kind": "kin",
+   "notes": "Husband's term for wife's mother."
+  },
+  {
+   "term": "con dâu",
+   "script": "con dâu",
+   "variants": [
+    "con dau",
+    "nàng dâu",
+    "nang dau"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": "Son's wife."
+  },
+  {
+   "term": "con rể",
+   "script": "con rể",
+   "variants": [
+    "con re"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": "Daughter's husband."
+  },
+  {
+   "term": "chị dâu",
+   "script": "chị dâu",
+   "variants": [
+    "chi dau",
+    "chị đâu"
+   ],
+   "patterns": [
+    "elder_brother.wife",
+    "brother.wife"
+   ],
+   "gloss": "elder brother's wife",
+   "kind": "kin",
+   "notes": "Wife of elder brother."
+  },
+  {
+   "term": "anh rể",
+   "script": "anh rể",
+   "variants": [
+    "anh re"
+   ],
+   "patterns": [
+    "elder_sister.husband",
+    "sister.husband"
+   ],
+   "gloss": "elder sister's husband",
+   "kind": "kin",
+   "notes": "Husband of elder sister."
+  },
+  {
+   "term": "em dâu",
+   "script": "em dâu",
+   "variants": [
+    "em dau"
+   ],
+   "patterns": [
+    "younger_brother.wife",
+    "brother.wife"
+   ],
+   "gloss": "younger brother's wife",
+   "kind": "kin",
+   "notes": "Wife of younger brother."
+  },
+  {
+   "term": "em rể",
+   "script": "em rể",
+   "variants": [
+    "em re"
+   ],
+   "patterns": [
+    "younger_sister.husband",
+    "sister.husband"
+   ],
+   "gloss": "younger sister's husband",
+   "kind": "kin",
+   "notes": "Husband of younger sister."
+  },
+  {
+   "term": "chồng",
+   "script": "chồng",
+   "variants": [
+    "chong",
+    "ông xã",
+    "ong xa",
+    "nhà tôi",
+    "nha toi"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "vợ",
+   "script": "vợ",
+   "variants": [
+    "vo",
+    "bà xã",
+    "ba xa",
+    "nhà tôi",
+    "nha toi"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "anh họ",
+   "script": "anh họ",
+   "variants": [
+    "anh ho",
+    "ông anh họ",
+    "ong anh ho"
+   ],
+   "patterns": [
+    "parent.sibling.child",
+    "parent.sibling.son",
+    "father.brother.son",
+    "mother.brother.son",
+    "father.sister.son",
+    "mother.sister.son"
+   ],
+   "gloss": "elder male cousin",
+   "kind": "kin",
+   "notes": "Elder male cousin, parent's sibling's son older than ego."
+  },
+  {
+   "term": "em họ",
+   "script": "em họ",
+   "variants": [
+    "em ho",
+    "em họ gái",
+    "em ho gai",
+    "em họ trai",
+    "em ho trai"
+   ],
+   "patterns": [
+    "parent.sibling.child",
+    "sibling.child"
+   ],
+   "gloss": "younger cousin",
+   "kind": "kin",
+   "notes": "Younger cousin regardless of sex; female younger em họ gái."
+  },
+  {
+   "term": "ạ",
+   "script": "ạ",
+   "variants": [
+    "a"
+   ],
+   "patterns": [],
+   "gloss": "respectful sentence-final particle",
+   "kind": "honorific",
+   "notes": "Marks respect to elders / superiors; attached after kin term: mẹ ạ, dạ."
+  },
+  {
+   "term": "dạ",
+   "script": "dạ",
+   "variants": [
+    "da",
+    "dạ vâng",
+    "da vang"
+   ],
+   "patterns": [],
+   "gloss": "polite yes / respectful response particle",
+   "kind": "honorific",
+   "notes": "Polite answer to elders; dạ thưa, dạ vâng."
+  },
+  {
+   "term": "con yêu",
+   "script": "con yêu",
+   "variants": [
+    "con yeu",
+    "con yêu ơi",
+    "con yeu oi"
+   ],
+   "patterns": [],
+   "gloss": "dear child; darling",
+   "kind": "endearment",
+   "notes": "Affectionate address to one's child."
+  },
+  {
+   "term": "bé cưng",
+   "script": "bé cưng",
+   "variants": [
+    "be cung",
+    "bé con",
+    "be con",
+    "cưng ơi",
+    "cung oi"
+   ],
+   "patterns": [],
+   "gloss": "sweetie; baby",
+   "kind": "endearment",
+   "notes": "Affectionate term for small child, bé + cưng."
+  }
+ ],
+ "code": "vi",
+ "name": "Vietnamese",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

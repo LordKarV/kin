@@ -20,10 +20,40 @@ def _clean(tok: str) -> str:
     return tok
 
 
-def lemma(tok: str) -> str:
+ENGLISH_STOP = {"the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "to", "of", "in", "on", "at", "for", "with", "you", "your", "i", "my",
+                "we", "our", "he", "she", "it", "they", "this", "that", "ok", "okay", "yes", "no", "not", "phone", "call", "video"}
+
+
+def _table(lang: str):
+    from ..graph.kin_tables import load_table
+    try:
+        return load_table(lang)
+    except (KeyError, FileNotFoundError):
+        return load_table("ta")
+
+
+def lemma(tok: str, lang: str = "ta") -> str:
     t = _clean(tok)
-    if t in FROZEN or t.lower() in FROZEN:
-        return t if TAMIL.search(t) else t.lower()
+    tb = _table(lang)
+    frozen = set(tb.frozen) | (FROZEN if lang == "ta" else set())
+    if t in frozen or t.lower() in frozen:
+        return t if tb.is_script(t) else t.lower()
+    if tb.is_script(t):
+        for suf in (tb.suffixes or []):
+            if t.endswith(suf) and len(t) - len(suf) >= 2:
+                return t[: -len(suf)]
+        return t
+    if "-" in t:
+        return t.lower().split("-")[0]
+    t = t.lower()
+    for suf in sorted(set(tb.roman_suffixes) | (set(ROMAN_SUFFIXES) if lang == "ta" else set()), key=len, reverse=True):
+        if t.endswith(suf) and len(t) - len(suf) >= 3:
+            return t[: -len(suf)]
+    return t
+
+
+def _lemma_tamil_legacy(tok: str) -> str:
+    t = _clean(tok)
     if TAMIL.search(t):
         for suf in TAMIL_SUFFIXES:
             if t.endswith(suf) and len(t) - len(suf) >= 2:
@@ -40,21 +70,24 @@ def lemma(tok: str) -> str:
     return t
 
 
-def is_heritage(tok: str) -> bool:
+def is_heritage(tok: str, lang: str = "ta") -> bool:
     t = _clean(tok)
-    if TAMIL.search(t):
+    tb = _table(lang)
+    if tb.is_script(t):
         return True
-    # romanized Tamil heuristics: not a plain English word (very rough): contains typical sequences
-    return bool(re.search(r"(aa|zh|nn|tt|dh|th|kk|ng|nga|ch)", t.lower())) and t.isalpha() and len(t) >= 4
+    if tb.script:  # a non-Latin-script language: Latin tokens are romanization only if they look like it (Tamil-style clusters)
+        return bool(re.search(r"(aa|zh|nn|tt|dh|th|kk|ng|nga|ch)", t.lower())) and t.isalpha() and len(t) >= 4
+    # Latin-script heritage language (Spanish, Tagalog...): the grandparent side speaks it; anything that is not an obvious English word counts
+    return t.isalpha() and len(t) >= 3 and t.lower() not in ENGLISH_STOP
 
 
-def heritage_lemmas(text: str) -> list[str]:
+def heritage_lemmas(text: str, lang: str = "ta") -> list[str]:
     out: list[str] = []
     for tok in re.findall(r"\S+", text):
         t = _clean(tok)
-        if len(t) < 2 or not is_heritage(t):
+        if len(t) < 2 or not is_heritage(t, lang):
             continue
-        lm = lemma(t)
+        lm = lemma(t, lang)
         if lm in STOP or len(lm) < 2:
             continue
         if lm not in out:

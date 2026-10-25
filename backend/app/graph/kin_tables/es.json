@@ -1,0 +1,676 @@
+{
+ "final_strip": [],
+ "suffixes": [],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "mi",
+  "mis",
+  "nuestro",
+  "nuestra",
+  "nuestros",
+  "nuestras"
+ ],
+ "possessive_listener": [
+  "tu",
+  "tus",
+  "su",
+  "sus",
+  "vuestro",
+  "vuestra",
+  "vuestros",
+  "vuestras"
+ ],
+ "respectful_markers": [
+  "usted",
+  "ustedes"
+ ],
+ "informal_markers": [
+  "ito",
+  "ita",
+  "itos",
+  "itas",
+  "cito",
+  "cita",
+  "citos",
+  "citas"
+ ],
+ "generic_heads": [],
+ "frozen": [
+  "hoy",
+  "ayer",
+  "mañana",
+  "muy",
+  "ahora",
+  "siempre",
+  "también",
+  "aquí",
+  "ahí",
+  "entonces"
+ ],
+ "terms": [
+  {
+   "term": "madre",
+   "script": "madre",
+   "variants": [
+    "madre"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "padre",
+   "script": "padre",
+   "variants": [
+    "padre"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "mama",
+   "script": "mamá",
+   "variants": [
+    "mamá",
+    "mami",
+    "ma"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mom",
+   "kind": "kin",
+   "notes": "informal / vocative for mother"
+  },
+  {
+   "term": "papa",
+   "script": "papá",
+   "variants": [
+    "papá",
+    "papi",
+    "pa"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "dad",
+   "kind": "kin",
+   "notes": "informal / vocative for father"
+  },
+  {
+   "term": "abuela",
+   "script": "abuela",
+   "variants": [
+    "abuela",
+    "abuelita"
+   ],
+   "patterns": [
+    "mother.mother",
+    "father.mother"
+   ],
+   "gloss": "grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "abuelo",
+   "script": "abuelo",
+   "variants": [
+    "abuelo",
+    "abuelito"
+   ],
+   "patterns": [
+    "mother.father",
+    "father.father"
+   ],
+   "gloss": "grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "abuela materna",
+   "script": "abuela materna",
+   "variants": [
+    "abuela materna"
+   ],
+   "patterns": [
+    "mother.mother"
+   ],
+   "gloss": "maternal grandmother",
+   "kind": "kin",
+   "notes": "specified by materna"
+  },
+  {
+   "term": "abuelo materno",
+   "script": "abuelo materno",
+   "variants": [
+    "abuelo materno"
+   ],
+   "patterns": [
+    "mother.father"
+   ],
+   "gloss": "maternal grandfather",
+   "kind": "kin",
+   "notes": "specified by materno"
+  },
+  {
+   "term": "abuela paterna",
+   "script": "abuela paterna",
+   "variants": [
+    "abuela paterna"
+   ],
+   "patterns": [
+    "father.mother"
+   ],
+   "gloss": "paternal grandmother",
+   "kind": "kin",
+   "notes": "specified by paterna"
+  },
+  {
+   "term": "abuelo paterno",
+   "script": "abuelo paterno",
+   "variants": [
+    "abuelo paterno"
+   ],
+   "patterns": [
+    "father.father"
+   ],
+   "gloss": "paternal grandfather",
+   "kind": "kin",
+   "notes": "specified by paterno"
+  },
+  {
+   "term": "tio",
+   "script": "tío",
+   "variants": [
+    "tío",
+    "tiito"
+   ],
+   "patterns": [
+    "mother.brother",
+    "father.brother",
+    "mother.sister.husband",
+    "father.sister.husband"
+   ],
+   "gloss": "uncle; aunt's husband",
+   "kind": "kin",
+   "notes": "also familiar address to non-relative man"
+  },
+  {
+   "term": "tia",
+   "script": "tía",
+   "variants": [
+    "tía",
+    "tiita"
+   ],
+   "patterns": [
+    "mother.sister",
+    "father.sister",
+    "mother.brother.wife",
+    "father.brother.wife"
+   ],
+   "gloss": "aunt; uncle's wife",
+   "kind": "kin",
+   "notes": "also familiar address to non-relative woman"
+  },
+  {
+   "term": "hermano",
+   "script": "hermano",
+   "variants": [
+    "hermano",
+    "hermanito"
+   ],
+   "patterns": [
+    "brother",
+    "elder_brother",
+    "younger_brother"
+   ],
+   "gloss": "brother",
+   "kind": "kin",
+   "notes": "no age distinction in base term"
+  },
+  {
+   "term": "hermana",
+   "script": "hermana",
+   "variants": [
+    "hermana",
+    "hermanita"
+   ],
+   "patterns": [
+    "sister",
+    "elder_sister",
+    "younger_sister"
+   ],
+   "gloss": "sister",
+   "kind": "kin",
+   "notes": "no age distinction in base term"
+  },
+  {
+   "term": "hermano mayor",
+   "script": "hermano mayor",
+   "variants": [
+    "hermano mayor"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": "age specified with mayor"
+  },
+  {
+   "term": "hermana mayor",
+   "script": "hermana mayor",
+   "variants": [
+    "hermana mayor"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": "age specified with mayor"
+  },
+  {
+   "term": "hermano menor",
+   "script": "hermano menor",
+   "variants": [
+    "hermano menor",
+    "hermanito"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": "age specified with menor"
+  },
+  {
+   "term": "hermana menor",
+   "script": "hermana menor",
+   "variants": [
+    "hermana menor",
+    "hermanita"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": "age specified with menor"
+  },
+  {
+   "term": "hijo",
+   "script": "hijo",
+   "variants": [
+    "hijo",
+    "hijito",
+    "mijo"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "hija",
+   "script": "hija",
+   "variants": [
+    "hija",
+    "hijita",
+    "mija"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nieto",
+   "script": "nieto",
+   "variants": [
+    "nieto",
+    "nietecito"
+   ],
+   "patterns": [
+    "son.son",
+    "daughter.son"
+   ],
+   "gloss": "grandson",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nieta",
+   "script": "nieta",
+   "variants": [
+    "nieta",
+    "nietecita"
+   ],
+   "patterns": [
+    "son.daughter",
+    "daughter.daughter"
+   ],
+   "gloss": "granddaughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "primo",
+   "script": "primo",
+   "variants": [
+    "primo",
+    "primito"
+   ],
+   "patterns": [
+    "parent.sibling.son",
+    "father.brother.son",
+    "mother.brother.son",
+    "father.sister.son",
+    "mother.sister.son"
+   ],
+   "gloss": "male cousin",
+   "kind": "kin",
+   "notes": "child of parent's sibling"
+  },
+  {
+   "term": "prima",
+   "script": "prima",
+   "variants": [
+    "prima",
+    "primita"
+   ],
+   "patterns": [
+    "parent.sibling.daughter",
+    "father.brother.daughter",
+    "mother.brother.daughter",
+    "father.sister.daughter",
+    "mother.sister.daughter"
+   ],
+   "gloss": "female cousin",
+   "kind": "kin",
+   "notes": "child of parent's sibling"
+  },
+  {
+   "term": "sobrino",
+   "script": "sobrino",
+   "variants": [
+    "sobrino",
+    "sobrinito"
+   ],
+   "patterns": [
+    "brother.son",
+    "sister.son",
+    "elder_brother.son",
+    "younger_brother.son",
+    "elder_sister.son",
+    "younger_sister.son"
+   ],
+   "gloss": "nephew",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sobrina",
+   "script": "sobrina",
+   "variants": [
+    "sobrina",
+    "sobrinita"
+   ],
+   "patterns": [
+    "brother.daughter",
+    "sister.daughter",
+    "elder_brother.daughter",
+    "younger_brother.daughter",
+    "elder_sister.daughter",
+    "younger_sister.daughter"
+   ],
+   "gloss": "niece",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "esposo",
+   "script": "esposo",
+   "variants": [
+    "esposo",
+    "marido"
+   ],
+   "patterns": [
+    "husband",
+    "spouse"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "esposa",
+   "script": "esposa",
+   "variants": [
+    "esposa",
+    "mujer"
+   ],
+   "patterns": [
+    "wife",
+    "spouse"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "conyuge",
+   "script": "cónyuge",
+   "variants": [
+    "cónyuge",
+    "conyuge"
+   ],
+   "patterns": [
+    "spouse",
+    "husband",
+    "wife"
+   ],
+   "gloss": "spouse",
+   "kind": "kin",
+   "notes": "formal gender-neutral"
+  },
+  {
+   "term": "suegro",
+   "script": "suegro",
+   "variants": [
+    "suegro",
+    "suegrito"
+   ],
+   "patterns": [
+    "spouse.father",
+    "husband.father",
+    "wife.father"
+   ],
+   "gloss": "father-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "suegra",
+   "script": "suegra",
+   "variants": [
+    "suegra",
+    "suegrita"
+   ],
+   "patterns": [
+    "spouse.mother",
+    "husband.mother",
+    "wife.mother"
+   ],
+   "gloss": "mother-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "yerno",
+   "script": "yerno",
+   "variants": [
+    "yerno"
+   ],
+   "patterns": [
+    "daughter.husband",
+    "daughter.spouse",
+    "child.husband"
+   ],
+   "gloss": "son-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nuera",
+   "script": "nuera",
+   "variants": [
+    "nuera"
+   ],
+   "patterns": [
+    "son.wife",
+    "son.spouse",
+    "child.wife"
+   ],
+   "gloss": "daughter-in-law",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "cunado",
+   "script": "cuñado",
+   "variants": [
+    "cuñado",
+    "cunado",
+    "cuñadito"
+   ],
+   "patterns": [
+    "spouse.brother",
+    "spouse.sibling",
+    "sister.husband",
+    "brother.husband",
+    "husband.brother",
+    "wife.brother"
+   ],
+   "gloss": "brother-in-law",
+   "kind": "kin",
+   "notes": "spouse's brother or sibling's husband"
+  },
+  {
+   "term": "cunada",
+   "script": "cuñada",
+   "variants": [
+    "cuñada",
+    "cunada",
+    "cuñadita"
+   ],
+   "patterns": [
+    "spouse.sister",
+    "brother.wife",
+    "sister.wife",
+    "husband.sister",
+    "wife.sister"
+   ],
+   "gloss": "sister-in-law",
+   "kind": "kin",
+   "notes": "spouse's sister or sibling's wife"
+  },
+  {
+   "term": "bisabuelo",
+   "script": "bisabuelo",
+   "variants": [
+    "bisabuelo"
+   ],
+   "patterns": [
+    "mother.mother.father",
+    "mother.father.father",
+    "father.mother.father",
+    "father.father.father"
+   ],
+   "gloss": "great-grandfather",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "bisabuela",
+   "script": "bisabuela",
+   "variants": [
+    "bisabuela"
+   ],
+   "patterns": [
+    "mother.mother.mother",
+    "mother.father.mother",
+    "father.mother.mother",
+    "father.father.mother"
+   ],
+   "gloss": "great-grandmother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "carino",
+   "script": "cariño",
+   "variants": [
+    "cariño",
+    "carino",
+    "cariñito"
+   ],
+   "patterns": [],
+   "gloss": "darling / dear",
+   "kind": "endearment",
+   "notes": "affectionate address, often to child or partner"
+  },
+  {
+   "term": "mi amor",
+   "script": "mi amor",
+   "variants": [
+    "mi amor",
+    "amor"
+   ],
+   "patterns": [],
+   "gloss": "my love",
+   "kind": "endearment",
+   "notes": "affectionate address"
+  },
+  {
+   "term": "don",
+   "script": "don",
+   "variants": [
+    "don"
+   ],
+   "patterns": [],
+   "gloss": "Mr. / respectful title before male first name",
+   "kind": "honorific",
+   "notes": "respectful address, e.g. don José"
+  },
+  {
+   "term": "dona",
+   "script": "doña",
+   "variants": [
+    "doña",
+    "dona"
+   ],
+   "patterns": [],
+   "gloss": "Mrs. / respectful title before female first name",
+   "kind": "honorific",
+   "notes": "respectful address, e.g. doña María"
+  }
+ ],
+ "code": "es",
+ "name": "Spanish",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

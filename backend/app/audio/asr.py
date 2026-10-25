@@ -60,6 +60,11 @@ def make_asr(language: str, keyterms: list[str]) -> ASRSession:
         from .asr_deepgram import DeepgramASR
         return DeepgramASR(api_key=s.deepgram_api_key, language=language, sample_rate=s.asr_sample_rate, keyterms=keyterms)
     if s.asr_provider == "muse":
+        from ..graph.kin_tables import MUSE_LANGUAGES
         from .asr_muse import MuseASR
-        return MuseASR(api_key=s.model_api_key, keywords=keyterms, language_bias=[language, "en"] if language != "en" else ["en", s.asr_heritage_lang])
+        # VERIFIED: languageBias takes language NAMES (docs example ["English", "French"]), not codes
+        name = MUSE_LANGUAGES.get(language, language)
+        heritage = MUSE_LANGUAGES.get(s.asr_heritage_lang, s.asr_heritage_lang)
+        bias = [name, "English"] if language != "en" else ["English", heritage]
+        return MuseASR(api_key=s.model_api_key, keywords=keyterms, language_bias=list(dict.fromkeys(bias)))
     return MockASR()

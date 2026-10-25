@@ -207,7 +207,12 @@ class FamilyGraph:
             if d and path and any(self.matches(path, pat) for pat in d.patterns):
                 return a
         if path:
-            for d in KIN_TERMS:
+            from .kin_tables import load_table
+            try:
+                terms = load_table(self.heritage_lang).terms
+            except (KeyError, FileNotFoundError):
+                terms = KIN_TERMS
+            for d in terms:
                 if d.kind == "kin" and any(self.matches(path, pat) for pat in d.patterns):
                     return d.term
         return None

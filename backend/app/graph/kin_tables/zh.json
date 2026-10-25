@@ -1,0 +1,708 @@
+{
+ "final_strip": [],
+ "suffixes": [],
+ "roman_suffixes": [],
+ "possessive_speaker": [
+  "我",
+  "我的",
+  "我们",
+  "我们的",
+  "俺",
+  "俺的",
+  "wo",
+  "wode",
+  "wo de",
+  "women",
+  "womende",
+  "women de"
+ ],
+ "possessive_listener": [
+  "你",
+  "你的",
+  "你们",
+  "你们的",
+  "您",
+  "您的",
+  "ni",
+  "nide",
+  "ni de",
+  "nimen",
+  "nimende",
+  "nimen de",
+  "nin",
+  "ninde",
+  "nin de"
+ ],
+ "respectful_markers": [],
+ "informal_markers": [
+  "阿",
+  "小",
+  "儿",
+  "a",
+  "xiao",
+  "er"
+ ],
+ "generic_heads": [
+  "老板",
+  "司机",
+  "师傅",
+  "邻居",
+  "服务员",
+  "快递",
+  "保安",
+  "老师",
+  "laoban",
+  "siji",
+  "shifu",
+  "linju",
+  "fuwuyuan",
+  "kuaidi",
+  "baoan",
+  "laoshi"
+ ],
+ "frozen": [
+  "今天",
+  "明天",
+  "昨天",
+  "现在",
+  "非常",
+  "很",
+  "太",
+  "jintian",
+  "mingtian",
+  "zuotian",
+  "xianzai",
+  "feichang",
+  "hen",
+  "tai"
+ ],
+ "terms": [
+  {
+   "term": "mama",
+   "script": "妈妈",
+   "variants": [
+    "mama",
+    "ma1ma",
+    "媽媽",
+    "母亲"
+   ],
+   "patterns": [
+    "mother"
+   ],
+   "gloss": "mother",
+   "kind": "kin",
+   "notes": "colloquial; formal is muqin"
+  },
+  {
+   "term": "baba",
+   "script": "爸爸",
+   "variants": [
+    "ba1ba",
+    "爸爸",
+    "父亲"
+   ],
+   "patterns": [
+    "father"
+   ],
+   "gloss": "father",
+   "kind": "kin",
+   "notes": "colloquial; formal is fuqin"
+  },
+  {
+   "term": "yeye",
+   "script": "爷爷",
+   "variants": [
+    "ye2ye",
+    "爺爺",
+    "祖父"
+   ],
+   "patterns": [
+    "father.father"
+   ],
+   "gloss": "paternal grandfather",
+   "kind": "kin",
+   "notes": "father's father; formal zufu"
+  },
+  {
+   "term": "nainai",
+   "script": "奶奶",
+   "variants": [
+    "nai3nai",
+    "姶姶",
+    "祖母"
+   ],
+   "patterns": [
+    "father.mother"
+   ],
+   "gloss": "paternal grandmother",
+   "kind": "kin",
+   "notes": "father's mother; formal zumu"
+  },
+  {
+   "term": "waigong",
+   "script": "外公",
+   "variants": [
+    "wai4gong1",
+    "姥爷",
+    "laoye"
+   ],
+   "patterns": [
+    "mother.father"
+   ],
+   "gloss": "maternal grandfather",
+   "kind": "kin",
+   "notes": "mother's father; northern colloquial laoye"
+  },
+  {
+   "term": "waipo",
+   "script": "外婆",
+   "variants": [
+    "wai4po2",
+    "姥姥",
+    "laolao"
+   ],
+   "patterns": [
+    "mother.mother"
+   ],
+   "gloss": "maternal grandmother",
+   "kind": "kin",
+   "notes": "mother's mother; northern colloquial laolao"
+  },
+  {
+   "term": "bobo",
+   "script": "伯伯",
+   "variants": [
+    "bo2bo",
+    "bofu",
+    "伯父",
+    "dabo",
+    "daye"
+   ],
+   "patterns": [
+    "father.elder_brother"
+   ],
+   "gloss": "father's elder brother",
+   "kind": "kin",
+   "notes": "also called bofu, daoye, dabo"
+  },
+  {
+   "term": "shushu",
+   "script": "叔叔",
+   "variants": [
+    "shu1shu",
+    "shufu",
+    "叔父"
+   ],
+   "patterns": [
+    "father.younger_brother"
+   ],
+   "gloss": "father's younger brother",
+   "kind": "kin",
+   "notes": "general term for paternal younger uncle"
+  },
+  {
+   "term": "gugu",
+   "script": "姑姑",
+   "variants": [
+    "gu1gu",
+    "guma",
+    "姑妈",
+    "dagu",
+    "xiaogu"
+   ],
+   "patterns": [
+    "father.sister",
+    "father.elder_sister",
+    "father.younger_sister"
+   ],
+   "gloss": "father's sister",
+   "kind": "kin",
+   "notes": "paternal aunt; dagu for elder, xiaogu for younger"
+  },
+  {
+   "term": "jiujiu",
+   "script": "舅舅",
+   "variants": [
+    "jiu4jiu",
+    "jiufu",
+    "舅父",
+    "dajiu",
+    "xiaojiu"
+   ],
+   "patterns": [
+    "mother.brother",
+    "mother.elder_brother",
+    "mother.younger_brother"
+   ],
+   "gloss": "mother's brother",
+   "kind": "kin",
+   "notes": "maternal uncle; dajiu elder, xiaojiu younger"
+  },
+  {
+   "term": "yima",
+   "script": "姨妈",
+   "variants": [
+    "yi2ma",
+    "ayi",
+    "阿姨",
+    "dayi",
+    "xiaoyi"
+   ],
+   "patterns": [
+    "mother.sister",
+    "mother.elder_sister",
+    "mother.younger_sister"
+   ],
+   "gloss": "mother's sister",
+   "kind": "kin",
+   "notes": "maternal aunt; dayi elder, xiaoyi younger"
+  },
+  {
+   "term": "bomu",
+   "script": "伯母",
+   "variants": [
+    "bo2mu3",
+    "dama",
+    "daniang",
+    "大妈"
+   ],
+   "patterns": [
+    "father.elder_brother.wife"
+   ],
+   "gloss": "father's elder brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "shenshen",
+   "script": "婶婶",
+   "variants": [
+    "shen3shen",
+    "shenmu",
+    "婶母"
+   ],
+   "patterns": [
+    "father.younger_brother.wife"
+   ],
+   "gloss": "father's younger brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "gufu",
+   "script": "姑父",
+   "variants": [
+    "gu1fu4",
+    "guzhang",
+    "姑丈"
+   ],
+   "patterns": [
+    "father.sister.husband",
+    "father.elder_sister.husband",
+    "father.younger_sister.husband"
+   ],
+   "gloss": "father's sister's husband",
+   "kind": "kin",
+   "notes": "also guzhang"
+  },
+  {
+   "term": "jiuma",
+   "script": "舅妈",
+   "variants": [
+    "jiu4ma1",
+    "jiumu",
+    "舅母"
+   ],
+   "patterns": [
+    "mother.brother.wife",
+    "mother.elder_brother.wife",
+    "mother.younger_brother.wife"
+   ],
+   "gloss": "mother's brother's wife",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "yifu",
+   "script": "姨父",
+   "variants": [
+    "yi2fu4",
+    "yizhang",
+    "姨丈"
+   ],
+   "patterns": [
+    "mother.sister.husband",
+    "mother.elder_sister.husband",
+    "mother.younger_sister.husband"
+   ],
+   "gloss": "mother's sister's husband",
+   "kind": "kin",
+   "notes": "also yizhang"
+  },
+  {
+   "term": "gege",
+   "script": "哥哥",
+   "variants": [
+    "ge1ge"
+   ],
+   "patterns": [
+    "elder_brother"
+   ],
+   "gloss": "elder brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "jiejie",
+   "script": "姐姐",
+   "variants": [
+    "jie3jie"
+   ],
+   "patterns": [
+    "elder_sister"
+   ],
+   "gloss": "elder sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "didi",
+   "script": "弟弟",
+   "variants": [
+    "di4di"
+   ],
+   "patterns": [
+    "younger_brother"
+   ],
+   "gloss": "younger brother",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "meimei",
+   "script": "妹妹",
+   "variants": [
+    "mei4mei"
+   ],
+   "patterns": [
+    "younger_sister"
+   ],
+   "gloss": "younger sister",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "erzi",
+   "script": "儿子",
+   "variants": [
+    "er2zi"
+   ],
+   "patterns": [
+    "son"
+   ],
+   "gloss": "son",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "nver",
+   "script": "女儿",
+   "variants": [
+    "nuer",
+    "nv3er2",
+    "nver"
+   ],
+   "patterns": [
+    "daughter"
+   ],
+   "gloss": "daughter",
+   "kind": "kin",
+   "notes": ""
+  },
+  {
+   "term": "sunzi",
+   "script": "孙子",
+   "variants": [
+    "sun1zi"
+   ],
+   "patterns": [
+    "son.son"
+   ],
+   "gloss": "son's son",
+   "kind": "kin",
+   "notes": "paternal grandson"
+  },
+  {
+   "term": "sunnv",
+   "script": "孙女",
+   "variants": [
+    "sunnu",
+    "sun1nv3"
+   ],
+   "patterns": [
+    "son.daughter"
+   ],
+   "gloss": "son's daughter",
+   "kind": "kin",
+   "notes": "paternal granddaughter"
+  },
+  {
+   "term": "waisun",
+   "script": "外孙",
+   "variants": [
+    "wai4sun1"
+   ],
+   "patterns": [
+    "daughter.son"
+   ],
+   "gloss": "daughter's son",
+   "kind": "kin",
+   "notes": "maternal grandson"
+  },
+  {
+   "term": "waisunnv",
+   "script": "外孙女",
+   "variants": [
+    "waisunnu",
+    "wai4sun1nv3"
+   ],
+   "patterns": [
+    "daughter.daughter"
+   ],
+   "gloss": "daughter's daughter",
+   "kind": "kin",
+   "notes": "maternal granddaughter"
+  },
+  {
+   "term": "laogong",
+   "script": "老公",
+   "variants": [
+    "lao3gong1",
+    "zhangfu",
+    "丈夫"
+   ],
+   "patterns": [
+    "husband"
+   ],
+   "gloss": "husband",
+   "kind": "kin",
+   "notes": "colloquial; formal zhangfu"
+  },
+  {
+   "term": "laopo",
+   "script": "老婆",
+   "variants": [
+    "lao3po2",
+    "qizi",
+    "妻子"
+   ],
+   "patterns": [
+    "wife"
+   ],
+   "gloss": "wife",
+   "kind": "kin",
+   "notes": "colloquial; formal qizi"
+  },
+  {
+   "term": "gonggong",
+   "script": "公公",
+   "variants": [
+    "gong1gong"
+   ],
+   "patterns": [
+    "husband.father"
+   ],
+   "gloss": "husband's father",
+   "kind": "kin",
+   "notes": "father-in-law for a wife"
+  },
+  {
+   "term": "popo",
+   "script": "婆婆",
+   "variants": [
+    "po2po"
+   ],
+   "patterns": [
+    "husband.mother"
+   ],
+   "gloss": "husband's mother",
+   "kind": "kin",
+   "notes": "mother-in-law for a wife"
+  },
+  {
+   "term": "yuefu",
+   "script": "岳父",
+   "variants": [
+    "yue4fu4",
+    "yuezhang",
+    "岳丈"
+   ],
+   "patterns": [
+    "wife.father"
+   ],
+   "gloss": "wife's father",
+   "kind": "kin",
+   "notes": "father-in-law for a husband; also called yuezhang"
+  },
+  {
+   "term": "yuemu",
+   "script": "岳母",
+   "variants": [
+    "yue4mu3"
+   ],
+   "patterns": [
+    "wife.mother"
+   ],
+   "gloss": "wife's mother",
+   "kind": "kin",
+   "notes": "mother-in-law for a husband"
+  },
+  {
+   "term": "xifu",
+   "script": "媳妇",
+   "variants": [
+    "xi2fu4",
+    "erxifu",
+    "儿媳"
+   ],
+   "patterns": [
+    "son.wife"
+   ],
+   "gloss": "son's wife",
+   "kind": "kin",
+   "notes": "daughter-in-law; also erxifu"
+  },
+  {
+   "term": "nvxu",
+   "script": "女婿",
+   "variants": [
+    "nv3xu4",
+    "nuxu",
+    "guye"
+   ],
+   "patterns": [
+    "daughter.husband"
+   ],
+   "gloss": "daughter's husband",
+   "kind": "kin",
+   "notes": "son-in-law; also guye"
+  },
+  {
+   "term": "tangge",
+   "script": "堂哥",
+   "variants": [
+    "tang2ge1"
+   ],
+   "patterns": [
+    "father.elder_brother.son",
+    "father.younger_brother.son"
+   ],
+   "gloss": "paternal older male cousin",
+   "kind": "kin",
+   "notes": "father's brother's son older than ego"
+  },
+  {
+   "term": "tangmei",
+   "script": "堂妹",
+   "variants": [
+    "tang2mei4"
+   ],
+   "patterns": [
+    "father.elder_brother.daughter",
+    "father.younger_brother.daughter"
+   ],
+   "gloss": "paternal younger female cousin",
+   "kind": "kin",
+   "notes": "father's brother's daughter younger than ego"
+  },
+  {
+   "term": "biaoge",
+   "script": "表哥",
+   "variants": [
+    "biao3ge1"
+   ],
+   "patterns": [
+    "mother.brother.son",
+    "mother.sister.son",
+    "father.sister.son"
+   ],
+   "gloss": "maternal or paternal-aunt older male cousin",
+   "kind": "kin",
+   "notes": "mother's sibling's or father's sister's son older than ego"
+  },
+  {
+   "term": "biaomei",
+   "script": "表妹",
+   "variants": [
+    "biao3mei4"
+   ],
+   "patterns": [
+    "mother.brother.daughter",
+    "mother.sister.daughter",
+    "father.sister.daughter"
+   ],
+   "gloss": "maternal or paternal-aunt younger female cousin",
+   "kind": "kin",
+   "notes": "mother's sibling's or father's sister's daughter younger than ego"
+  },
+  {
+   "term": "airen",
+   "script": "爱人",
+   "variants": [
+    "ai4ren5",
+    "peiou",
+    "配偶"
+   ],
+   "patterns": [
+    "spouse"
+   ],
+   "gloss": "spouse",
+   "kind": "kin",
+   "notes": "gender-neutral formal spouse; also peiou"
+  },
+  {
+   "term": "baobei",
+   "script": "宝贝",
+   "variants": [
+    "bao3bei4",
+    "baobao",
+    "宝宝"
+   ],
+   "patterns": [],
+   "gloss": "darling, precious",
+   "kind": "endearment",
+   "notes": "affectionate address for child or lover"
+  },
+  {
+   "term": "guai",
+   "script": "乖",
+   "variants": [
+    "guai1",
+    "guaiguai",
+    "乖乖"
+   ],
+   "patterns": [],
+   "gloss": "good, well-behaved child",
+   "kind": "endearment",
+   "notes": "used to coax or praise one's child; reduplicated guaiguai"
+  },
+  {
+   "term": "nin",
+   "script": "您",
+   "variants": [
+    "nin2",
+    "ninde",
+    "您的"
+   ],
+   "patterns": [],
+   "gloss": "respectful you",
+   "kind": "honorific",
+   "notes": "polite second person, used to elders and in-laws"
+  }
+ ],
+ "code": "zh",
+ "name": "Mandarin Chinese",
+ "verified": false,
+ "source": "muse-spark-1.3",
+ "notes": "Draft by Muse Spark; review by a native speaker before relying on it."
+}

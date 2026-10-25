@@ -159,7 +159,8 @@ class CallSession:
         lat = dict(res.latencies)
         lat["asr_ms"] = round((t0 - side.speech_end_at) * 1000, 1) if side.speech_end_at else 0.0
         payload = {"type": "transcript", "call_id": self.call_id, "speaker": side.person, "listener": listener, "role": side.role,
-                   "src_text": text, "src_lang_tags": list(lang_tags), "target_lang": target_lang, **res.as_dict(), "latencies": lat}
+                   "src_text": text, "src_lang_tags": list(lang_tags), "target_lang": target_lang, "heritage_lang": self.translator.g.heritage_lang,
+                   **res.as_dict(), "latencies": lat}
         # persist first so the UI gets an id, then show text immediately (audio follows)
         payload["utterance_id"] = self._persist(side, listener, text, list(lang_tags), t_start, t_end, res, lat)
         self.history.append((side.person, text, res.result.translation)); self.history = self.history[-6:]
@@ -238,7 +239,7 @@ def _record_exposures(payload: dict) -> None:
     if payload.get("target_lang") != "en":
         return
     from ..fade.service import record_exposures
-    record_exposures(payload["listener"], payload["src_text"])
+    record_exposures(payload["listener"], payload["src_text"], payload.get("heritage_lang"))
 
 
 class CallRegistry:
