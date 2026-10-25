@@ -109,6 +109,14 @@ def write_results(path: Path, conds: list[dict], idioms: list[dict], model: str,
     for c in conds:
         lines.append(f"| {c['name']} | {pct(c['overall'][0])} (n={c['overall'][1]}) | {pct(c['kin'][0])} (n={c['kin'][1]}) | {pct(c['collision'][0])} (n={c['collision'][1]}) | "
                      f"{pct(c['dish_place'][0])} (n={c['dish_place'][1]}) | {pct(c['flattening'])} | {c['p50']:.0f} ms | {c['p95']:.0f} ms | {c['errors']} |")
+    from collections import Counter
+    err_lines = []
+    for c in conds:
+        kinds = Counter((r["error"] or "").split(":")[0] for r in c["rows"] if r["error"])
+        if kinds:
+            err_lines.append(f"- {c['name']}: " + ", ".join(f"{k} ×{n}" for k, n in kinds.most_common()))
+    if err_lines:
+        lines += ["", "Provider errors by type (each counts as wrong for every entity in that row):"] + err_lines
     lines += ["", "## Idiom cards", "", "| Condition | Precision | Recall | TP | FP | FN | n |", "|---|---|---|---|---|---|---|"]
     for i in idioms:
         lines.append(f"| {i['name']} | {pct(i['precision'])} | {pct(i['recall'])} | {i['tp']} | {i['fp']} | {i['fn']} | {i['n']} |")
@@ -127,7 +135,7 @@ def main(argv=None) -> int:
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", default=str(HERE / "results.md"))
     ap.add_argument("--workers", type=int, default=4)
-    ap.add_argument("--effort", default="medium", help="reasoning_effort for eval calls")
+    ap.add_argument("--effort", default="low", help="reasoning_effort for eval calls (low ≈ live setting; medium ≈ +1 s)")
     args = ap.parse_args(argv)
 
     init_db()

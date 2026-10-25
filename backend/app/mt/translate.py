@@ -123,7 +123,7 @@ class Translator:
         t1 = time.perf_counter()
         error = None
         try:
-            out = self.llm.structured(TranslationOut, system=system, user=user, reasoning_effort=reasoning_effort, max_completion_tokens=1200)
+            out = self.llm.structured(TranslationOut, system=system, user=user, reasoning_effort=reasoning_effort, max_completion_tokens=3000)
             out.pragmatics_cards = filter_cards(out.pragmatics_cards, text)
             out.grounded_spans = self._reconcile(out.grounded_spans, spans, listener)
         except Exception as e:  # StructuredOutputError, API errors, timeouts → linker-only fallback keeps the call alive
@@ -153,7 +153,7 @@ class Translator:
         try:
             out = self.llm.structured(TranslationOut, system=GENERIC_RULES.format(lang=self.lang),
                                       user=self.generic_user_prompt(text, name(speaker) if speaker else None, name(listener) if listener else None, ctx),
-                                      reasoning_effort=reasoning_effort, max_completion_tokens=1200)
+                                      reasoning_effort=reasoning_effort, max_completion_tokens=3000)
             out.pragmatics_cards = filter_cards(out.pragmatics_cards, text)
         except Exception as e:
             error = f"{type(e).__name__}: {e}"

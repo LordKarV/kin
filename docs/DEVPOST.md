@@ -24,21 +24,24 @@ Closest prior work: Khalilia et al. 2023 and Li et al. ACL 2024 document kin-ter
 ## Evals
 See `backend/eval/results.md` (regenerate with `python -m eval.run_eval`). 105 Tamil sentences authored for the demo family (42 kin-term, 32 name-collision, 31 dish/place) and 83 idiom/register items (42 positive, 41 plain negatives).
 
-_Latest run (replace with the live generic-vs-grounded run once MODEL_API_KEY is set):_
+_Live run, 2026-10-24, `muse-spark-1.3`, reasoning_effort=low, 105 grounding items + 83 idiom items. Provider failures would count as errors for every entity; there were none._
 
 ## Entity grounding (error rate, lower is better)
 
 | Condition | Overall | Kin terms | Name collisions | Dishes/places | Kin flattening | MT p50 | MT p95 | API errors |
 |---|---|---|---|---|---|---|---|---|
-| linker-only (no LLM) | 2% (n=144) | 4% (n=53) | 3% (n=32) | 0% (n=40) | 0% | 3 ms | 49 ms | 0 |
+| linker-only (no LLM) | 2% (n=150) | 4% (n=54) | 3% (n=32) | 0% (n=41) | 0% | 2 ms | 24 ms | 0 |
+| generic (same model + same context, no family graph) | 54% (n=150) | 72% (n=54) | 97% (n=32) | 24% (n=41) | 36% | 1793 ms | 4127 ms | 0 |
+| grounded (KIN) | 1% (n=150) | 4% (n=54) | 0% (n=32) | 0% (n=41) | 0% | 3015 ms | 4800 ms | 0 |
 
 ## Idiom cards
 
 | Condition | Precision | Recall | TP | FP | FN | n |
 |---|---|---|---|---|---|---|
-| linker-only (no cards in mock) | n/a | n/a | 0 | 0 | 42 | 83 |
+| generic | 90% | 86% | 36 | 4 | 6 | 83 |
+| grounded (KIN) | 100% | 83% | 35 | 0 | 7 | 83 |
 
-Offline floor (no LLM at all): the linker alone reaches 2% entity error overall and 3% on name collisions, with 0% kin flattening.
+Reading: the same model, given the same speaker/listener/context, gets 97% of the two-Ravi sentences wrong and flattens a third of kin terms to "uncle"/"aunt"; with the family graph it gets 1% wrong overall and never flattens. The linker alone (no LLM) is already at 2%. Caveat: the linker's cue words were authored alongside this test set; a held-out split is future work.
 
 ## How we built it
 - **Muse Spark 1.3** (Meta Model API, OpenAI-compatible, strict JSON-schema structured output, automatic prefix caching with the family roster as the stable prefix) for grounded translation, pragmatics cards, call summaries and extraction.

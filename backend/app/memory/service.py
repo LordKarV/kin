@@ -99,7 +99,7 @@ def end_call(call_id: int) -> dict:
             except Exception as e:  # noqa: BLE001
                 err = f"summary: {e}"
             try:
-                extracted = _reduce_sensitive(llm.structured(ExtractionOut, EXTRACT_SYS, text, reasoning_effort="medium", max_completion_tokens=1200))
+                extracted = _reduce_sensitive(llm.structured(ExtractionOut, EXTRACT_SYS, text, reasoning_effort="medium", max_completion_tokens=4000))
                 # tag the utterances that carried a sensitive topic: their text is withheld from memory until remembered
                 for t in extracted.get("topics", []):
                     if t.get("sensitive"):

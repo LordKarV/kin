@@ -79,7 +79,7 @@ class LLM:
         user: str,
         history: Iterable[dict[str, str]] = (),
         reasoning_effort: str | None = None,
-        max_completion_tokens: int = 800,
+        max_completion_tokens: int = 3000,
     ) -> T:
         """One structured completion, validated with Pydantic. Raises StructuredOutputError on bad JSON."""
         messages = [{"role": "developer", "content": system}, *history, {"role": "user", "content": user}]
@@ -94,15 +94,19 @@ class LLM:
         )
         assert not (_REJECTED & kwargs.keys())
         t0 = time.perf_counter()
-        content = self._complete(kwargs)
+        content, finish = self._complete(kwargs)
         self.last_latency_ms = (time.perf_counter() - t0) * 1000
+        if finish == "length":
+            # VERIFIED live 2026-10-24: Muse Spark's reasoning tokens count against max_completion_tokens (medium effort ≈ 1000-1200)
+            log.error("structured output truncated for %s at max_completion_tokens=%s (reasoning uses the budget)", schema_model.__name__, kwargs["max_completion_tokens"])
+            raise StructuredOutputError(f"truncated at max_completion_tokens={kwargs['max_completion_tokens']}; raise the budget")
         try:
             return schema_model.model_validate(json.loads(content))
         except (json.JSONDecodeError, ValidationError) as e:
             log.error("structured output invalid for %s: %s | raw=%r", schema_model.__name__, e, content[:500])
             raise StructuredOutputError(str(e)) from e
 
-    def text(self, system: str, user: str, reasoning_effort: str | None = None, max_completion_tokens: int = 600) -> str:
+    def text(self, system: str, user: str, reasoning_effort: str | None = None, max_completion_tokens: int = 2500) -> str:
         kwargs: dict[str, Any] = dict(
             model=self.model,
             messages=[{"role": "developer", "content": system}, {"role": "user", "content": user}],
@@ -110,16 +114,17 @@ class LLM:
             max_completion_tokens=max_completion_tokens,
             prompt_cache_key="kin",
         )
-        return self._complete(kwargs)
+        return self._complete(kwargs)[0]
 
     # -- internals ----------------------------------------------------------
 
-    def _complete(self, kwargs: dict[str, Any]) -> str:
+    def _complete(self, kwargs: dict[str, Any]) -> tuple[str, str | None]:
         last: Exception | None = None
         for i, client in enumerate(self._clients):
             try:
                 resp = client.chat.completions.create(**kwargs)
-                return resp.choices[0].message.content or ""
+                ch = resp.choices[0]
+                return ch.message.content or "", ch.finish_reason
             except (openai.RateLimitError, openai.AuthenticationError, openai.PermissionDeniedError) as e:
                 last = e
                 if i + 1 < len(self._clients):
