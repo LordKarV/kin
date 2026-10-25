@@ -32,8 +32,9 @@ struct Eyebrow: View {
 /// "Who's that?" (who/what) and culture terms (term/saying), straight from a `GlanceItem`.
 public struct GapCard: View {
     let item: GlanceItem
+    let viaTap: Bool                // true when this card answers the listener tapping a word (POST /explain)
     @Environment(\.kinStrings) private var str
-    public init(_ item: GlanceItem) { self.item = item }
+    public init(_ item: GlanceItem, viaTap: Bool = false) { self.item = item; self.viaTap = viaTap }
 
     /// The engine sends "Mei's friend from the Fudan climbing wall, first mentioned Sep 14": the source clause gets its
     /// own quieter line so the identity reads first.
@@ -75,6 +76,14 @@ public struct GapCard: View {
     }
 
     @ViewBuilder var eyebrow: some View {
+        if viaTap {
+            Eyebrow(symbol: "hand.tap.fill", text: str.youAsked, color: K.Call.highlight)
+        } else {
+            pushEyebrow
+        }
+    }
+
+    @ViewBuilder var pushEyebrow: some View {
         switch (item.kind, item.gap) {
         case ("who", "reminder"), ("what", "reminder"): Eyebrow(symbol: "clock.arrow.circlepath", text: str.reminder, color: K.Call.highlight)
         case ("who", _), ("what", _): Eyebrow(symbol: nil, text: str.newToYou, color: K.Call.text3)
@@ -163,13 +172,20 @@ public struct StorylineCard: View {
 public struct AskCard: View {
     let item: GlanceItem
     let speakerName: String
-    public init(_ item: GlanceItem, speakerName: String) { self.item = item; self.speakerName = speakerName }
+    let viaTap: Bool
+    @Environment(\.kinStrings) private var str
+    public init(_ item: GlanceItem, speakerName: String, viaTap: Bool = false) { self.item = item; self.speakerName = speakerName; self.viaTap = viaTap }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Eyebrow(symbol: "questionmark.circle.fill", text: "\(speakerName) mentioned", color: K.Call.highlight)
+                Eyebrow(symbol: viaTap ? "hand.tap.fill" : "questionmark.circle.fill",
+                        text: viaTap ? str.youAsked : "\(speakerName) mentioned", color: K.Call.highlight)
                 Text("Who is \(item.term)?").font(KinFont.headline).foregroundStyle(K.Call.text)
+                if viaTap {
+                    Text("KIN doesn't know \(item.term) yet. Add them, and next time it can tell you.")
+                        .font(KinFont.footnote).foregroundStyle(K.Call.text2).fixedSize(horizontal: false, vertical: true)
+                }
             }
             // The two most likely relations from the language's kinship table: one tap adds the person.
             HStack(spacing: 8) {

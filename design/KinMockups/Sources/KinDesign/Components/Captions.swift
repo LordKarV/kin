@@ -22,14 +22,18 @@ public struct LiveCaptions: View {
     let current: Caption?
     let partial: String?
     let highlights: [String]
+    let tappable: [String]          // recognized names, places, terms: quietly tappable (faint underline)
+    let pressed: String?            // the word the listener just tapped
     let voiceOn: Bool
     let onToggleVoice: () -> Void
     @Environment(\.kinStrings) private var str
 
     public init(speakerName: String, route: (from: String, to: String)?, previous: Caption? = nil, current: Caption?, partial: String? = nil,
-                highlights: [String] = [], voiceOn: Bool = false, onToggleVoice: @escaping () -> Void = {}) {
+                highlights: [String] = [], tappable: [String] = [], pressed: String? = nil,
+                voiceOn: Bool = false, onToggleVoice: @escaping () -> Void = {}) {
         self.speakerName = speakerName; self.route = route; self.previous = previous; self.current = current
-        self.partial = partial; self.highlights = highlights; self.voiceOn = voiceOn; self.onToggleVoice = onToggleVoice
+        self.partial = partial; self.highlights = highlights; self.tappable = tappable; self.pressed = pressed
+        self.voiceOn = voiceOn; self.onToggleVoice = onToggleVoice
     }
 
     public var body: some View {
@@ -47,7 +51,7 @@ public struct LiveCaptions: View {
                 if current.translation != nil {
                     Text(current.original).font(KinFont.captionOriginal).foregroundStyle(K.Call.text2).lineLimit(1)
                 }
-                Text(Self.highlighted(current.readable, highlights))
+                Text(Self.highlighted(current.readable, highlights, tappable: tappable, pressed: pressed))
                     .font(KinFont.captionLine).foregroundStyle(K.Call.text)
                     .lineSpacing(2).lineLimit(3).fixedSize(horizontal: false, vertical: true)
             }
@@ -78,16 +82,26 @@ public struct LiveCaptions: View {
         .accessibilityLabel(voiceOn ? "Translated voice on. Tap to turn off." : "Translated voice off. Tap to hear translations spoken.")
     }
 
-    static func highlighted(_ text: String, _ words: [String]) -> AttributedString {
+    /// Word treatments, strongest first: a word that triggered a card (tinted, dotted underline); a word you can tap
+    /// for context (a faint solid underline, deliberately quiet so captions never look like a page of links); the word
+    /// you just tapped (a soft highlight behind it while its card loads).
+    static func highlighted(_ text: String, _ words: [String], tappable: [String] = [], pressed: String? = nil) -> AttributedString {
         var a = AttributedString(text)
-        for w in words where !w.isEmpty {
+        func each(_ w: String, _ apply: (Range<AttributedString.Index>) -> Void) {
+            guard !w.isEmpty else { return }
             var search = a.startIndex..<a.endIndex
-            while let r = a[search].range(of: w) {
+            while let r = a[search].range(of: w) { apply(r); search = r.upperBound..<a.endIndex }
+        }
+        for w in tappable where !words.contains(w) {
+            each(w) { a[$0].underlineStyle = Text.LineStyle(pattern: .solid, color: Color.white.opacity(0.32)) }
+        }
+        for w in words {
+            each(w) { r in
                 a[r].foregroundColor = K.Call.highlight
                 a[r].underlineStyle = Text.LineStyle(pattern: .dot, color: K.Call.highlight.opacity(0.8))
-                search = r.upperBound..<a.endIndex
             }
         }
+        if let pressed { each(pressed) { a[$0].backgroundColor = Color.white.opacity(0.22) } }
         return a
     }
 }
@@ -104,6 +118,21 @@ public struct RouteLabel: View {
         }
         .font(KinFont.footnote).foregroundStyle(K.Call.text3)
         .accessibilityElement(children: .ignore).accessibilityLabel("Translating \(route.from) to \(route.to)")
+    }
+}
+
+/// Shown once, on the first call: how to get context KIN did not offer. Dismisses itself after the first tap.
+public struct CaptionTip: View {
+    public init() {}
+    public var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "hand.tap.fill").font(.system(size: 13, weight: .semibold))
+            Text("Tap a name to see who it is")
+            Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundStyle(K.Call.text3).padding(.leading, 2)
+        }
+        .font(KinFont.footnoteEmph).foregroundStyle(K.Call.text)
+        .padding(.horizontal, 12).frame(height: 34)
+        .background(Color.white.opacity(0.14), in: Capsule())
     }
 }
 

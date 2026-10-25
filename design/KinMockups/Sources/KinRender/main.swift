@@ -49,6 +49,9 @@ MainActor.assumeIsolated {
     call("call-20-two-ravis", CallStates.paattiTwoRavis)
     call("call-21-paatti-hike-bridge", CallStates.paattiHikeBridge)
     call("call-22-paused-by-me", CallStates.pausedByMe)
+    call("call-23-tappable-caption", CallStates.tappableCaption)
+    call("call-24-tap-result", CallStates.tapResult)
+    call("call-25-tap-unknown-ask", CallStates.tapUnknown)
 
     let only = Set(CommandLine.arguments.dropFirst(2))
     var images: [(String, CGImage)] = []

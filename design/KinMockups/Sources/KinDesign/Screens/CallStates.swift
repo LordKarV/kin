@@ -76,6 +76,21 @@ public extension CallStates {
         var m = paatti(); m.previous = Caption(Sample.paattiRaviPeriyappa); m.current = Caption(Sample.paattiFriends)
         m.bridge = Sample.hikeBridge; return m
     }
+    /// On-demand context, 1 of 3: recognized words are quietly tappable; the first call shows a one-time tip.
+    static var tappableCaption: CallScreen.Model {
+        var m = mei(); m.previous = Caption(Sample.meiHello); m.current = Caption(Sample.meiLin)
+        m.tappable = ["Lin", "Moganshan"]; m.tip = true; return m
+    }
+    /// 2 of 3: KIN thought Arjun remembered Lin (heard 25 days ago) and pushed nothing. He taps "Lin".
+    static var tapResult: CallScreen.Model {
+        var m = mei(); m.current = Caption(Sample.meiLin); m.tappable = ["Lin", "Moganshan"]; m.pressed = "Lin"
+        m.slot = .tappedGap(Sample.linExplained); return m
+    }
+    /// 3 of 3: he taps a name KIN has never heard, and gets the "Who is X?" card.
+    static var tapUnknown: CallScreen.Model {
+        var m = mei(); m.previous = Caption(Sample.meiLin); m.current = Caption(Sample.meiXiaoWang); m.pressed = "Xiao Wang"
+        m.slot = .tappedAsk(Sample.xiaoWangAsk); return m
+    }
     /// Film shot 12: you paused KIN yourself.
     static var pausedByMe: CallScreen.Model { var m = mei(); m.kin = .pausedByMe; return m }
 }

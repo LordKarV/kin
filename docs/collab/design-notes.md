@@ -1,6 +1,6 @@
 # KIN iOS design notes
 
-Mockups: `design/KinMockups/` (SwiftUI package). Screens: `design/screens/*.png` (37 states, plus `_contact-sheet.png`).
+Mockups: `design/KinMockups/` (SwiftUI package). Screens: `design/screens/*.png` (40 states, plus `_contact-sheet.png`).
 Brand: `design/brand/` (app icon, launch screen, launch film cards).
 Every component takes the real wire types from `ios/Kin/Sources/Contracts/Contracts.swift` (mirrored at commit dc5bc87),
 and all sample data is the exact JSON of ARCHITECTURE section 9, decoded through those types. If the server shape
@@ -138,9 +138,9 @@ still work ("Jess: Priya's roommate at Georgia Tech").
 **Voice toggle (call-10).** Off by default, next to the captions, written out ("Voice off" / "Voice on") with an icon.
 On means a translated voice for this listener only.
 
-**Edge states (call-11 to 14).** Paused (who paused, Resume, and what pausing means), weak connection, the other person
-joined without KIN, and the first call ("KIN on, learning" plus one line explaining that it learns as you talk). Each is
-one short line under the KIN pill, never a modal.
+**Edge states (call-11 to 14).** Paused (in the pill and one quiet line in the caption area; see "Round 3"), weak
+connection, the other person joined without KIN, and the first call ("KIN on, learning" plus one line explaining that
+it learns as you talk). Each is one short line under the KIN pill, never a modal.
 
 **Paatti's view, in Tamil (call-15).** Same app for everyone: her captions and cards arrive in Tamil, and the chrome
 strings around them come from `KinStrings.ta`. When Arjun mentions Mei, Paatti's card says who Mei is to him using only
@@ -275,3 +275,43 @@ Launch film cards in `design/brand/film/` (1920 by 1080, for the shot list in `d
 | overlay-september, overlay-next-day, overlay-no-card | Lower thirds and the "No card." overlay, transparent PNGs |
 
 Render them again with `.build/debug/KinRender --brand ../brand` after any change.
+
+## Round 3: on-demand context and a tiny pause
+
+From the 2026-10-25 additions to PRODUCT.md and the design brief (`POST /api/calls/{id}/explain`, ARCHITECTURE
+amendment 5).
+
+### Tap a word for context (call-23 to 25)
+
+KIN's push cards will sometimes miss: it thought Arjun remembered Lin (he heard about her 25 days ago, p 0.40, so no
+card). On-demand context is the safety net.
+
+- **Three word treatments in a caption, strongest first.** A word that triggered a card: tinted and dotted-underlined.
+  A word KIN recognizes (a name, place or term in the listener's own grounded or linker spans): a faint 1 point solid
+  underline at 32 percent white, quiet enough that captions never look like a page of links. Every other word: plain.
+- **Any word is tappable,** not only underlined ones. Tapping an unrecognized word sends that word plus its neighbors
+  (two-word names like "Xiao Wang") to `explain`; the server's matcher finds the span.
+- **Tapping** puts a soft highlight behind the word while the request runs, then the answer appears in the usual card
+  slot, replacing any card there. The card says "You asked" (with a tap icon) instead of "New to you" or "Mentioned
+  before", so it is obviously a response to you and not KIN interrupting.
+- **Nothing known yet** returns the "Who is X?" card, with one extra line: "KIN doesn't know Xiao Wang yet. Add them,
+  and next time it can tell you." Relations are social ones from the speaker's world ("Mei's friend", "Mei's
+  classmate"), plus "Someone else" and "Not now".
+- **Not a name or term** (empty `items`): the highlight fades and nothing else happens. No error, no toast.
+- **Discoverability:** a one-time tip above the captions on the first call: "Tap a name to see who it is". It goes away
+  after the first tap or the first dismiss and never returns.
+- **No gestures** (tilt, shake, long press): phones move too much during calls, and a tap is the most learnable action.
+- **Privacy:** the tap and its answer are private to the person tapping; the other person sees nothing change.
+- **Implementation hint for SwiftUI:** build the caption as an `AttributedString`, give tappable runs a `.link` like
+  `kin://explain?text=Lin&u=91`, style them with `underlineStyle` instead of the default link color, and handle the
+  tap with an `OpenURLAction` in the environment. VoiceOver reads links in `Text` as separate elements, so the names in
+  a caption become individually reachable without extra work.
+
+### Pause stays tiny (call-11, call-22)
+
+- One tap on the pause button inside the "KIN on" pill. No confirmation and no separate screen.
+- Both people's pills change at once: "KIN paused · Resume" for the person who paused, "Paused by Mei · Resume" for the
+  other. Either of them can resume with one tap.
+- The caption area shows one quiet line, "KIN is taking a break. Nothing is captioned or saved.", and nothing else.
+- The point is consent in the moment (Mei about to talk about her mom's surgery, Paatti about Saroja's health), so the
+  control has to be instant and the state impossible to miss, but it must not turn the call into a settings screen.

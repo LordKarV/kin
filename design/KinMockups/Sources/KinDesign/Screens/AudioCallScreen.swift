@@ -63,6 +63,8 @@ public struct AudioCallScreen: View {
                             case .meaning(let c): MeaningCard(c)
                             case .story(let i): StorylineCard(i)
                             case .ask(let i): AskCard(i, speakerName: m.name)
+                            case .tappedGap(let i): GapCard(i, viaTap: true)
+                            case .tappedAsk(let i): AskCard(i, speakerName: m.name, viaTap: true)
                             }
                         case .bridge(let i): HStack { Spacer(minLength: 48); BridgeChip(i) }
                         }

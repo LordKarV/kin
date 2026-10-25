@@ -97,4 +97,18 @@ public enum Sample {
     public static let hikeBridge: GlanceItem = decode(#"""
     {"key":"bridge:38","kind":"bridge","title":"Paatti hasn't heard yet","body":"you went hiking with Mei when she visited","target":"p_paatti_2","private":true}
     """#)
+
+    // On-demand context (POST /api/calls/{id}/explain). Arjun heard about Lin 25 days ago, so KIN thought he
+    // remembered and pushed nothing; he taps "Lin" and gets her card.
+    public static let linExplained: GlanceItem = decode(#"""
+    {"key":"who:p_lin_17","kind":"who","title":"Lin","native":"林","body":"Mei's friend from the Fudan climbing wall, first mentioned Sep 14","category":"person","node_id":"p_lin_17","gap":null}
+    """#)
+    public static let meiXiaoWang: Transcript = decode(#"""
+    {"call_id":12,"utterance_id":96,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"小王也跟我们一起去了","src_lang":"zh","target_lang":"en","translation":"Xiao Wang came with us too."}
+    """#)
+    // Tapping a name KIN has never heard returns a single ask item.
+    public static let xiaoWangAsk: GlanceItem = decode(#"""
+    {"key":"ask:xiao wang","kind":"ask","title":"Xiao Wang","term":"Xiao Wang","guess":"Xiao Wang",
+     "suggestions":[{"owner":"p_mei_5","relation":"friend","label":"Mei's friend"},{"owner":"p_mei_5","relation":"classmate","label":"Mei's classmate"}]}
+    """#)
 }
