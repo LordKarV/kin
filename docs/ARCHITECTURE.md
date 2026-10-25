@@ -22,6 +22,17 @@ lists every contradiction between the three designs and how it was resolved.
    calls is never suggested to anyone.
 4. **The client is a native iOS app** (SwiftUI + LiveKit Swift 2.17.0) in `ios/`; `mobile/` (web) is frozen. Task
    specs in the plan already reflect this.
+5. **On-demand context (tap a word in the caption).** `POST /api/calls/{call_id}/explain {"text": str, "utterance_id":
+   int | null}` with the caller from X-KIN-User. The server runs the alias matcher (3.2) over `text` (the tapped word or
+   span), resolves it with the same WorldView render and visibility rules as push cards for THIS listener, and returns
+   `{"items": [GlanceItem]}` (a who/what/storyline/term card), or a single `kind: "ask"` item when the span matches
+   nothing visible (the "Who is X?" flow), or `{"items": []}` when the span is not a name or term. It never returns
+   anything the listener could not get as a push card. Each returned entity records ASKED evidence for this listener
+   (knowledge model: the listener did not know it) and a card_log row with `via = "explain"`, so card dedupe, rate
+   limits and the eval see it. Response is to the caller only; nothing is broadcast. Typed caption taps never change
+   what other listeners see.
+6. **Pause stays tiny:** the existing pause (`kin_status`) is one tap in the "KIN on" pill, visible to everyone in the
+   call with who paused; no separate pause screen in the client.
 
 Verified against the code while writing this (no files other than this one were changed):
 
