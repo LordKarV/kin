@@ -42,6 +42,14 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
      when it comes up and you are behind on it.
    - **"Who is X?" learning cards:** a suggested relationship (kinship or social) plus a name; one tap adds the person
      to the right world and the next mention is grounded.
+   - **On-demand context (tap a word):** KIN's push cards will sometimes miss (it thought you remembered Lin). Every
+     name, place or term in the caption is quietly tappable; tapping it shows that thing's card, or a "Who is X?" card
+     if KIN knows nothing yet. Private to you, limited by the same visibility rules as push cards, and the tap counts
+     as evidence that you did not know (the model learns to card you next time). No gestures like tilt: phones move too
+     much during calls.
+   - **Pause, kept tiny:** one tap in the "KIN on" pill pauses listening for everyone; both people see who paused;
+     one tap resumes. No separate screen. Consent is per moment, not per install (Mei about to talk about her mom's
+     surgery, Paatti about Saroja's health).
    - **Translation and cultural meaning** when languages differ: grounded on who people are ("your uncle Ravi", not
      "uncle"), plus cultural/pragmatic meaning ("you've gotten thin" from a grandma is care, not criticism).
      **Captions by default.** A translated voice is an optional per-person toggle (off by default), for someone who

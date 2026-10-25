@@ -40,6 +40,16 @@ Help appears briefly, privately, at the edge of attention, and leaves. Silence i
 13. **Empty and edge states:** no people yet, first call (KIN knows nothing yet: it learns), poor connection, KIN
     paused, the other person does not have KIN running.
 
+## Additions agreed after the first mockups (2026-10-25)
+
+- **On-demand context:** every recognized name, place or term in the caption is quietly tappable (a very subtle
+  affordance, so captions do not look like a page of links; the words that already triggered a card keep the dotted
+  underline). Tapping shows that thing's card in the usual card slot, or a "Who is X?" card when KIN knows nothing.
+  Private to the person tapping. Please mock: the tappable caption state, the result card arriving from a tap, and the
+  "nothing known yet" ask card from a tap. No tilt or shake gestures.
+- **Pause stays tiny:** one tap in the "KIN on" pill, both people see who paused, one tap to resume. Drop any
+  dedicated pause screen; the paused state lives in the pill and the caption area only.
+
 ## Visual direction
 
 - Meta-adjacent but its own product. The current client uses Meta's dark palette: background #18191A, surfaces #242526,
