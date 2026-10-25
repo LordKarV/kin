@@ -123,19 +123,25 @@ class RoomAgent:
         silence (DTX), and Muse Voice Transcribe both needs real-time ingress and only ends a turn after hearing
         silence; without the filler a sentence sat unfinished until the stream timed out (28 s in testing)."""
         stream = rtc.AudioStream(track, sample_rate=SAMPLE_RATE, num_channels=1)
-        last = asyncio.get_running_loop().time()
+        loop = asyncio.get_running_loop()
+        # clock-based: count samples delivered since the start and top up exactly the deficit. A sleep-then-send
+        # filler drifts behind real time (each sleep runs long) and Muse closed the stream after ~50 s of silence.
+        clock = {"start": loop.time(), "sent": 0}
+        log.info("KIN hears %s (%s)", leg.identity, leg.role)
 
         async def keep_alive() -> None:
-            silence = b"\0" * (FRAME_SAMPLES * 2)
             while True:
                 await asyncio.sleep(FRAME_SAMPLES / SAMPLE_RATE)
-                if asyncio.get_running_loop().time() - last > QUIET_AFTER_S:
-                    await self.session.on_audio(leg.role, silence)
+                owed = int((loop.time() - clock["start"]) * SAMPLE_RATE) - clock["sent"]
+                if owed > QUIET_AFTER_S * SAMPLE_RATE:
+                    n = min(owed, SAMPLE_RATE)  # at most 1 s at once after a long stall
+                    clock["sent"] += n
+                    await self.session.on_audio(leg.role, b"\0" * (n * 2))
 
         filler = asyncio.create_task(keep_alive())
         try:
             async for ev in stream:
-                last = asyncio.get_running_loop().time()
+                clock["sent"] += ev.frame.samples_per_channel
                 await self.session.on_audio(leg.role, bytes(ev.frame.data))
         finally:
             filler.cancel()
