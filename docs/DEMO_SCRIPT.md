@@ -1,106 +1,81 @@
-# KIN live demo script: Karthik (English) and Nithin (Tamil)
+# KIN table demo: Karthik (English) and Paatti (Tamil, played by Nithin)
 
-Every line below was rehearsed against the same seed on a throwaway server; the outcomes listed are what came back.
-The real accounts have not been used, so every beat is still fresh. After any practice run, re-seed (see the end).
+Act it out. Nothing here is a line to read word for word: KIN reacts to the people, places and topics below, so bring
+them up in any order, in your own words. The judge holds Karthik's phone and only ever reads English.
 
-## Setup (once)
+## Setup
 
-- Mac and both iPhones on the same hotspot. Servers running (backend on IPv6, LiveKit dual-stack).
-- Each phone: open KIN. Everything is pre-filled (name, language, server, sign-in). Tap **Sign up**.
-  If KIN opens straight into an old account: People > gear > **Sign out**, then tap **Sign up**.
-- Both phones on the table, screens facing the judges. Keep KIN open on both (it only rings while open).
+- Mac and both iPhones on the same hotspot; backend and LiveKit running.
+- Each phone: open KIN and tap **Sign up** (everything is pre-filled). If it opens into an old account: People > gear >
+  Sign out, then Sign up.
+- Hand Karthik's phone to the judge: "You're Karthik, on a call with your grandmother. She only speaks Tamil. Just read
+  your screen."
 
 ## What KIN already knows (two months, planted on the dev clock)
 
-| When | What happened | Who heard it |
-|---|---|---|
-| ~8 weeks ago, call | Nithin: his new friend **Rohan** from the climbing gym | Karthik |
-| ~7 weeks ago, call | Nithin: **Ravi mama** (mom's younger brother, Chennai) and **Ravi periyappa** (dad's elder brother, Madurai) | Karthik |
-| ~6 and ~4 weeks ago, calls | Nithin's **Adobe internship**: applied, then final round | Karthik |
-| ~2 weeks ago, text to KIN | Karthik: **started bouldering at the campus gym** | Nobody (private) |
-| Karthik's own | **Mei**: his friend from high school, now in Shanghai | Nobody yet |
+| Whose | What | Who heard it | When it comes up |
+|---|---|---|---|
+| Paatti | Ravi mama (Mom's younger brother, Chennai) and Ravi periyappa (Dad's elder brother, Madurai) | Karthik, ~7 weeks ago | A card for each on Karthik's phone |
+| Paatti | Saroja, her younger sister in Coimbatore | Karthik, ~6 weeks ago | Card on Karthik's phone |
+| Paatti | Cousin Meena (Ravi mama's daughter) got engaged | Karthik, ~6 weeks ago | Storyline card on Karthik's phone |
+| Karthik | Mei, his friend from high school, now in Shanghai | Paatti, ~8 weeks ago | Tamil card on Paatti's phone |
+| Karthik | Rohan, his friend from the climbing gym | Paatti, ~7 weeks ago | Tamil card on Paatti's phone |
+| Karthik | He applied for the Adobe internship | Paatti, ~7 weeks ago | Storyline card on Paatti's phone |
+| Karthik | Went hiking with Mei when she visited | Nobody | Chip on Karthik's phone when Paatti asks about his friends |
+| Karthik | Started bouldering at the campus gym (texted to KIN) | Nobody | Chip when climbing or the gym comes up |
+| Paatti | Joined a bhajan singing group at the temple | Nobody | Chip on Paatti's phone when Karthik talks about friends or music |
+| Karthik | Lin, Mei's friend from the Fudan climbing wall | Karthik (from Mei) | Shows in Mei's world in the walkthrough |
 
-## The script (about 3 minutes)
+Meaning cards fire on their own for Tamil words and sayings: kanna (dear), da, "ilaichutta" (you've gotten thin, which
+from a grandmother is care), food, festivals and the rest of the Tamil lexicon.
 
-### 0. Before the call (Karthik, 20 s)
-- Open People > **Nithin**. Show his world: Rohan (climbing gym), the two Ravis, the Adobe internship thread, each
-  with where it came from.
-- Open **Messages**: "What KIN understood" shows *started bouldering at the campus gym*, texted, private.
-- Say: "KIN builds this from our calls and the occasional text to it. Nithin speaks Tamil, I speak English."
+## A flow that shows everything
 
-### 1. Ring (5 s)
-- Karthik taps **Call** on Nithin. Nithin's phone rings; he taps **Accept**.
-- Say: "No links. We're connected, so it's just a call."
+1. Paatti greets him, asks if he has eaten, says he looks thin. Karthik's phone: the caption and the care cards.
+2. Paatti's family news: Ravi mama came from Chennai, Ravi periyappa is still in Madurai, Meena's engagement, Saroja.
+   Karthik's phone: who each person is to him.
+3. Paatti asks how his friends are. Karthik's phone: "You haven't told Paatti: went hiking with Mei when she visited."
+   The judge says it out loud. Paatti's phone: a Tamil card about Mei. Nithin answers like she now remembers ("Oh,
+   Mei! Your friend in Shanghai, right?"); the judge reads that answer in English.
+4. Karthik brings up Rohan, climbing, or the Adobe internship (tell her the news). Paatti's phone: Tamil cards for
+   what she half-remembers.
+5. Karthik asks what she has been up to, or mentions music. Paatti's phone: her own chip about the bhajan group; she
+   tells him.
+6. Repeat any name from earlier. Nothing appears on either phone: "It only speaks when you'd be lost."
+7. After a vague line ("that trip was so nice"), twist the wrist twice for an on-demand card. Tap the KIN pill to pause;
+   both phones show who paused.
+8. After the call, on Karthik's phone: People > Paatti (her world, and where each fact came from), Mei's world (Lin),
+   Messages, delete one item, Settings (name, language).
 
-### 2. The gap: someone you would have forgotten
-- **Nithin:** "டேய், போன வாரம் ரோஹன் கூட Enchanted Rock-ல climbing போனேன்!"
-  (*Dei, pona vaaram Rohan kooda Enchanted Rock-la climbing ponen!*: Dude, last week I went climbing at Enchanted
-  Rock with Rohan!)
-- **Karthik's phone:** English caption, a **Rohan** card mid-sentence ("Nithin's friend Rohan (from the climbing
-  gym), first mentioned Aug 30", a reminder), and a private chip: **"You haven't told Nithin: started bouldering at
-  the campus gym."**
-- **Nithin's phone:** nothing. He knows Rohan.
-- Say: "He told me about Rohan two months ago. I'd have nodded along. Different help on each phone, same sentence."
+Rehearsed against this seed on a throwaway server: steps 1, 2 (the two Ravis), 3 and 6. Not yet rehearsed: Saroja,
+Meena, Rohan, Adobe and the bhajan chip, which were planted the same way.
 
-### 3. Silence (the most important beat)
-- **Nithin** says the same line again.
-- **Both phones:** nothing. Hold the pause for two seconds.
-- Say: "I just saw it, so KIN stays quiet. It only speaks when you'd be lost."
+## Change things without rebuilding
 
-### 4. The bridge closes
-- **Karthik:** "Wait, I actually started bouldering two weeks ago!"
-- **Karthik's phone:** the chip disappears. **Nithin's phone:** the Tamil caption of what Karthik said.
-- Say: "Now he's heard it, so KIN never suggests it again. It only ever uses my own news, never his."
+- Your own news: Messages > text KIN. It becomes a chip for anyone who has not heard it.
+- Your name or language: People > gear. Others see the new name; a call in progress keeps the old one.
+- Anything said on a call is remembered for the next call.
+- More planted context: add it to `more()` in `scripts/seed_karthik_paatti.py`, then run it against the live server
+  with `--extend` (phones stay signed in).
 
-### 5. Two people with the same name
-- **Nithin:** "ரவி மாமா சென்னையில இருந்து வந்திருக்கார், ரவி பெரியப்பா மதுரையிலேயே இருக்கார்."
-  (*Ravi maama Chennai-la irundhu vandhirukkaar, Ravi periyappa Madurai-laye irukkaar*: Ravi mama came from Chennai;
-  Ravi periyappa is still in Madurai.)
-- **Karthik's phone:** the caption keeps the two Ravis apart, with a card for each.
-- Say: "Two uncles named Ravi. A generic translator gets names and relationships wrong 54% of the time on our Tamil
-  family test set. With KIN's graph, 1%."
+## Reset between judges
 
-### 6. What it means, not just what it says
-- **Nithin:** "சாப்டியா டா? ரொம்ப இளைச்சுட்ட மாதிரி இருக்கே."
-  (*Saaptiya da? Romba ilaichutta maadhiri irukke*: Did you eat, man? You look like you've gotten thin.)
-- **Karthik's phone:** the caption, plus a meaning card (டா: a familiar "hey, buddy").
-- Say: "Tone and culture, not just words."
+Every card shown changes what KIN thinks each person knows. To put the planted state back (phones stay signed in;
+the restart is required because the server keeps the last call in memory, untested beyond that):
 
-### 7. Ask without asking: twist the phone
-- **Nithin:** "Adobe-ல இருந்து இன்னும் எதுவும் வரல, final round முடிஞ்சு ஒரு மாசம் ஆச்சு."
-  (*Adobe-la irundhu innum edhuvum varala, final round mudinju oru maasam aachu*: Still nothing from Adobe; it's
-  been a month since the final round.)
-- **Karthik:** quick double twist of the wrist. A card tagged **You asked**: **Adobe internship: applied ->
-  final round.**
-- Or tap **Rohan** in an earlier caption for the same kind of card.
-- Say: "If KIN guessed wrong that I remembered, I twist and it fills me in, without Nithin knowing."
+```
+kill $(lsof -ti tcp:8000 -sTCP:LISTEN)
+cd backend && .venv/bin/python ../scripts/demo_snapshot.py restore
+ASR_PROVIDER=muse DEV_ENDPOINTS=1 LIVEKIT_URL='ws://[<Mac IPv6>]:7880' .venv/bin/uvicorn app.main:app --host :: --port 8000
+```
 
-### 8. Your world, explained in their language
-- **Karthik:** "Mei visited from Shanghai last month and we went hiking at Enchanted Rock."
-- **Nithin's phone:** a Tamil caption and a **Tamil card about Mei** (Karthik's school friend, now in Shanghai).
-- Say: "It shares only my own facts about Mei, never anything Mei told me."
-
-### 9. Off the record
-- **Nithin** taps the **KIN** pill. Both phones: **KIN paused (Nithin)**. Nothing is captioned or saved.
-- Tap again to resume.
-- Say: "Anyone can take it off the record, and everyone sees it."
-
-### 10. After the call (15 s)
-- Karthik: People > Nithin. The Enchanted Rock trip with Rohan is now in his world, with where it came from.
-- Delete one item. Say: "You own your world. Deleted means gone."
-- Optional: People > gear > change language. "Takes effect on the next call."
-
-### Close
-"KIN only speaks when you'd be lost. It decides in two milliseconds, privacy is enforced in code, and with three
-months of history an AI given everyone's chats missed 1 card in 5 and leaked a private text. KIN didn't."
+From scratch (new sign-ins): stop the backend, move `backend/kin.db*` aside, start it, run
+`cd backend && KIN_BASE='http://[::1]:8000' .venv/bin/python ../scripts/seed_karthik_paatti.py`, then
+`demo_snapshot.py save`, and paste the printed links under Sign up > Server > Sign-in link on each phone.
 
 ## If a judge asks
-- **Is the history real?** It was planted on the dev clock to stand in for two months of calls, through the same
-  code path a real call or text uses. Everything during the demo is live.
-- **Why not just give an AI the whole history?** We tested exactly that: same decisions on short histories, but
-  about 2 to 4 s per line, and at three months it missed 5 of 27 cards and leaked private news to two people.
 
-## Reset after a rehearsal
-Every card shown changes what KIN thinks you know. To start fresh: stop the backend, move `backend/kin.db*` aside,
-start it again, run `cd backend && KIN_BASE='http://[::1]:8000' .venv/bin/python ../scripts/seed_karthik_nithin.py`,
-then rebuild both phones with the new tokens (or paste them under Sign up > Server > Sign-in link).
+- **Is the history real?** It was planted on the dev clock to stand in for two months of calls, through the same code
+  path a real call or text uses. Everything during the demo is live.
+- **Why not just give an AI the whole history?** We tested that: the same decisions on short histories, but about 2 to
+  4 s per line, and at three months it missed 5 of 27 cards and leaked private news to two people.
