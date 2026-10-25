@@ -232,7 +232,9 @@ def apply_update(s: Session, update: WorldUpdateOut, ctx: ApplyCtx) -> ApplyResu
     for t in update.ties:
         _tie(s, ctx, t.kind, t.context, tie_fact, resolve, speakers, t.a, t.b)
     s.flush()
-    return ApplyResult(fact_ids, {ref: rid for ref, (_, rid) in created.items()}, evidence)
+    # One update is one exposure per item: every fact citing a person must not add another 'heard' at the same
+    # instant, or a friend split over 3 facts stays above FORGOT six weeks later and never gets a reminder.
+    return ApplyResult(fact_ids, {ref: rid for ref, (_, rid) in created.items()}, list(dict.fromkeys(evidence)))
 
 
 def _own_things(s: Session, f: m.Fact, refs: list[tuple[str, int]]) -> None:

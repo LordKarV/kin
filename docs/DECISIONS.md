@@ -264,3 +264,4 @@
 - 2026-10-25 sweep: the iOS reducer drops a partial line on kin_status off and when its speaker leaves the participants list (Caption carries speakerIdentity).
 - 2026-10-25 sweep: an iOS card being touched keeps its slot and is never the rail-cap eviction victim; a hold whose release never arrives is cleared by kin_status off (reducer) and by CardView.onDisappear sending touch(false); the LongPressGesture minimumDuration change waits for a device check.
 - 2026-10-25 sweep: deleted the unused iOS CallController.inviteURL(apiBase:key:), which built invites without the code; AppModel.inviteURL(callId:) is the share link.
+- 2026-10-25 apply_update dedupes its evidence: one extraction is one exposure per (knower, item, type), so an intro the LLM splits into 2-3 facts no longer adds 2-3 same-instant 'heard' and keeps the friend above FORGOT six weeks later (zh/es/ar/he/tr got no reminder on call 2).

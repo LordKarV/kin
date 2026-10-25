@@ -616,3 +616,31 @@ def test_call_end_extraction_stamps_when_said_not_when_finished(world_reply, liv
     w._after_extract(res, w._rebuild())
     heard = [at for ev, at in stamped if any(e[3] == "heard" for e in ev)]
     assert heard and all(abs((at - said).total_seconds()) < 5 for at in heard)
+
+
+def test_friend_cited_by_two_facts_in_call_one_still_gets_a_reminder_six_weeks_later(world_reply, live):
+    """multilang_check zh/es/ar/he/tr: call 1's extraction split the intro into 2-3 facts citing the new friend; each
+    fact added its own 'heard', so the listener 'heard' the friend 2-3 times at one instant and six weeks later was
+    still above FORGOT: no card on call 2. One extraction is one exposure per item."""
+    ids, make = live
+    w = make("arjun", "mei")
+    arjun, mei = f"p{ids['arjun']}", f"p{ids['mei']}"
+    with session_scope() as s:
+        slug = s.get(m.Person, ids["mei"]).slug
+    ent = {"ref": "e1", "name": "Siqi", "native": "思琪", "forms": ["Siqi", "思琪"], "kind": "person",
+           "existing_id": None}
+    world_reply["update"] = {"entities": [ent], "ties": [],
+                             "facts": [_fact(slug, "Siqi is Mei's friend from school", [0], ["e1"]),
+                                       _fact(slug, "Siqi is moving to Austin", [0], ["e1"])]}
+    text = "我的朋友思琪要搬到奥斯汀了"
+    w.on_translated(mei, _utt(ids, "mei", text), text, {"en": "My friend Siqi is moving to Austin"}, [ids["arjun"]])
+    w.leave(arjun)
+    w.leave(mei)
+    w.close()  # call-end extraction creates Siqi and flushes Arjun's knowledge
+    with session_scope() as s:
+        siqi = s.query(m.Person).filter_by(display_name="Siqi").one().id
+    clock.set_offset_days(clock.offset_days() + 42)  # the demo's six-week jump to call 2
+    w2 = make("arjun", "mei")
+    sends = w2.on_final(mei, "思琪昨天给我打电话了").sends
+    assert [(it["key"], it["gap"]) for it in _items(sends, arjun)] == [(f"who:{w2._snap.view.people[siqi].slug}",
+                                                                       "reminder")]
