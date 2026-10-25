@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// KIN's SMS number (design app-07): text KIN your news so it knows who has not heard it yet. "What KIN understood"
+/// KIN's SMS number (design app-07): text KIN your news so it knows who has not heard it yet, or type it here (the
+/// same server path, POST /api/me/messages, so it works without Twilio). "What KIN understood"
 /// lists my own facts that came from texts (GET /api/me/facts, source_kind "message"), and "From your calls" every
 /// other fact about me, each correctable or deletable (PRODUCT: see, correct and delete what KIN holds about you).
 struct MessagesScreen: View {
@@ -13,6 +14,9 @@ struct MessagesScreen: View {
     @State private var editing: FactRow?
     @State private var draft = ""
     @State private var confirm: ConfirmDelete?
+    @State private var thread = MessageThread()
+    @State private var message = ""
+    @State private var sending = false
 
     var body: some View {
         MessagesView(number: number, understood: understood, error: error, fromCalls: fromCalls,
@@ -22,7 +26,9 @@ struct MessagesScreen: View {
                              Task { await act { try await api.deleteFact(fact.id) } }
                          }
                      },
-                     retry: { Task { await load() } })
+                     retry: { Task { await load() } },
+                     thread: thread.bubbles, message: $message, sending: sending, sendError: thread.error,
+                     onSend: { Task { await send() } })
             .task { await load() }
             .refreshable { await load() }
             .confirmDelete($confirm)
@@ -36,6 +42,17 @@ struct MessagesScreen: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
+    }
+
+    /// POST /api/me/messages, the in-app twin of texting KIN's number; then reload "What KIN understood".
+    private func send() async {
+        guard !sending else { return }
+        sending = true
+        let next = await thread.sending(message, via: api)
+        thread = next
+        if next.error == nil { message = "" }
+        sending = false
+        if next.error == nil { await load() }
     }
 
     private func act(_ change: () async throws -> Void) async {
@@ -74,6 +91,11 @@ struct MessagesView: View {
     let onEdit: (FactRow) -> Void
     let onDelete: (FactRow) -> Void
     let retry: () -> Void
+    var thread: [MessageThread.Bubble] = []
+    var message: Binding<String> = .constant("")
+    var sending = false
+    var sendError: String? = nil
+    var onSend: () -> Void = {}
 
     var body: some View {
         ScrollView {
@@ -115,7 +137,7 @@ struct MessagesView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("KIN's number").font(KinFont.footnote).foregroundStyle(K.text3)
-                    Text(number?.isEmpty == false ? number! : "Not set up on this server")
+                    Text(number?.isEmpty == false ? number! : "In-app only on this server")
                         .font(.system(.title3, design: .rounded, weight: .semibold)).monospacedDigit()
                         .foregroundStyle(number?.isEmpty == false ? AnyShapeStyle(K.text) : AnyShapeStyle(K.text3))
                         .lineLimit(1).minimumScaleFactor(0.8)
@@ -133,16 +155,40 @@ struct MessagesView: View {
                 }
             }
             .padding(14).background(K.raised, in: RoundedRectangle(cornerRadius: Radius.image, style: .continuous))
-            VStack(alignment: .trailing, spacing: 6) {
-                bubble("started bouldering at the campus gym", mine: true)
-                bubble("Got it: you started bouldering.", mine: false)
+            if !thread.isEmpty {
+                VStack(alignment: .trailing, spacing: 6) {
+                    ForEach(thread) { b in
+                        bubble(b.text, mine: b.mine).accessibilityLabel((b.mine ? "You: " : "KIN: ") + b.text)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Example: you text started bouldering at the campus gym, KIN replies Got it.")
+            composer
         }
         .padding(16).background(K.surface, in: RoundedRectangle(cornerRadius: Radius.section, style: .continuous))
         .padding(.horizontal, Space.gutter)
+    }
+
+    private var blank: Bool { message.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    private var composer: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                TextField("Text KIN your news...", text: message)
+                    .font(KinFont.subhead).submitLabel(.send).onSubmit { if !blank { onSend() } }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(K.raised, in: Capsule())
+                    .disabled(sending)
+                Button(action: onSend) {
+                    if sending { ProgressView() } else { Image(systemName: "arrow.up.circle.fill").font(.title) }
+                }
+                .buttonStyle(.plain).foregroundStyle(blank ? AnyShapeStyle(K.text3) : AnyShapeStyle(K.link))
+                .frame(minWidth: 44, minHeight: 44)
+                .disabled(blank || sending)
+                .accessibilityLabel("Send to KIN")
+            }
+            if let sendError { Text(sendError).font(KinFont.footnote).foregroundStyle(K.error) }
+        }
     }
 
     private func bubble(_ t: String, mine: Bool) -> some View {

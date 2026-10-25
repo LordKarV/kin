@@ -108,6 +108,8 @@ app.include_router(users.router)
 app.include_router(world.router)
 app.include_router(dev.router)
 app.include_router(sms.router)
+from .api import messages  # noqa: E402  in-app twin of texting KIN
+app.include_router(messages.router)
 app.include_router(explain.router)
 app.include_router(events.router)
 
