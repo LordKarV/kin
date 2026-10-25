@@ -305,3 +305,27 @@ def test_guard_catches_a_render_through_a_hidden_hop(live, monkeypatch):
     monkeypatch.setattr(WorldView, "_hop_ok", lambda self, *a: True)  # a hop-visibility regression in view.py
     fr = w.on_final(f"p{ids['dana']}", "I saw Lin")
     assert _items(fr.sends, f"p{ids['arjun']}") == [] and w.guard_drops == 1
+
+
+# 4C: a bridge chip clears when the owner tells the listener on the call.
+def test_bridge_retracted_when_owner_tells_and_never_resent(live):  # noqa: F811
+    ids, make = live
+    w = make("arjun", "mei")
+    mei, arjun = f"p{ids['mei']}", f"p{ids['arjun']}"
+    key = f"bridge:{ids['boulder']}"
+    line, tr = "我和林去攀岩了", {"en": "I went climbing with Lin."}
+    w.on_final(mei, line)
+    first = w.on_translated(mei, 1, line, tr, [ids["arjun"]])
+    assert key in [it["key"] for it in _items(first, arjun)]
+
+    w.on_final(arjun, "I started bouldering")
+    told = w.on_translated(arjun, 2, "I started bouldering", {"zh": "我开始抱石了"}, [ids["mei"]])
+    assert _items(told, arjun, "glance_retract") == [{"type": "glance_retract", "keys": [key]}]
+    assert mei not in told or _items(told, mei, "glance_retract") == []
+
+    w.on_final(mei, line)
+    again = w.on_translated(mei, 3, line, tr, [ids["arjun"]])
+    assert key not in [it["key"] for it in _items(again, arjun)]
+    w.on_final(arjun, "I started bouldering")  # telling again does not retract twice
+    assert _items(w.on_translated(arjun, 4, "I started bouldering", {"zh": "我开始抱石了"}, [ids["mei"]]),
+                  arjun, "glance_retract") == []

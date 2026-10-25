@@ -15,11 +15,24 @@ python -m app.smoke             # one structured completion from Muse Spark
 uvicorn app.main:app --reload   # http://localhost:8000/health
 ```
 
+Dev database: `create_all` never alters existing tables. If your `backend/kin.db` predates the common-ground schema,
+run `rm backend/kin.db` once (the next start recreates it). Dev routes (`/api/dev/*`) are off unless the server runs
+with `DEV_ENDPOINTS=1`.
+
+The client is the iOS app in `ios/` (SwiftUI + LiveKit Swift 2.17.0):
+
 ```bash
-cd frontend && npm install && npm run dev   # http://localhost:5173
+livekit-server --dev                                  # LiveKit on ws://localhost:7880
+cd ios && xcodegen generate && open Kin.xcodeproj     # run the Kin scheme on an iPhone simulator
 ```
 
-Tests: `cd backend && pytest -q`. Eval: `cd backend && python -m eval.run_eval`.
+`frontend/` (the old Vite web UI) and `mobile/` are legacy and frozen; they are kept for reference only.
+
+Demo: [docs/DEMO.md](docs/DEMO.md). `cd backend && .venv/bin/python ../scripts/demo_common_ground.py --next-day` plays
+the whole story against a running server (fresh `kin.db`, `DEV_ENDPOINTS=1`, `livekit-server --dev`).
+
+Tests: `cd backend && pytest -q`. Eval: `cd backend && python -m eval.run_eval` (committed live result: generic MT 54%
+entity error vs grounded KIN 1%, in `backend/eval/results.md`).
 
 ## Architecture
 

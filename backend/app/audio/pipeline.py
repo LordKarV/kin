@@ -1,6 +1,6 @@
 """Transport-agnostic call pipeline: ASR final → linker → fade policy → grounded MT → TTS → peer, with per-stage latencies.
 
-Used by the WebSocket transport (api/ws.py) and by the optional LiveKit agent (audio/agent.py).
+Used by the WebSocket transport (api/ws.py) and by the LiveKit room agent (rtc/agent.py).
 """
 from __future__ import annotations
 

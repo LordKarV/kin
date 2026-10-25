@@ -3,26 +3,22 @@
 Partials stay in memory (D6): scan, stability gate, per-listener gaps, delivery guard. Finals confirm or retract
 partial cards and write evidence into the knowledge cache; DB writes (knowledge flush, card_log, told rows) and
 extraction run on `_WORLD_POOL`. Results that touch live state come back to the event loop via call_soon_threadsafe.
-Card selection itself lives in world/cards.py.
+Card selection itself lives in world/cards.py; localization and extraction jobs live in world/live_jobs.py.
 """
 from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-import functools
 import dataclasses
-import hashlib
-import json
 import logging
 import re
 import threading
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Awaitable, Callable
 
-import openai
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy import update as sql_update
@@ -32,15 +28,12 @@ from ..cards.lexicon import load_lexicon
 from ..cards.matcher import Match, Matcher
 from ..db import models as m
 from ..db.session import session_scope
-from ..graph.kin_tables import MUSE_LANGUAGES, load_table
-from ..llm import StructuredOutputError, get_llm
+from ..graph.kin_tables import load_table
 from . import cards as C
 from . import clock
 from . import knowledge as kn
-from .apply import ApplyCtx, ApplyResult, apply_update
-from .contracts import LocalizeOut, NewPerson, SuggestionOut, WorldUpdateOut
-from .extract import (ENTITY_TABLE, Candidate, Line, Participant, own_context, run_extraction, validate,
-                      validate_ctx)
+from .contracts import NewPerson, SuggestionOut
+from .live_jobs import EXTRACT_EVERY, LiveJobs, _locked, _sha
 from .match import AliasIndex, Hit, fold, script_of
 from .view import TIE_LABEL, WorldView
 
@@ -53,18 +46,10 @@ Sends = dict[str, list[dict]]  # identity -> server->client messages
 
 _POOL_PREFIX = "kin-world"
 _WORLD_POOL = ThreadPoolExecutor(max_workers=2, thread_name_prefix=_POOL_PREFIX)
-# localization gets its own worker so a burst of misses never queues ahead of extraction, flushes or refresh()
-_L10N_POOL = ThreadPoolExecutor(max_workers=1, thread_name_prefix="kin-l10n")
 AMBIGUITY_MARGIN = 1.0  # 3.4: top-two candidate scores closer than this = ambiguous
 RECENT_LINES = 6
-EXTRACT_EVERY = 4
-EXTRACT_IDLE_S = 30.0
-EXTRACT_OVERLAP = 3
-LOCALIZE_TOP = 30
 KEYTERMS_CAP = 100
 LOG_WINDOW = C.BRIDGE_REPEAT
-_LLM_ERRORS = (StructuredOutputError, openai.APIError, TimeoutError)
-_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 # 3.5, English only. Possessive word -> tie kind.
 REL_KIND = {"friend": "friend", "roommate": "roommate", "boss": "coworker", "coworker": "coworker",
@@ -72,11 +57,6 @@ REL_KIND = {"friend": "friend", "roommate": "roommate", "boss": "coworker", "cow
             "teammate": "teammate"}
 _REL_RE = re.compile(r"\b(my|your|her|his|their)\s+(" + "|".join(REL_KIND) + r")\b", re.IGNORECASE)
 _THE_RE = re.compile(r"\b(that|the)\s+([^\W\d_]+)", re.IGNORECASE)
-
-LOCALIZE_SYSTEM = ("You localize short context cards shown during a live call. Translate each body into natural {lang} "
-                   "({lang} script), as short as the English, keeping people's names as written. Return every key "
-                   "unchanged with its translated body. Return JSON for the schema.")
-
 
 @dataclass(frozen=True)
 class FinalResult:
@@ -118,10 +98,6 @@ def _build(space_id: int, members: frozenset[int], now: datetime) -> _Snap:
     return _Snap(v, AliasIndex(v.index_forms()), AliasIndex(kw), slugs)
 
 
-def _sha(text: str) -> str:
-    return hashlib.sha1(text.encode()).hexdigest()
-
-
 def _latin(form: str) -> bool:
     letters = [c for c in form if c.isalpha()]
     return bool(letters) and all(script_of(c) == "latin" for c in letters)
@@ -131,17 +107,7 @@ def _on_pool() -> bool:
     return threading.current_thread().name.startswith(_POOL_PREFIX)
 
 
-def _locked(fn: Callable) -> Callable:
-    """The pipeline calls LiveWorld from the loop thread and from to_thread workers; every read-modify-write of live
-    state (sent, pending, kcache, ...) runs under one lock. ponytail: one RLock per call, held ~1 ms in memory."""
-    @functools.wraps(fn)
-    def wrapper(self: "LiveWorld", *args, **kw):
-        with self._state:
-            return fn(self, *args, **kw)
-    return wrapper
-
-
-class LiveWorld:
+class LiveWorld(LiveJobs):
     def __init__(self, call_id: int, space_id: int, emit: Callable[[str, dict], Awaitable[None]],
                  loop: asyncio.AbstractEventLoop) -> None:
         self.call_id = call_id
@@ -439,19 +405,6 @@ class LiveWorld:
             self._lazy(identity, lang, card)
         return p
 
-    def _lazy(self, identity: str, lang: str, card: C.Card) -> None:
-        body = card.payload.get("body")
-        k = (card.key, lang, _sha(body)) if body and lang != "en" else None
-        if k is None or k in self._l10n or k in self._l10n_inflight:
-            return
-        self._l10n_inflight = self._l10n_inflight | {k}
-        self._submit_l10n(self._lazy_l10n, identity, lang, card.key, body)  # English now, glance_update later
-
-    def _submit_l10n(self, fn: Callable, *args) -> None:
-        fut = _L10N_POOL.submit(fn, *args)
-        self._jobs.add(fut)
-        fut.add_done_callback(self._job_done)
-
     def _card_evidence(self, listener: int, c: C.Card) -> list[tuple[int, str, int, str]]:
         kind = c.item.get("kind")
         if kind in C.ENTITY_KINDS:
@@ -600,7 +553,9 @@ class LiveWorld:
                 sends[ident] = [self._glance(speaker, ident, lang, cards, False)]
         self._evidence([e for L, _t, c in shown for e in self._card_evidence(L, c)], now)
         self._log(shown, now)
-        self._told(snap, S, slang, text, hits, audience, now)
+        told = self._told(snap, S, slang, text, hits, audience, now)
+        if told:
+            sends = {**sends, speaker: sends.get(speaker, []) + [{"type": "glance_retract", "keys": told}]}
         self._flush_async()
         if len(self._lines) - self._extracted >= EXTRACT_EVERY:
             self._extract_async()
@@ -609,19 +564,27 @@ class LiveWorld:
         return sends
 
     def _told(self, snap: _Snap, S: int, slang: str, text: str, hits: list[Hit], audience: list[int],
-              now: datetime) -> None:
+              now: datetime) -> list[str]:
         """5.6 fast path: the speaker's own words hit one of their bridge facts, so the line's audience has heard it.
         A FactAudience row also makes the fact visible, so a keyword false positive must not expose a non-shareable
-        (SMS) fact: those get a card_log "told" row instead, which only blocks the bridge (7 days)."""
+        (SMS) fact: those get a card_log "told" row instead, which only blocks the bridge (7 days).
+        Returns the keys of bridge chips shown to the speaker in this call that this line has now covered: the caller
+        retracts them. The key stays in `sent`, so the chip is never sent again in this call."""
         v = snap.view
         rows = [(f, O) for O in set(audience) - {S}
                 for f in C.relevant(C.bridge_candidates(v, S, O, now), [text], hits, [slang])]
+        ident = self._identity(S)
+        covered = [(ident, f"bridge:{f.id}") for f, O in rows
+                   if (c := self.delivered.get((ident, f"bridge:{f.id}"))) is not None and c.kind == "bridge"
+                   and c.item.get("target") == O]
+        self.delivered = {k: c for k, c in self.delivered.items() if k not in covered}  # retract once
+        retract = list(dict.fromkeys(k for _i, k in covered))
         shared = [(f.id, O) for f, O in rows if f.shareable]
         quiet = [(S, O, C.Card(f"bridge:{f.id}", "told", {"kind": "fact", "id": f.id}, (f.id,), {}))
                  for f, O in rows if not f.shareable]
         self._log(quiet, now, final=False)
         if not shared:
-            return
+            return retract
         add: dict[int, frozenset[int]] = {}
         for fid, O in shared:
             add[fid] = add.get(fid, frozenset()) | {O}
@@ -630,6 +593,7 @@ class LiveWorld:
             aud = {**v.audience, **{f: v.audience.get(f, frozenset()) | o for f, o in add.items()}}
             self._snap = replace(snap, view=replace(v, audience=aud))
         self._submit(self._write_told, shared, now)
+        return retract
 
     def _write_told(self, rows: list[tuple[int, int]], now: datetime) -> None:
         with session_scope() as s:
@@ -779,146 +743,3 @@ class LiveWorld:
                     s.add(row)
                 for c in cols:
                     setattr(row, c, getattr(st, c))
-
-    # ---- extraction (6.1, D14) ----------------------------------------------------------------------------------------
-    def _arm_idle(self) -> None:
-        if self._idle is not None:
-            self._idle.cancel()
-        self._idle = self.loop.call_later(EXTRACT_IDLE_S, self._extract_async)
-
-    def _extract_async(self) -> None:
-        with self._lock:
-            if self._extracting or self._extracted >= len(self._lines):
-                return
-            self._extracting = True
-            start, end = self._extracted, len(self._lines)
-            self._extracted = end
-        self._submit(self._extract_job, start, end)
-
-    def _extract_job(self, start: int, end: int) -> None:
-        try:
-            res = self._extract(start, end)
-        finally:
-            with self._lock:
-                self._extracting = False
-        if res is not None:
-            self._on_loop(self._after_extract, res, self._rebuild())
-
-    def _candidates(self, v: WorldView, sp: int) -> list[Candidate]:
-        out = [Candidate("person", p.id, p.slug, p.name, p.is_user,
-                         tuple(dict.fromkeys(x for x in (p.lang_name, *(a for a, _l in p.aliases)) if x)))
-               for p in v.people.values() if p.id != sp and v.visible(sp, "person", p.id)]
-        out += [Candidate("thing", t.id, t.slug, t.name, False, t.aliases) for t in v.things.values()
-                if v.visible(sp, "thing", t.id)]
-        out += [Candidate("group", g.id, g.slug, g.name, False) for g in v.groups.values()
-                if v.visible(sp, "group", g.id)]
-        return out
-
-    def _extract(self, start: int, end: int):
-        """Blocking: one LLM call, validate, apply. Returns (ApplyResult, clean update, speaker_of_line,
-        audience_of_line) or None."""
-        v = self.view
-        lines = self._lines[max(0, start - EXTRACT_OVERLAP):end]
-        if v is None or not lines:
-            return None
-        win = [Line(n, ln.speaker, ln.lang, ln.text) for n, ln in enumerate(lines)]
-        everyone = list(dict.fromkeys(self._ever.values()))  # leave() empties parts before the call-end extraction
-        parts = [Participant(p, v.people[p].slug, v.people[p].name, lang) for p, lang in everyone if p in v.people]
-        speakers = sorted({ln.speaker for ln in lines})
-        with session_scope() as s:
-            own = {sp: own_context(s, sp) for sp in speakers}
-        cands = {sp: self._candidates(v, sp) for sp in speakers}
-        upd = run_extraction(None, self.call_id, win, parts, own, cands, sorted({lg for _p, lg in everyone}))
-        if upd is None:
-            return None
-        clean, _dropped = validate(upd, validate_ctx(win, parts, own, cands))  # drops are logged by validate
-        if not (clean.entities or clean.facts or clean.ties):
-            return None
-        speaker_of = {n: ln.speaker for n, ln in enumerate(lines)}
-        line_aud = {n: list(ln.audience) for n, ln in enumerate(lines)}
-        ctx = ApplyCtx(self.space_id, self.call_id, None, speaker_of, line_aud,
-                       {n: ln.utterance_id for n, ln in enumerate(lines) if ln.utterance_id}, clock.now())
-        try:
-            with session_scope() as s:
-                res = apply_update(s, clean, ctx)
-        except SQLAlchemyError:
-            log.exception("applying extraction failed for call %s", self.call_id)
-            return None
-        return res, clean, speaker_of, line_aud
-
-    @_locked
-    def _after_extract(self, res: tuple[ApplyResult, WorldUpdateOut, dict[int, int], dict[int, list[int]]],
-                       snap: _Snap) -> None:
-        """On the loop: swap in the new view, apply evidence, send late who/ask cards (2.5 trigger 3) via emit."""
-        result, clean, speaker_of, line_aud = res
-        now = clock.now()
-        self._swap(snap)
-        self._evidence(result.evidence, now)
-        v = snap.view
-        shown: list[tuple[int, int | None, C.Card]] = []
-        for e in clean.entities:
-            pid = result.entities.get(e.ref)
-            fact = next((f for f in clean.facts if e.ref in (f.subject, *f.refs)), None)
-            if ENTITY_TABLE[e.kind] != "person" or pid not in v.people or fact is None:
-                continue
-            S = speaker_of[fact.lines[0]]
-            sp_ident = self._identity(S)
-            heard = set(line_aud.get(fact.lines[0], ()))  # only people who heard that line may learn of the mention
-            for ident, L, lang in self._listeners(sp_ident) if sp_ident else []:
-                if L not in heard or not v.visible(L, "person", pid, S):
-                    continue
-                cards = self._late_card(v, L, S, pid, e.existing_id is None, now)
-                cards = self._admit(v, ident, L, S, cards, frozenset({pid}), now)
-                if cards:
-                    shown += [(L, None, c) for c in cards]
-                    self._send_later(ident, self._glance(sp_ident, ident, lang, cards, False))
-        self._evidence([ev for L, _t, c in shown for ev in self._card_evidence(L, c)], now)
-        self._log(shown, now)
-        self._flush_async()
-
-    def _late_card(self, v: WorldView, L: int, S: int, pid: int, is_new: bool, now: datetime) -> list[C.Card]:
-        name = v.people[pid].name
-        rendered = v.render(L, pid, S)
-        if is_new and (rendered == name or rendered.startswith(f"{name}, mentioned by")):  # no relation L can place
-            owner = v.people[S]
-            return [C.ask(name, name, f"{owner.name} mentioned {name}",
-                          [SuggestionOut(owner=owner.slug, relation="friend", label=f"{owner.name}'s friend")])]
-        return C.gaps(v, self.kcache, L, S, [Hit(0, 0, name, "person", (pid,), name, True)], [], now)
-
-    # ---- localization (8.5) -------------------------------------------------------------------------------------------
-    def _localize(self, items: list[tuple[str, str]], lang: str) -> dict[str, str]:
-        if not items:
-            return {}
-        name = MUSE_LANGUAGES.get(lang, lang)
-        user = json.dumps([{"key": k, "body": b} for k, b in items], ensure_ascii=False)
-        try:
-            out = get_llm().structured(LocalizeOut, LOCALIZE_SYSTEM.format(lang=name), user,
-                                       reasoning_effort="minimal", max_completion_tokens=1500,
-                                       prompt_cache_key=f"kin-l10n-{lang}")
-        except _LLM_ERRORS as e:
-            log.warning("card localization to %s failed: %s: %s", lang, type(e).__name__, e)
-            return {}
-        src = dict(items)
-        got = {it.key: it.body.strip() for it in out.items if it.key in src and it.body.strip()}
-        with self._state:
-            self._l10n = {**self._l10n, **{(k, lang, _sha(src[k])): b for k, b in got.items()}}
-        return got
-
-    def _prewarm(self, listener: int, lang: str) -> None:
-        """Best effort: bodies are rendered without a speaker, so a live card rendered through one misses."""
-        v, now = self.view, clock.now()
-        if v is None:
-            return
-        people = sorted((p for p in v.people.values() if p.id != listener and v.visible(listener, "person", p.id)
-                         and not v.structural_known(listener, "person", p.id)),
-                        key=lambda p: v.first_mention.get(p.id, _EPOCH), reverse=True)[:LOCALIZE_TOP]
-        self._localize([(f"who:{p.slug}", v.card_body(listener, "person", p.id, None, now)[0]) for p in people], lang)
-
-    def _lazy_l10n(self, identity: str, lang: str, key: str, body: str) -> None:
-        try:
-            got = self._localize([(key, body)], lang)
-        finally:
-            with self._state:
-                self._l10n_inflight = self._l10n_inflight - {(key, lang, _sha(body))}
-        if key in got and (identity, key) in self.sent:  # skip a card retracted meanwhile
-            self._send_later(identity, {"type": "glance_update", "key": key, "body": got[key]})

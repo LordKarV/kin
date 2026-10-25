@@ -320,6 +320,10 @@ class WorldView:
     def fact_forms(self) -> list[tuple[str, str, int]]       # concept forms -> ("fact"|"storyline", id) for the keyword index
 ```
 
+As built (2A): `WorldView` also keeps defaulted indexes after these fields (`now`, `links`, `about`, `gpair`,
+`first_known`, `group_forms`). `card_body(..., now)` with a different `now` re-evaluates on
+`dataclasses.replace(self, now=now)`, so the render and the cited facts use one clock.
+
 Scope of a build: the members; every person, thing and group referenced by a fact whose audience intersects the members
 or that a member said; everyone within 2 hops (kin, tie, group) of a member; all users in the space. Expected size: tens
 to low hundreds of rows. Target build time under 50 ms.
@@ -383,6 +387,12 @@ plain surface text with `node_id: null`.
     `apply.py`; `builder.add_relative` is used unchanged when the person does not exist yet). The edge's Fact audience is
     me plus the endpoints;
   - `confirmed` evidence for me on the person; then `LiveWorld.refresh()` on any active call with me in it.
+- Signatures as built (2C): `place_person(s, space_id, me, name, owner, relation, context='', call_audience=(), *,
+  person=None, now=None, call_id=None) -> (Person, list[Evidence])` and `link_kin(s, space_id, anchor_id, path,
+  person_id, *, me, name='', call_audience=(), now=None, call_id=None) -> (Person, list[Evidence])`. `person` is a slug
+  that must exist (LookupError, 404 at the route); only `name` creates a new Person. The route resolves the target
+  through the caller's own WorldView first (3C) and calls `place_person(s, space, me, body.name or '', owner, relation,
+  body.context or '', audience, person=target, call_id=body.call_id)`.
 
 ---
 
@@ -579,7 +589,9 @@ For each listener L who is a user, on `on_translated` for speaker S's final:
    watchers.
 6. **Closing the loop**: when L's own final, with S present, hits F's concepts at pass strength, write
    `FactAudience(F, S, via="told")` immediately (it only suppresses future bridges, so a false positive fails safe).
-   Extraction later confirms with `same_as=F`.
+   Extraction later confirms with `same_as=F`. If L was shown the `bridge:{F}` chip for S in this call, L gets
+   `glance_retract {keys:["bridge:{F}"]}` in that line's sends; the key stays in `sent`, so it never comes back in
+   the call (4C).
 
 ---
 
@@ -623,6 +635,8 @@ evidence to its cache.
 
 - Entities: reuse `existing_id`, else create Person/Thing/Group with world slugs and `translit` aliases from `forms`.
 - Ties: `Tie` + a Fact (`predicate="tie"`, subject = owner, text "Lin is Mei's friend from the Fudan climbing wall").
+  A tie with no matching LLM tie fact gets a synthesized tie Fact only when one person spoke in the window; with two
+  or more speakers it is dropped, because nothing says who said it.
 - Facts: `said_at` = utterance time; `third_party` when the subject has no `users` row, then
   `expires_at = said_at + third_party_ttl_days`; `FactAudience`: the speaker (`said`), the line audience (`heard`);
   `FactRef` rows for `refs`. `same_as` merges audience into the existing fact instead of writing a new one.
@@ -760,6 +774,8 @@ latency event to every side
   byte-identical ("Tamil script").
 - `Linker(graph, lang=None)` and `keyterms()` including `Node.name` (`graph/linker.py`).
 - `CardsOut.new_people: list[NewPerson] = []` (`mt/schemas.py`); B's task text asks for unresolved names.
+  With a roster, `TranslateResult.cards` resolves to `(cards, b_ms, new_people: list[NewPerson])`; without, to
+  `(cards, b_ms)`. The pipeline reads `new_people` from index 2.
 - `get_translator(family_id)` is unchanged for legacy and eval.
 
 ### 8.5 `LiveWorld` (`backend/app/world/live.py`): the one object the pipeline talks to
@@ -791,6 +807,7 @@ Internals: `view`, `index` (AliasIndex over `view.index_forms()`), `kw` (keyword
 `kcache`, `sent: frozenset[(identity, key)]`, `pending: dict[(identity, key), PendingCard]` (sent on a partial, waiting
 for the final), `last_hits: dict[speaker, frozenset[(start, id)]]` (stability gate), `recent: list[(speaker, hits)]`
 (last 6 finals for salience). Card selection lives in `world/cards.py` (pure functions over the view and kcache).
+Localization and extraction jobs live in `world/live_jobs.py` (`LiveJobs`, a mixin LiveWorld inherits).
 
 - **on_partial**: scan; a hit is stable when `(start, id)` was in the previous partial of this speaker; for each
   listener != speaker: `gaps(...)` -> items not in `sent`; guard; record in `sent` and `pending`; send `glance` with
@@ -913,12 +930,13 @@ clients ignore unknown kinds):
 | `POST /api/calls/{id}/pause` | `{paused:bool}` | `{on, paused_by}` (participants only) |
 | `POST /api/calls/{id}/feedback` | `{key, action:"know|dismiss|remember"}` | `{ok:true}` |
 | `POST /api/calls/{id}/text` | `{text}` | `{ok:true}` (typed input for LiveKit clients; demo insurance) |
+| `POST /api/calls/{id}/voice` | `{on:bool}` | `{on}` (pause, feedback, text and voice return 409 until the caller has a joined side) |
 | `GET /api/calls/{id}/participants` | | `[{person, identity, lang, joined_at, left_at}]` |
 | `POST /api/rtc/join` | world `{call_id?}` + X-KIN-User, or legacy body | `{call_id, room, token, url, identity, person, name, lang, participants}` / legacy unchanged |
 | `POST /twilio/sms` | Twilio form | TwiML |
 | `POST /api/dev/sms` | `{from, body}` | `{reply, message_id, facts:[{id, text}]}` |
 | `POST /api/dev/clock` | `{offset_days}` | `{now}` |
-| `POST /api/dev/apply` | `{call_id?, speaker:slug, audience:[slug], update: WorldUpdateOut}` | `{facts:[id], entities:[{ref, id, slug}]}` (same `apply_update` path; validator runs with each fact citing line 0 by `speaker`) |
+| `POST /api/dev/apply` | `{call_id?, speaker:slug, audience:[slug], update: WorldUpdateOut}` | `{facts:[id], entities:[{ref, id, slug}]}` (same `apply_update` path; validator runs with each fact citing line 0 by `speaker`; a tie with no tie fact is synthesized, since one person speaks) |
 
 Dev routes return 404 when `settings.dev_endpoints` is false.
 
