@@ -29,13 +29,12 @@ Talking points and what each phone shows:
 6. Optional: after a vague line, twist the wrist twice for a card about what you're talking about. Tap the KIN pill to
    pause; both phones show who paused.
 
-Keep out of Part 1: Mei, Ravi, Saroja, Meena, music or singing. Those belong to Part 2.
 
 ## Switch (on stage, 15 s)
 
-Hang up. On Nithin's phone: People > gear > name **Grandma**, language **Tamil**, save both. Call again. (Name and
-language take effect on the next call.) Say: "Now the harder case: my grandmother. She speaks Tamil, I don't, and her
-memory isn't what it was."
+Hang up. On either phone: People > gear > Demo > **Reset to 2: grandmother call**. That swaps in the grandmother world
+(the second phone becomes Grandma, Karthik's Mom's mom, in Tamil). Force-quit and reopen KIN on both phones, then call
+again. Say: "Now the harder case: my grandmother. She speaks Tamil, I don't, and her memory isn't what it was."
 
 ## Part 2: Karthik and his grandmother (Grandma speaks Tamil, Karthik English)
 

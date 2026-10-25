@@ -160,9 +160,10 @@ def dev_reset(body: DevResetIn) -> DevResetOut:
     url = get_settings().database_url
     if not url.startswith("sqlite:///"):
         raise HTTPException(422, "reset needs the SQLite demo database")
-    snapshot = Path(url.removeprefix("sqlite:///")).with_name("kin.demo-snapshot.db")
+    db = Path(url.removeprefix("sqlite:///"))
+    snapshot = db.with_name(f"kin.demo-part{body.part}.db")  # each part is its own seeded world
     if not snapshot.exists():
-        raise HTTPException(404, f"no snapshot at {snapshot}: run scripts/demo_snapshot.py save after seeding")
+        raise HTTPException(404, f"no snapshot at {snapshot}: build the part worlds (docs/DEMO_SCRIPT.md)")
     if registry.active() or any(agents.running(cid) for cid in list(agents._agents)) or calls._rings:
         raise HTTPException(409, "hang up first: a call is still live")
     src, raw = sqlite3.connect(snapshot), get_engine().raw_connection()
