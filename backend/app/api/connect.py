@@ -27,7 +27,7 @@ HANDLE_TRIES = 20
 MAX_MATCH_HASHES = 2000
 
 
-# ponytail: new tables, not columns, because the schema has no migrations (create_all builds these on startup).
+# Known limit: new tables, not columns, because the schema has no migrations (create_all builds these on startup).
 class UserHandle(m.Base):
     __tablename__ = "user_handles"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -165,7 +165,7 @@ def _relations(s: Session, me_id: int) -> dict[int, str]:
 @router.post("/connect/match")
 def match(body: MatchIn, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> dict:
     """KIN users whose linked phone hashes to one of `hashes`, never me. Reveals only that they exist (slug, name),
-    never their number. ponytail: hashes every linked phone per call, O(users); add an indexed hash column at scale."""
+    never their number. Known limit: hashes every linked phone per call, O(users); add an indexed hash column at scale."""
     want = set(body.hashes)
     rows = s.execute(select(m.User.id, m.User.phone).where(m.User.phone.is_not(None), m.User.id != user.id))
     found = [uid for uid, phone in rows if hashlib.sha256(phone.encode()).hexdigest() in want]

@@ -1,17 +1,17 @@
-"""Structured output schema for grounded translation (plan §2 Phase 2). Strict-mode friendly: no defaults, closed objects."""
+"""Structured output schema for grounded translation. Strict-mode friendly: no defaults, closed objects."""
 from __future__ import annotations
 
 from typing import Literal
 
 from pydantic import BaseModel, create_model, model_validator
 
-from ..world.contracts import NewPerson  # noqa: F401  (one definition, docs/ARCHITECTURE.md 2.5)
+from ..world.contracts import NewPerson  # noqa: F401  (one definition)
 
 
 class GroundedSpan(BaseModel):
     source: str      # surface form in the source utterance
-    rendered: str    # how it was rendered for the listener, e.g. "your uncle Ravi mama (Mom's younger brother)"
-    node_id: str     # family-graph slug, e.g. p_ravi_mama
+    rendered: str    # how it was rendered for the listener, e.g. "your uncle Ravi <kin term> (Mom's younger brother)"
+    node_id: str     # family-graph slug, e.g. p_ravi_7
 
 
 class PragmaticsCard(BaseModel):
@@ -26,7 +26,7 @@ class TranslationOut(BaseModel):
     translation: str
     grounded_spans: list[GroundedSpan]
     pragmatics_cards: list[PragmaticsCard]
-    passthrough_kept: list[str]   # heritage-language tokens left untranslated (Fade)
+    passthrough_kept: list[str]   # tokens left untranslated
     confidence: float
 
 
@@ -41,7 +41,7 @@ class SpeechOut(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _accept_single_call_shape(cls, v):
-        # ponytail: accepts the old one-call reply ({"translation": ...}) so existing mocked providers keep working
+        # Known limit: accepts the old one-call reply ({"translation": ...}) so existing mocked providers keep working
         if isinstance(v, dict) and "a_translation" not in v and "translation" in v:
             return {**v, "a_translation": v["translation"]}
         return v

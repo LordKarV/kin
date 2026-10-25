@@ -1,4 +1,4 @@
-"""LiveWorld background jobs (docs/ARCHITECTURE.md 6.1, 8.5): card localization and debounced / call-end extraction.
+"""LiveWorld background jobs: card localization and debounced / call-end extraction.
 
 Split out of live.py for size only. `LiveJobs` is a mixin: LiveWorld inherits it and these methods read and write the
 same live state (kcache, sent, _lines, ...) under the same lock. Nothing here is called from outside live.py.
@@ -55,19 +55,19 @@ def _sha(text: str) -> str:
 
 
 def _new_only(raw: WorldUpdateOut, upd: WorldUpdateOut, first_new: int, vctx: ValidateCtx) -> WorldUpdateOut:
-    """D14 overlap: lines before `first_new` were extracted last time and are context only. Facts citing only them
+    """Overlap handling: lines before `first_new` were extracted last time and are context only. Facts citing only them
     are dropped (a model that ignores same_as would write them twice), with the ties and entities only they carried.
-    `upd` is validate's output for `raw`. A tie fact validate synthesized (6.3, one speaker) sits on the speaker's
+    `upd` is validate's output for `raw`. A tie fact validate synthesized (one speaker) sits on the speaker's
     first line, usually an overlap one, so it is kept: it is a tie fact with no storyline and not sensitive (validate
-    never rewrites those) that the model did not send. ponytail: a tie the model re-sends from overlap lines without
+    never rewrites those) that the model did not send. Known limit: a tie the model re-sends from overlap lines without
     its tie fact gets one more tie Fact row (apply keeps the first Tie); marking synthesized facts in validate fixes
-    that. Entities nothing cited pass through as validate let them (apply learns a known entity's new forms, 3.3)."""
+    that. Entities nothing cited pass through as validate let them (apply learns a known entity's new forms)."""
     if first_new == 0:
         return upd
     facts = [f for f in upd.facts if max(f.lines) >= first_new
              or (f.predicate == "tie" and f.storyline is None and not f.sensitive_kind and f not in raw.facts)]
     for i, f in enumerate(upd.facts):
-        if f not in facts:  # index and length only: fact text is user content (privacy, section 10)
+        if f not in facts:  # index and length only: fact text is user content (privacy)
             log.info("extraction dropped: fact #%d (%d chars) cites only overlap lines %s", i, len(f.text_en), f.lines)
     refs = {e.ref: e for e in upd.entities}
     ties = [t for t in upd.ties if _tie_fact(t, facts, refs, vctx) is not None]
@@ -81,7 +81,7 @@ def _new_only(raw: WorldUpdateOut, upd: WorldUpdateOut, first_new: int, vctx: Va
 
 def _locked(fn: Callable) -> Callable:
     """The pipeline calls LiveWorld from the loop thread and from to_thread workers; every read-modify-write of live
-    state (sent, pending, kcache, ...) runs under one lock. ponytail: one RLock per call, held ~1 ms in memory."""
+    state (sent, pending, kcache, ...) runs under one lock. Known limit: one RLock per call, held ~1 ms in memory."""
     @functools.wraps(fn)
     def wrapper(self: "LiveWorld", *args, **kw):
         with self._state:
@@ -92,7 +92,7 @@ def _locked(fn: Callable) -> Callable:
 class LiveJobs:
     """Localization and extraction methods of LiveWorld (see the module docstring)."""
 
-    # ---- localization (8.5) -------------------------------------------------------------------------------------------
+    # ---- localization -------------------------------------------------------------------------------------------------
     def _lazy(self, identity: str, lang: str, card: C.Card) -> None:
         body = card.payload.get("body")
         k = (card.key, lang, _sha(body)) if body and lang != "en" else None
@@ -147,7 +147,7 @@ class LiveJobs:
         if key in got and (identity, key) in self.sent:  # skip a card retracted meanwhile
             self._send_later(identity, {"type": "glance_update", "key": key, "body": got[key]})
 
-    # ---- extraction (6.1, D14) ----------------------------------------------------------------------------------------
+    # ---- extraction ---------------------------------------------------------------------------------------------------
     def _arm_idle(self) -> None:
         if self._idle is not None:
             self._idle.cancel()
@@ -183,7 +183,7 @@ class LiveJobs:
 
     def _live_lines(self, start: int, end: int, extra: set[int]) -> tuple[list["_Line"], int, frozenset[int]]:
         """Window lines that may still go to the LLM, plus the index of the first new one (>= start) and which of the
-        people in the lines or `extra` still exist. A privacy delete mid-call (section 10) removes a speaker or
+        people in the lines or `extra` still exist. A privacy delete mid-call removes a speaker or
         redacts an utterance: those words never go back to the model. Audiences lose deleted people, whose rows
         would fail the FK and roll back the whole apply."""
         lo = max(0, start - EXTRACT_OVERLAP)
@@ -264,7 +264,7 @@ class LiveJobs:
                 if cards:
                     shown += [(L, None, c) for c in cards]
                     self._send_later(ident, self._glance(sp_ident, ident, lang, cards, False))
-        # Section 4 ordering: the late-card decisions above read the state before these lines; shown before heard.
+        # Ordering: the late-card decisions above read the state before these lines; shown before heard.
         self._evidence([ev for L, _t, c in shown for ev in self._card_evidence(L, c)], now)
         self._evidence(result.evidence, said)  # heard when said, not when extraction finished
         self._log(shown, now)

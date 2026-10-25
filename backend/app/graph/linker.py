@@ -20,7 +20,7 @@ NON_LATIN = re.compile(r"[^\x00-\x7f]")
 GENERIC_HEADS_EN = {"shop", "driver", "auto", "school", "office", "neighbour", "neighbor", "teacher", "doctor", "nurse"}
 SIBLING_TERMS = {"anna", "akka", "thambi", "thangai", "mama", "mami"}
 COMPOSITIONAL_ONLY = {"paiyan", "ponnu"}
-# romanized suffixes common across the Indic languages; each language table adds its own (ROMAN_SUFFIXES ∪ table.roman_suffixes)
+# romanized suffixes shared by several languages; each language table adds its own (ROMAN_SUFFIXES ∪ table.roman_suffixes)
 ROMAN_SUFFIXES = {"kku", "ukku", "la", "le", "um", "ai", "a", "aa", "ku", "ka", "ki", "ko", "ne", "se", "me", "ya", "s", "es"}
 
 
@@ -109,7 +109,7 @@ class Linker:
         try:
             self.table = load_table(lang or graph.heritage_lang)
         except (KeyError, FileNotFoundError):
-            self.table = load_table("ta")
+            self.table = load_table("en")  # no table for this language: English kin terms only
         t = self.table
         self.possessive_speaker = set(t.possessive_speaker)
         self.possessive_listener = set(t.possessive_listener)
@@ -145,7 +145,7 @@ class Linker:
         return spans
 
     def keyterms(self) -> list[str]:
-        """Latin-script names/dishes/places to bias the ASR (Deepgram keyterm / Muse keywords)."""
+        """Latin-script names/dishes/places to bias the ASR (Muse keywords)."""
         out: list[str] = []
         for p in self.g.people.values():
             out += [a for a in [p.name, *(a for a, _l, _k in p.aliases)] if a and not NON_LATIN.search(a)]

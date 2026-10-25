@@ -19,7 +19,7 @@ log = logging.getLogger("kin.events")
 router = APIRouter()
 PING_EVERY_S = 25
 
-# ponytail: in-process registry, so one worker only (same ceiling as the call registry); a pub/sub bus if KIN scales out.
+# Known limit: in-process registry, so one worker only (same ceiling as the call registry); a pub/sub bus if KIN scales out.
 _sockets: dict[int, set[WebSocket]] = {}
 
 

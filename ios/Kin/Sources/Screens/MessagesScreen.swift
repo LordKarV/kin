@@ -1,10 +1,10 @@
 import SwiftUI
 import UIKit
 
-/// KIN's SMS number (design app-07): text KIN your news so it knows who has not heard it yet, or type it here (the
-/// same server path, POST /api/me/messages, so it works without Twilio). "What KIN understood"
+/// KIN's SMS number: text KIN your news so it knows who has not heard it yet, or type it here (the
+/// same server path, POST /api/me/messages). "What KIN understood"
 /// lists my own facts that came from texts (GET /api/me/facts, source_kind "message"), and "From your calls" every
-/// other fact about me, each correctable or deletable (PRODUCT: see, correct and delete what KIN holds about you).
+/// other fact about me, each correctable or deletable, so you can see, correct and delete what KIN holds about you.
 struct MessagesScreen: View {
     let api: KinAPI
     @State private var number: String?

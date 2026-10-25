@@ -1,5 +1,5 @@
 """API-key gate. Dev mode (default key, no public host) is open on localhost; the moment a real key or a public
-host is configured, every /api and /ws route needs the key. /api/phone/dial always needs it (toll fraud)."""
+host is configured, every /api and /ws route needs the key."""
 from __future__ import annotations
 
 import hmac
@@ -7,8 +7,8 @@ import hmac
 from .config import get_settings
 
 DEFAULT_KEY = "change-me"
-PUBLIC_PREFIXES = ("/health", "/connectors/", "/media/", "/twilio/", "/docs", "/openapi.json", "/redoc")
-ALWAYS_LOCKED = ("/api/phone/dial",)
+PUBLIC_PREFIXES = ("/health", "/docs", "/openapi.json", "/redoc")
+ALWAYS_LOCKED: tuple[str, ...] = ()
 
 
 def locked() -> bool:

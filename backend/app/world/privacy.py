@@ -1,4 +1,4 @@
-"""Privacy operations (ARCHITECTURE section 10): delete a fact, a person or an account, and the third-party expiry sweep.
+"""Privacy operations: delete a fact, a person or an account, and the third-party expiry sweep.
 
 Every function returns per-table counts and never commits; the caller's session_scope does. Commit with
 commit_and_checkpoint so the WAL does not keep the deleted text ("deleted means gone").
@@ -26,7 +26,7 @@ def _n(counts: dict[str, int], key: str, result) -> None:
 
 def _strip_ids(s: Session, model, col: str, ids: set[int], counts: dict[str, int], key: str, **clear) -> None:
     """Remove ids from a JSON list column, and set `clear` columns on every row that cited one.
-    ponytail: Python scan of the whole table; json_each query if it grows."""
+    Known limit: Python scan of the whole table; json_each query if it grows."""
     if not ids:
         return
     for row in s.scalars(select(model)):
@@ -143,13 +143,13 @@ def delete_person(s: Session, person_id: int) -> dict[str, int]:
         fact_ids |= set(s.scalars(select(col).where(q, col.is_not(None))))
     _n(counts, "knowledge", s.execute(delete(m.Knowledge).where(or_(
         m.Knowledge.knower_id == P, (m.Knowledge.item_kind == "person") & (m.Knowledge.item_id == P)))))
-    # ponytail: Python scan for the JSON intersect; fine at hackathon scale.
+    # Known limit: Python scan for the JSON intersect; fine at hackathon scale.
     gone = [c.id for c in s.scalars(select(m.CardLog)) if P in (c.listener_id, c.target_id) or fact_ids & set(c.fact_ids or [])]
     if gone:
         _n(counts, "card_log", s.execute(delete(m.CardLog).where(m.CardLog.id.in_(gone))))
     _n(counts, "fact_audience", s.execute(delete(m.FactAudience).where(m.FactAudience.person_id == P)))
     _n(counts, "fact_refs", s.execute(delete(m.FactRef).where(m.FactRef.kind == "person", m.FactRef.ref_id == P)))
-    if owned:  # section 10 order: storyline_states then storylines, before facts
+    if owned:  # order: storyline_states then storylines, before facts
         states = list(s.scalars(select(m.StorylineState.id).where(m.StorylineState.storyline_id.in_(owned))))
         if states:
             _n(counts, "knowledge", s.execute(delete(m.Knowledge).where(m.Knowledge.item_kind == "state",
@@ -259,7 +259,7 @@ def commit_and_checkpoint(s: Session) -> bool:
     """Commit a delete, then truncate the WAL (secure_delete only zeroes pages after a checkpoint) and drop cached
     legacy graphs that may still hold the deleted person. Returns False when another connection's read kept the WAL
     from truncating; the deleted rows then sit in kin.db-wal until the next checkpoint (run_sweep runs hourly).
-    ponytail: no retry, since each busy attempt already waits out the sqlite busy timeout (5 s by default)."""
+    Known limit: no retry, since each busy attempt already waits out the sqlite busy timeout (5 s by default)."""
     from ..mt.translate import reset_translator_cache
     s.commit()
     busy = _wal_checkpoint(s)

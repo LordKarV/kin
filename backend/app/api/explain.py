@@ -1,5 +1,5 @@
-"""Tap a word in the caption (docs/ARCHITECTURE.md Amendment 5), or a gesture with {"text": null, "recent": true}
-(Amendment 7). The response goes to the caller only."""
+"""Tap a word in the caption, or a gesture with {"text": null, "recent": true}.
+The response goes to the caller only."""
 from __future__ import annotations
 
 import asyncio
@@ -23,7 +23,7 @@ class ExplainIn(BaseModel):
 
 
 def _listener(call_id: int, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> int:
-    """Like calls.caller, but a caller outside the call gets 404 (Amendment 5): it does not learn the call exists."""
+    """Like calls.caller, but a caller outside the call gets 404: it does not learn the call exists."""
     part = s.scalar(select(m.CallParticipant.id).where(m.CallParticipant.call_id == call_id,
                                                         m.CallParticipant.person_id == user.person_id))
     if s.get(m.Call, call_id) is None or part is None:

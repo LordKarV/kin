@@ -1,4 +1,4 @@
-"""Wire contracts for world calls (docs/ARCHITECTURE.md section 9) and the world LLM schemas (6.1, 7, 3.3, 8.5).
+"""Wire contracts for world calls and the world LLM schemas.
 
 Server-to-client models mirror ios/Kin/Sources/Contracts/Contracts.swift; change both together.
 LLM schemas are strict-mode shapes (llm.to_strict_schema): no defaults, comments instead of docstrings
@@ -121,7 +121,7 @@ class GlanceUpdateMsg(BaseModel):
 class GroundedSpanOut(BaseModel):
     source: str
     rendered: str
-    node_id: str | None = None  # null when the node is not visible to this listener (2.4)
+    node_id: str | None = None  # null when the node is not visible to this listener
 
 
 class LinkerSpanOut(BaseModel):
@@ -436,7 +436,7 @@ class DevSmsIn(BaseModel):
     @field_validator("body")
     @classmethod
     def _truncate(cls, v: str) -> str:
-        return v[:1600]  # section 7: long bodies are truncated, not rejected, same as the Twilio path
+        return v[:1600]  # long bodies are truncated, not rejected
 
 
 class FactBrief(BaseModel):
@@ -559,7 +559,7 @@ class NewPerson(BaseModel):  # CardsOut.new_people item (call B)
     context: str
 
 
-class BridgeOut(BaseModel):  # optional rerank (section 5), off by default
+class BridgeOut(BaseModel):  # optional rerank, off by default
     fact_id: int | None
 
 

@@ -1,4 +1,4 @@
-"""Streaming ASR abstraction. Providers: muse (Meta Muse Voice Transcribe), deepgram, mock. Chosen by ASR_PROVIDER."""
+"""Streaming ASR abstraction. Providers: muse (Meta Muse Voice Transcribe), mock. Chosen by ASR_PROVIDER."""
 from __future__ import annotations
 
 import asyncio
@@ -54,29 +54,13 @@ class MockASR:
             yield ev
 
 
-def make_asr(language: str, keyterms: list[str]) -> ASRSession:
+def make_asr(language: str, keyterms: list[str], others: list[str] | tuple[str, ...] = ()) -> ASRSession:
+    """`others`: languages the other people in the call speak, so code-switched words in them are expected too."""
     s = get_settings()
-    if s.asr_provider == "deepgram":
-        from .asr_deepgram import DeepgramASR
-        return DeepgramASR(api_key=s.deepgram_api_key, language=language, sample_rate=s.asr_sample_rate, keyterms=keyterms)
     if s.asr_provider == "muse":
         from ..graph.kin_tables import MUSE_LANGUAGES
         from .asr_muse import MuseASR
         # VERIFIED: languageBias takes language NAMES (the docs example lists full names), not codes
-        name = MUSE_LANGUAGES.get(language, language)
-        heritage = MUSE_LANGUAGES.get(s.asr_heritage_lang, s.asr_heritage_lang)
-        bias = [name, "English"] if language != "en" else ["English", heritage]
+        bias = [MUSE_LANGUAGES.get(c, c) for c in (language, *others, "en")]
         return MuseASR(api_key=s.model_api_key, keywords=keyterms, language_bias=list(dict.fromkeys(bias)))
     return MockASR()
-
-
-def make_bilingual_asr(heritage_lang: str, keyterms: list[str]) -> ASRSession:
-    """One stream that hears BOTH people on a merged phone call. That needs code-switching across the heritage
-    language and English, which Muse Voice Transcribe does (25 languages); Deepgram here is one language per stream."""
-    s = get_settings()
-    if s.asr_provider == "mock":
-        return MockASR()
-    from ..graph.kin_tables import MUSE_LANGUAGES
-    from .asr_muse import MuseASR
-    bias = [MUSE_LANGUAGES.get(heritage_lang, heritage_lang), "English"]
-    return MuseASR(api_key=s.model_api_key, keywords=keyterms, language_bias=list(dict.fromkeys(bias)))

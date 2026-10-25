@@ -1,7 +1,6 @@
 import Foundation
 
-// Tap-to-explain (docs/ARCHITECTURE.md Amendment 5) and the call screen's one-card layout rule
-// (docs/collab/design-notes.md, layout rule 3), as pure functions over WorldState.
+// Tap-to-explain and the call screen's one-card layout rule, as pure functions over WorldState.
 
 /// A tap was sent for `term`. Returns nil when the same word is already waiting (no double send).
 func explainStarted(_ state: WorldState, term: String) -> WorldState? {
@@ -38,7 +37,7 @@ func explainFailed(_ state: WorldState, term: String, message: String) -> WorldS
     return s
 }
 
-/// The double twist's slot in `explaining` (Amendment 7), so a second twist while one is waiting does not send again.
+/// The double twist's slot in `explaining`, so a second twist while one is waiting does not send again.
 /// Starts with a control character, so no caption word can collide with it. Start it with `explainStarted`.
 let recentAsk = "\u{1}recent"
 
@@ -72,8 +71,8 @@ func triggerTerms(_ card: RailCard?) -> [String] {
 }
 
 /// Every name, place or term in the line that can be tapped: words KIN has grounded or carded this call, plus
-/// capitalized Latin words that are not just the first word of a sentence. Longest first, so "Ravi mama" wins
-/// over "Ravi". ponytail: the capitalization rule misses lowercase terms in Latin text ("murukku") until KIN has
+/// capitalized Latin words that are not just the first word of a sentence. Longest first, so "Anna Lee" wins
+/// over "Anna". Known limit: the capitalization rule misses lowercase terms in Latin text until KIN has
 /// carded them once; a server-side term list would close that.
 func tappableTerms(in text: String, known: Set<String>) -> [String] {
     var found = Set(known.filter { $0.count > 1 && !termRanges(of: $0, in: text).isEmpty })

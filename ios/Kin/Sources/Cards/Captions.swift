@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Live captions (design-notes layout rules 4 to 6). The big line is the latest line I can read and changes only when
+/// Live captions. The big line is the latest line I can read and changes only when
 /// a final lands; the other person's live words show small underneath with a typing indicator. The word behind the
 /// card on screen is tinted and dotted-underlined; every other name or term is quietly tappable (a faint dotted
 /// underline) and opens `kin-explain:` links that the call screen turns into a tap-to-explain request.
@@ -69,7 +69,7 @@ struct LiveCaptions: View {
     }
 
     /// Tappable terms become links; the card's trigger word is also tinted. Longer terms are applied first and a
-    /// range already linked is never relinked, so "Ravi mama" is one tap, not two.
+    /// range already linked is never relinked, so "Anna Lee" is one tap, not two.
     static func styled(_ text: String, tappable: [String], highlights: [String]) -> AttributedString {
         var a = AttributedString(text)
         var taken: [Range<AttributedString.Index>] = []

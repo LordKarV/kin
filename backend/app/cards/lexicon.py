@@ -3,9 +3,9 @@
 Nothing is hand-seeded per family. A language's lexicon is drafted ONCE by Muse Spark and cached as reference data in
 app/cards/lexicons/<lang>.json (verified=false until a speaker reviews it, like app/graph/kin_tables). Entries are
 validated on load; bad ones are dropped and counted. The family's own learned items (past glossary cards) are added at
-match time by app/cards/glance.py so a term explained once is instant forever after.
+match time so a term explained once is instant forever after.
 
-CLI: python -m app.cards.lexicon ta hi
+CLI: python -m app.cards.lexicon <lang> [<lang> ...]
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ CATEGORIES = ("food", "festival", "ritual", "place", "address", "saying", "objec
 MAX_FORMS = 16
 MAX_FORM_LEN = 120
 GEN_TIMEOUT_S = 300.0       # 12k-token structured outputs take minutes; the live client's 20 s timeout would cut them off
-GEN_MAX_TOKENS = 12000      # reasoning tokens count against this budget (DECISIONS 2026-10-24)
+GEN_MAX_TOKENS = 12000      # reasoning tokens count against this budget
 
 # one Muse call per batch; categories grouped so each batch stays ~40-50 entries
 BATCHES = [

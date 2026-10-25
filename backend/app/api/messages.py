@@ -1,13 +1,15 @@
-"""In-app Messages (PRODUCT.md, Messages): the user types their news to KIN in the app and it takes the same path as a
-text to KIN's number (world/sms.py ingest: self facts only, sensitive reduction, never forwarded, body cleared once
-parsed). The caller is the X-KIN-User, so no phone number or link code is involved.
+"""In-app Messages: the user types their news to KIN in the app (world/sms.py ingest: self facts only, sensitive
+reduction, never forwarded, body cleared once parsed). The caller is the X-KIN-User.
 
-ponytail: no GET /api/me/messages. ingest clears Message.body after the parse (section 7 privacy), so the server has
-no message text to list; the app keeps this session's thread itself and "What KIN understood" is the durable record.
+Known limit: no GET /api/me/messages. ingest clears Message.body after the parse (privacy), so the server has no
+message text to list; the app keeps this session's thread itself and "What KIN understood" is the durable record.
 """
 from __future__ import annotations
 
 import logging
+import threading
+import time
+from collections import defaultdict, deque
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -18,9 +20,26 @@ from ..db import models as m
 from ..db.session import get_session
 from ..world.contracts import FactRow
 from ..world.sms import SLOW_REPLY, ingest
-from .sms import _allow
 from .users import current_user
 from .world import _row
+
+RATE_LIMIT = 30
+RATE_WINDOW_S = 3600.0
+# Known limit: in-memory, per process; resets on restart. Move to the messages table if KIN runs several workers.
+_sent: dict[int, deque[float]] = defaultdict(deque)
+_lock = threading.Lock()
+
+
+def _allow(user_id: int, now: float | None = None) -> bool:
+    now = time.monotonic() if now is None else now
+    with _lock:
+        q = _sent[user_id]
+        while q and now - q[0] >= RATE_WINDOW_S:
+            q.popleft()
+        if len(q) >= RATE_LIMIT:
+            return False
+        q.append(now)
+        return True
 
 log = logging.getLogger("kin.api.messages")
 router = APIRouter(prefix="/api/me", tags=["messages"])
@@ -37,7 +56,7 @@ class MessageOut(BaseModel):
 
 @router.post("/messages", response_model=MessageOut)
 def post_message(body: MessageIn, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> MessageOut:
-    if not _allow(user.id):  # the same per-user budget as SMS: typing in the app is not a way around it
+    if not _allow(user.id):  # a per-user budget on what KIN parses
         log.info("in-app message rate limit hit for user %s", user.id)
         return MessageOut(reply=SLOW_REPLY)
     reply, _message_id, facts = ingest(s, user, body.text)

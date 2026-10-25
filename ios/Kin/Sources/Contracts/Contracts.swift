@@ -1,4 +1,4 @@
-// Wire contracts for world calls (docs/ARCHITECTURE.md section 9). Mirrors backend/app/world/contracts.py;
+// Wire contracts for world calls. Mirrors backend/app/world/contracts.py;
 // change both together. Foundation only.
 //
 // Decode server messages with `KinWorldMsg.decode(data)` or a plain JSONDecoder (default key strategy):

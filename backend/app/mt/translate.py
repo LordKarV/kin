@@ -17,13 +17,13 @@ from functools import lru_cache
 from ..graph.kinship import FamilyGraph
 from ..graph.linker import Linker, Span
 from ..graph.kin_tables import MUSE_LANGUAGES, load_table
-from ..llm import LLM, StructuredOutputError, get_llm
+from ..llm import LLM, get_llm
 from .pragmatics import filter_cards
-from .schemas import CardsOut, GroundedSpan, LegacyCardsOut, PragmaticsCard, SpeechOut, TranslationOut
+from .schemas import CardsOut, GroundedSpan, LegacyCardsOut, SpeechOut, TranslationOut
 
 log = logging.getLogger("kin.mt")
 
-# Measured live 2026-10-24 (docs/DECISIONS.md): latency ≈ 0.3 s + ~3 ms per reasoning token, so effort is the lever.
+# Measured live 2026-10-24: latency ≈ 0.3 s + ~3 ms per reasoning token, so effort is the lever.
 SPEECH_EFFORT = "minimal"   # call A
 CARDS_EFFORT = "minimal"    # call B
 SPEECH_HEDGE_S = 2.0        # duplicate call A if nothing by then
@@ -81,7 +81,7 @@ class Translator:
         try:
             self.table = load_table(lang or graph.heritage_lang)
         except (KeyError, FileNotFoundError):
-            self.table = load_table("ta")
+            self.table = load_table("en")  # no table for this language: English kin terms only
         self.lang = self.table.name
         self._system_cache: dict[str, str] = {}
 
@@ -161,14 +161,14 @@ class Translator:
     # ---- translation ---------------------------------------------------------
     def translate(self, text: str, speaker: str, listener: str | None, history=(), passthrough=(), reasoning_effort: str | None = None,
                   target_lang: str = "en") -> TranslateResult:
-        """A and B together (API, eval, buddy). Live calls use translate_speech and attach cards when B lands."""
+        """A and B together (eval). Live calls use translate_speech and attach cards when B lands."""
         return self.with_cards(self.translate_speech(text, speaker, listener, history, passthrough, reasoning_effort, target_lang))
 
     def translate_speech(self, text: str, speaker: str, listener: str | None, history=(), passthrough=(), reasoning_effort: str | None = None,
                          target_lang: str = "en", extra_spans=(), roster: str | None = None) -> TranslateResult:
         """Call A, with call B started in parallel and returned unresolved in `.cards`. reasoning_effort overrides both.
 
-        World calls (docs/ARCHITECTURE.md 8.4): `roster` replaces the FAMILY ROSTER block and keys the prompt cache;
+        World calls: `roster` replaces the FAMILY ROSTER block and keys the prompt cache;
         `listener=None` means several listeners; `extra_spans` (dicts from LiveWorld.on_final) join the linker spans.
         With a roster, `.cards` resolves to (cards, b_ms, new_people); without one, to (cards, b_ms) as before."""
         t0 = time.perf_counter()
@@ -179,7 +179,7 @@ class Translator:
             linked = [_roster_scoped(s, shown) for s in linked if s.node not in self.g.thing_by_slug]
         spans = _merge_spans(linked, extra_spans, text)
         t_link = (time.perf_counter() - t0) * 1000
-        # Fade guardrail: never pass through a token inside a grounded span
+        # guardrail: never pass through a token inside a grounded span
         safe_pt = [p for p in passthrough if not any(p in s.source or s.source in p for s in spans if s.node)]
         system = self.system_prompt(listener, roster)
         user = self.user_prompt(text, speaker, listener, spans, history, safe_pt, shown)
@@ -301,7 +301,7 @@ def _roster_scoped(s: Span, shown: dict[str, str]) -> Span:
 def _merge_spans(spans: list[Span], extra, text: str) -> list[Span]:
     """Linker spans plus world spans (dicts start/end/source/node_id/type/rendered/confidence) that overlap none of them.
     A world span replaces a name or kin-word match (alias/disambiguated/kin-term) on the same range: the world span is
-    visibility-checked, including on purpose with no node. Kin-chain spans ("Ravi mama") still win on overlap."""
+    visibility-checked, including on purpose with no node. Kin-chain spans (a name plus a kin term) still win on overlap."""
     good = []
     for d in extra:
         if not (0 <= d.get("start", -1) < d.get("end", -1) <= len(text)) or not d.get("source"):
@@ -312,7 +312,7 @@ def _merge_spans(spans: list[Span], extra, text: str) -> list[Span]:
     out = [s for s in spans if not ((s.start, s.end) in ex and s.method in ("alias", "disambiguated", "kin-term"))]
     for d in good:
         if any(d["start"] < s.end and s.start < d["end"] for s in out):
-            continue  # ponytail: first span wins on overlap (linker first: it knows kin chains); no scoring
+            continue  # Known limit: first span wins on overlap (linker first: it knows kin chains); no scoring
         out.append(Span(d["start"], d["end"], d["source"], d.get("node_id"), d.get("type", "person"), float(d.get("confidence", 0.9)),
                         d.get("method", "world"), display=d.get("rendered", "") or d["source"], candidates=list(d.get("candidates", []))))
     return sorted(out, key=lambda s: s.start)

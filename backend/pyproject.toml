@@ -1,7 +1,7 @@
 [project]
 name = "kin-backend"
 version = "0.1.0"
-description = "KIN: family-grounded live interpreter with Fade"
+description = "KIN: live call interpreter with a common-ground engine"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115",
@@ -13,14 +13,11 @@ dependencies = [
   "httpx>=0.27",
   "websockets>=12",
   "rapidfuzz>=3.9",
-  "twilio>=9.0",
   "python-dotenv>=1.0",
-  "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
 livekit = ["livekit==1.1.21", "livekit-api==1.2.2"]  # KIN call app: app/rtc/agent.py (rtc SDK, not livekit-agents)
-embeddings = ["sentence-transformers>=3.0"]
 
 [build-system]
 requires = ["setuptools>=68"]

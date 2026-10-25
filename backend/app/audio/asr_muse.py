@@ -2,7 +2,7 @@
 wss://api.meta.ai/v1/asr/realtime; first text frame = JSON handshake with authorization.accessToken (the HTTP header is ignored);
 binary frames = signed 16-bit LE mono PCM (PCM_16KHZ or PCM_24KHZ); server events carry `type`; {"type":"endStream"} closes input.
 Supports 25 languages with code-switching; `keywords` biases names; NO word timestamps (turn-level only).
-VERIFY at the venue: the exact `model` handshake value (docs list `muse-voice-transcribe-1.0` as the model id)."""
+Unconfirmed: the exact `model` handshake value (docs list `muse-voice-transcribe-1.0` as the model id)."""
 from __future__ import annotations
 
 import asyncio

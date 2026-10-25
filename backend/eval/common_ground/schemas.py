@@ -1,4 +1,4 @@
-"""Planted common-ground scenarios (ARCHITECTURE 11): who knows what, when, and which cards each listener should get.
+"""Planted common-ground scenarios: who knows what, when, and which cards each listener should get.
 
 Days are offsets from the scenario's day 0 (fractions allowed, e.g. 41.9995 for "a minute before the probe").
 Evidence rows are applied in list order (the runner relies on this: `shown` before `heard` on the same final).
@@ -78,7 +78,7 @@ class FactS(_M):
     remembered: bool = False
     pinned: bool = False
     third_party: bool = False
-    contradicts: str | None = None      # key of an earlier fact this one contradicts (6.4)
+    contradicts: str | None = None      # key of an earlier fact this one contradicts
     storyline: StorylineRef | None = None
 
 

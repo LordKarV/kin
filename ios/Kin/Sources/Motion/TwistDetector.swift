@@ -8,14 +8,14 @@ struct TwistSample: Equatable {
     let accel: Double
 }
 
-/// Double twist of the wrist (PRODUCT "on-demand context", ARCHITECTURE Amendment 7): two opposite-sign rotation
+/// Double twist of the wrist (on-demand context): two opposite-sign rotation
 /// spikes about the long axis within `window`, with no jolt of linear acceleration nearby, at most once per `debounce`.
 /// Pure value type so tests can feed synthetic ~60 Hz sequences.
 ///
-/// ponytail: thresholds are first guesses from a wrist flick (5-10 rad/s, under ~0.5 g); calibrate on a real
+/// Known limit: thresholds are first guesses from a wrist flick (5-10 rad/s, under ~0.5 g); calibrate on a real
 /// phone by logging `TwistSample`s during a call. Raise `spikeRate` if it fires while talking with your hands,
 /// lower it if a deliberate twist is missed; raise `joltG` if twists themselves trip the jolt gate.
-/// One out-and-back flick is two opposite spikes, so it fires (the spec's definition). If that false-triggers while
+/// One out-and-back flick is two opposite spikes, so it fires. If that false-triggers while
 /// talking with your hands, require 3 alternating spikes: make `pending` (first t, last sign, count) and fire at 3.
 /// The fire lands `joltHold` after the second spike so the thump of setting the phone down can still cancel it.
 struct TwistDetector {

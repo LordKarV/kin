@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import statistics
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -102,7 +101,7 @@ def pct(x: float) -> str:
 
 
 def write_results(path: Path, conds: list[dict], idioms: list[dict], model: str, mock: bool) -> None:
-    lines = [f"# KIN eval results", "", f"Generated {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC · model `{model}` · {'MOCK (no LLM)' if mock else 'live'}", "",
+    lines = ["# KIN eval results", "", f"Generated {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC · model `{model}` · {'MOCK (no LLM)' if mock else 'live'}", "",
              "## Entity grounding (error rate, lower is better)", "",
              "| Condition | Overall | Kin terms | Name collisions | Dishes/places | Kin flattening | MT p50 | MT p95 | API errors |",
              "|---|---|---|---|---|---|---|---|---|"]

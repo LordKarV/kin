@@ -32,7 +32,7 @@ class Family(Base):
                             postgresql_where=text("kind = 'space'")),)
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    heritage_lang: Mapped[str] = mapped_column(String(8))  # ISO 639-1, e.g. "ta"
+    heritage_lang: Mapped[str] = mapped_column(String(8))  # ISO 639-1 code
     kind: Mapped[str] = mapped_column(String(8), default="family")  # family | space (the one world space)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
@@ -64,7 +64,7 @@ class Alias(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
     alias: Mapped[str] = mapped_column(String(120))
-    lang: Mapped[str] = mapped_column(String(8), default="ta")
+    lang: Mapped[str] = mapped_column(String(8), default="en")
     kind: Mapped[str] = mapped_column(String(24), default="name")  # name | nickname | script | address
 
     person: Mapped[Person] = relationship(back_populates="aliases")
@@ -183,16 +183,6 @@ class Mastery(Base):
     n_exposures: Mapped[int] = mapped_column(Integer, default=0)
     n_verified: Mapped[int] = mapped_column(Integer, default=0)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
-
-
-class CallSummary(Base):
-    __tablename__ = "call_summaries"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    call_id: Mapped[int] = mapped_column(ForeignKey("calls.id"), unique=True)
-    summary: Mapped[str] = mapped_column(Text, default="")
-    extracted: Mapped[dict] = mapped_column(JSON, default=dict)
-    approved: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class Consent(Base):
@@ -373,7 +363,7 @@ class Message(Base):
     author_id: Mapped[int] = _people_fk()
     body: Mapped[str] = mapped_column(Text, default="")  # cleared after a successful parse
     from_number: Mapped[str] = mapped_column(String(20))
-    provider_sid: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)  # Twilio MessageSid
+    provider_sid: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)  # idempotency key for a resent message
     received_at: Mapped[datetime] = mapped_column(UTCDateTime)
     status: Mapped[str] = mapped_column(String(8), default="received")  # received|parsed|failed
     reply: Mapped[str] = mapped_column(String(200), default="")

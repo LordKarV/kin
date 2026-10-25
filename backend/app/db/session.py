@@ -43,7 +43,7 @@ def init_db() -> None:
     engine = get_engine()
     models.Base.metadata.create_all(engine)
     # create_all never alters an existing table: an old kin.db would start cleanly and then 500 on the first write.
-    # ponytail: fail fast with a clear message instead of migrations; add Alembic when data must survive a schema change.
+    # Known limit: fail fast with a clear message instead of migrations; add Alembic when data must survive a schema change.
     insp = inspect(engine)
     for t in models.Base.metadata.sorted_tables:
         missing = {c.name for c in t.columns} - {c["name"] for c in insp.get_columns(t.name)}

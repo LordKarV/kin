@@ -1,10 +1,9 @@
-"""Users routes (docs/ARCHITECTURE.md 9.2): sign-up, me, contacts, and the X-KIN-User dependency every world route uses."""
+"""Users routes: sign-up, me, contacts, and the X-KIN-User dependency every world route uses."""
 from __future__ import annotations
 
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
-from pydantic import BaseModel
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -18,7 +17,7 @@ from ..world.contracts import ContactOut, DeleteMeOut, FormsOut, MeOut, MePatch,
 from ..world.extract import MAX_FORMS, clean_forms
 from ..world.match import fold
 from ..world.sms import refresh_calls
-from ..world.users import create_user, normalize_phone, phone_code, user_by_token
+from ..world.users import create_user, normalize_phone, user_by_token
 from ..world.view import WorldView
 
 log = logging.getLogger("kin.api.users")
@@ -31,7 +30,7 @@ One script per form. Never translate the meaning of the name."""
 
 
 def current_user(x_kin_user: str | None = Header(default=None), s: Session = Depends(get_session)) -> m.User:
-    """X-KIN-User token -> User, or 401 (D12)."""
+    """X-KIN-User token -> User, or 401."""
     user = user_by_token(s, x_kin_user)
     if user is None:
         raise HTTPException(401, "X-KIN-User token required (returned once by POST /api/users)")
@@ -39,7 +38,7 @@ def current_user(x_kin_user: str | None = Header(default=None), s: Session = Dep
 
 
 def fetch_forms(person_id: int) -> None:
-    """Background FormsOut call (3.3): cross-script spellings of a name, stored as translit aliases. Failures are
+    """Background FormsOut call: cross-script spellings of a name, stored as translit aliases. Failures are
     logged; the person still matches by their typed name."""
     try:
         with session_scope() as s:
@@ -75,13 +74,6 @@ def _new_lang_others(s: Session, person: m.Person, lang: str) -> list[int]:
     return [] if lang == "en" or lang in {lg for _pid, lg in rows} else [pid for pid, _lg in rows]
 
 
-class PhoneCodeOut(BaseModel):  # local: contracts.py belongs to the iOS contract owners
-    code: str
-    text: str  # what to text from the phone, "KIN <code>"
-    sms_number: str = ""
-    linked: bool
-
-
 def _me_out(s: Session, user: m.User) -> MeOut:
     p = s.get(m.Person, user.person_id)
     return MeOut(user_id=user.id, person_id=p.id, person=p.slug, name=p.display_name, lang=user.lang, phone=user.phone)
@@ -114,8 +106,7 @@ def sign_up(body: UserIn, background: BackgroundTasks, s: Session = Depends(get_
     s.commit()  # the background task reads the person in its own session
     for pid in [person.id, *others]:
         background.add_task(fetch_forms, pid)
-    return UserOut(user_id=user.id, person_id=person.id, person=person.slug, space_id=person.family_id, token=token,
-                   sms_number=get_settings().sms_number)
+    return UserOut(user_id=user.id, person_id=person.id, person=person.slug, space_id=person.family_id, token=token)
 
 
 @router.get("/me", response_model=MeOut)
@@ -152,12 +143,6 @@ def patch_me(body: MePatch, background: BackgroundTasks, user: m.User = Depends(
         background.add_task(fetch_forms, pid)
     refresh_calls(person_id=p.id)
     return out
-
-
-@router.get("/me/phone-code", response_model=PhoneCodeOut)
-def get_phone_code(user: m.User = Depends(current_user)) -> PhoneCodeOut:
-    code = phone_code(user)
-    return PhoneCodeOut(code=code, text=f"KIN {code}", sms_number=get_settings().sms_number, linked=user.phone is not None)
 
 
 @router.delete("/me", response_model=DeleteMeOut)

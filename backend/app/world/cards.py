@@ -1,7 +1,7 @@
-"""Per-listener card selection (docs/ARCHITECTURE.md 8.6, bridges 5, storylines 6.5). Pure functions over a
+"""Per-listener card selection (who/what/term gaps, bridges, storylines). Pure functions over a
 WorldView and a knowledge cache; LiveWorld (live.py) owns dedupe, delivery and evidence.
 
-Every card carries the fact ids its body cites; `deliver_ok` (D13) re-checks them for the listener right before a send.
+Every card carries the fact ids its body cites; `deliver_ok` re-checks them for the listener right before a send.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ class Card:
     kind: str
     item: dict  # internal: {"kind", "id", "start"?, "state"?}; never sent
     fact_ids: tuple[int, ...]
-    payload: dict  # GlanceItem JSON (9.1)
+    payload: dict  # GlanceItem JSON
 
 
 @dataclass(frozen=True)
@@ -77,10 +77,10 @@ def entity_key(view: WorldView, kind: str, id_: int) -> str | None:
     return f"{CARD_KIND[kind]}:{e.slug}" if e is not None else None
 
 
-# ---- who / what / term (8.6) ------------------------------------------------------------------------------------------
+# ---- who / what / term ------------------------------------------------------------------------------------------------
 def gaps(view: WorldView, kcache: KCache, listener: int, speaker: int, hits: list[Hit], lex: list[Match],
          now: datetime) -> list[Card]:
-    """Cards for the gaps in `listener`'s common ground. A hit with several ids is an ambiguous mention (3.4): an ask
+    """Cards for the gaps in `listener`'s common ground. A hit with several ids is an ambiguous mention: an ask
     with candidates, never a guessed who card. Term/saying cards only across languages."""
     if listener == speaker:
         return []
@@ -110,12 +110,12 @@ def _entity_card(view: WorldView, kcache: KCache, listener: int, speaker: int, h
     if gap is None:
         return None
     body, fids = view.card_body(listener, h.kind, id_, speaker, now)
-    if h.kind == "person":  # cite the hops the render quotes, so the guard re-checks them too (D13)
+    if h.kind == "person":  # cite the hops the render quotes, so the guard re-checks them too
         fids = tuple(dict.fromkeys((*fids, *_render_facts(view, listener, id_, speaker))))
     key = entity_key(view, h.kind, id_)
     category = {"person": "person", "group": "group"}.get(h.kind) or ent.kind
-    # The app shows `native` under the name and as the avatar letter, so an English listener got a non-Latin form on Rohan.
-    # ponytail: English listeners get no native form; a listener of another language may still see a third script's form (per-script match if needed)
+    # The app shows `native` under the name and as the avatar letter, so an English listener got a non-Latin form on a name.
+    # Known limit: English listeners get no native form; a listener of another language may still see a third script's form (per-script match if needed)
     lp = view.people.get(listener)
     native = getattr(ent, "lang_name", "") if lp is not None and lp.lang not in ("", "en") else ""
     payload = _glance(key=key, kind=CARD_KIND[h.kind], title=ent.name, native=native,
@@ -125,7 +125,7 @@ def _entity_card(view: WorldView, kcache: KCache, listener: int, speaker: int, h
 
 def _render_facts(view: WorldView, ego: int, e: int, speaker: int | None) -> tuple[int, ...]:
     """Fact ids behind the hops `view.render(ego, e, speaker)` walks, mirroring view._render's branch order.
-    ponytail: kin renders cite nothing here although link_kin stamps each edge with a fact, so the guard trusts
+    Known limit: kin renders cite nothing here although link_kin stamps each edge with a fact, so the guard trusts
     view._kin_ok for them; returning the hop ids from view.card_body would close that."""
     mentioned = frozenset({e})
     ok = lambda a, h: view._hop_ok(ego, speaker, a, h, mentioned)  # noqa: E731
@@ -161,7 +161,7 @@ def _ask_ambiguous(view: WorldView, listener: int, speaker: int, h: Hit) -> Card
 
 
 def ask(term: str, guess: str, body: str, suggestions: list[SuggestionOut], item: dict | None = None) -> Card:
-    """"Who is X?" card (2.5). Cites no facts: suggestions are renders over hops the listener may already see."""
+    """"Who is X?" card. Cites no facts: suggestions are renders over hops the listener may already see."""
     key = f"ask:{fold(term)[0].strip()}"[:80]
     payload = _glance(key=key, kind="ask", title=term, body=body, category="person", term=term, guess=guess,
                       suggestions=suggestions)
@@ -176,7 +176,7 @@ def _lex_card(mt: Match) -> Card:
     return Card(e.key, kind, {"kind": "lex", "id": e.key, "start": mt.start}, (), payload)
 
 
-# ---- bridges (5) ------------------------------------------------------------------------------------------------------
+# ---- bridges ----------------------------------------------------------------------------------------------------------
 def bridge_candidates(view: WorldView, listener: int, other: int, now: datetime) -> list[FactV]:
     """Self-only by construction (visibility.bridge_candidate): the listener's own facts `other` has not heard.
     A fact that refers to `other` is news about them, not for them ("Mei is my friend in Shanghai")."""
@@ -199,9 +199,9 @@ def _strong(form: str) -> bool:
 
 
 def relevant(facts: list[FactV], texts: Iterable[str], hits: Iterable[Hit], langs: Iterable[str] = ()) -> list[FactV]:
-    """Facts whose concept groups the texts hit at pass strength (5.2), in the given order. A group counts once;
+    """Facts whose concept groups the texts hit at pass strength, in the given order. A group counts once;
     a hit on an entity in f.refs counts as one extra concept. Pass: one strong concept, or two concepts.
-    langs[i] is the language of texts[i]: it turns on the 3.2 suffix and virama-stem rules."""
+    langs[i] is the language of texts[i]: it turns on the suffix and virama-stem rules."""
     if not facts:
         return []
     # kind "c<group index>" keeps each concept group apart inside one index
@@ -265,7 +265,7 @@ def _rerank(top: list[FactV], texts: list[str]) -> list[FactV]:
     return [f for f in top if f.id == out.fact_id]
 
 
-# ---- storylines (6.5) -------------------------------------------------------------------------------------------------
+# ---- storylines -------------------------------------------------------------------------------------------------------
 def storylines(view: WorldView, kcache: KCache, listener: int, speaker: int, kw_hits: list[Hit], hits: list[Hit],
                now: datetime) -> list[Card]:
     if listener == speaker:
@@ -314,7 +314,7 @@ def storylines(view: WorldView, kcache: KCache, listener: int, speaker: int, kw_
     return out
 
 
-# ---- delivery guard (D13) ---------------------------------------------------------------------------------------------
+# ---- delivery guard ---------------------------------------------------------------------------------------------------
 def deliver_ok(view: WorldView, card: Card, listener: int, speaker: int, mentioned: frozenset[int],
                now: datetime) -> bool:
     """Every cited fact must be usable for the listener with this speaker; a bridge must cite only the listener's own

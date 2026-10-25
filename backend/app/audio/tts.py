@@ -1,6 +1,6 @@
 """TTS: ElevenLabs HTTP streaming (pcm_16000) with optional consented voice clone; MockTTS for tests.
 VERIFIED 2026-10-24: POST /v1/text-to-speech/{voice_id}/stream, header xi-api-key, body {text, model_id, language_code};
-eleven_flash_v2_5 (~75 ms) and eleven_multilingual_v2 both support Tamil."""
+eleven_flash_v2_5 (~75 ms) and eleven_multilingual_v2 are both multilingual."""
 from __future__ import annotations
 
 import logging
@@ -43,7 +43,7 @@ class ElevenLabsTTS:
                     yield chunk
 
     async def clone_voice(self, name: str, wav_bytes: bytes, description: str = "KIN consented voice sample") -> str:
-        """Instant voice clone. Caller MUST have checked consents.voice_clone (plan §9)."""
+        """Instant voice clone. Caller MUST have checked consents.voice_clone."""
         r = await self._client.post(f"{get_settings().elevenlabs_base_url}/v1/voices/add", headers={"xi-api-key": self.api_key},
                                     data={"name": name, "description": description}, files={"files": ("sample.wav", wav_bytes, "audio/wav")})
         r.raise_for_status()

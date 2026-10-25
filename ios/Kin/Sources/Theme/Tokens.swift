@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Design tokens ported from design/KinMockups/Sources/KinDesign/Theme/Tokens.swift (docs/collab/design-notes.md).
+// Design tokens.
 // Neutrals follow Meta's light/dark system. App/Theme.swift keeps the older dark-only tokens for the screens that
 // were not redesigned (sign-up, ended).
 

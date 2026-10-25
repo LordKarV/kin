@@ -1,14 +1,13 @@
 """KIN as a server-side participant in a LiveKit room (the KIN call app).
 
 Each person joins from the app with their own audio track, so there is no "who spoke?" guesswork (unlike a merged
-phone call). The agent subscribes to every person's microphone at 16 kHz and feeds it to the normal CallSession
-(linker, glance cards, Fade, translation, memory). What KIN produces goes only to the person it is for:
+phone call). The agent subscribes to every person's microphone at 16 kHz and feeds it to the CallSession
+(name matching, cards, grounded translation, extraction). What KIN produces goes only to the person it is for:
   - JSON (partials, glance cards, transcripts, enrich cards, asks) as data messages addressed to that participant;
   - the translated voice on a per-listener track named `kin-to-<identity>`, which only that listener plays.
-Participants say who they are in their token metadata: legacy {"role": "grandparent"|"grandchild", "person": "<slug>"}
-or world {"person": "<slug>", "person_id": <id>, "lang": "<code>", "name": "..."} (ARCHITECTURE 8.7).
-World legs publish their `kin-to-<identity>` track lazily on their first `audio_start` (sent only to listeners with
-voice on), so a listener with voice off (the default) never gets one. There is no client-to-agent data handler (D17: pause, feedback and text go over REST).
+Participants say who they are in their token metadata: {"person": "<slug>", "person_id": <id>, "lang": "<code>",
+"name": "..."}. Legs publish their `kin-to-<identity>` track lazily on their first `audio_start` (sent only to listeners with
+voice on), so a listener with voice off (the default) never gets one. There is no client-to-agent data handler (pause, feedback and text go over REST).
 Verified against livekit==1.1.21 (rtc) signatures on 2026-10-24.
 """
 from __future__ import annotations
@@ -47,7 +46,7 @@ def room_name(call_id: int) -> str:
 
 def participant_from_meta(identity: str, metadata_json: str | None) -> tuple[str, str, str | None, int | None] | None:
     """(session identity, person slug, lang, person_id) from token metadata, or None when it is not a KIN participant.
-    World metadata (has person_id) keys the session by the LiveKit identity; legacy metadata keys it by role."""
+    The session is keyed by the LiveKit identity."""
     try:
         meta = json.loads(metadata_json or "{}")
     except json.JSONDecodeError:
@@ -57,16 +56,10 @@ def participant_from_meta(identity: str, metadata_json: str | None) -> tuple[str
     person = meta.get("person")
     if not isinstance(person, str) or not person:
         return None
-    pid = meta.get("person_id")
-    if pid is not None:
-        lang = meta.get("lang")
-        if isinstance(pid, bool) or not isinstance(pid, int) or not isinstance(lang, str) or not lang:
-            return None
-        return identity, person, lang, pid
-    role = meta.get("role")
-    if role in ("grandparent", "grandchild"):
-        return role, person, None, None
-    return None
+    pid, lang = meta.get("person_id"), meta.get("lang")
+    if isinstance(pid, bool) or not isinstance(pid, int) or not isinstance(lang, str) or not lang:
+        return None
+    return identity, person, lang, pid
 
 
 def mint_token(room: str, identity: str, name: str, metadata: dict | None = None, agent: bool = False) -> str:
@@ -82,11 +75,11 @@ class _Leg:
     """One person in the room as a CallSession side: their data channel and their private translated-voice track."""
 
     def __init__(self, room: rtc.Room, identity: str, key: str, person: str, on_publish: Callable[["_Leg"], None]):
-        # identity: LiveKit identity (data destination); key: CallSession side identity (role for legacy)
+        # identity: LiveKit identity (data destination); key: CallSession side identity
         self.room, self.identity, self.key, self.person = room, identity, key, person
         self.source = rtc.AudioSource(SAMPLE_RATE, 1)
         self.track = rtc.LocalAudioTrack.create_audio_track(f"kin-to-{identity}", self.source)
-        self.published = False  # legacy legs publish in _join before the session starts; world legs on first audio_start
+        self.published = False  # published on the first audio_start
         self._on_publish = on_publish
         self._publish_lock = asyncio.Lock()
         self.token: str | None = None
@@ -165,7 +158,7 @@ class RoomAgent:
         """Only <identity> may subscribe to kin-to-<identity>: it carries that listener's private grounding (the client
         also plays only its own, Routing.swift). Each call replaces the whole set, so it lists every published leg."""
         legs = {x.identity: x for x in self.legs.values() if x.published}
-        if leg is not None:  # a legacy leg publishes before _join registers it
+        if leg is not None:  # a leg can publish before _join registers it
             legs[leg.identity] = leg
         perms = [rtc.ParticipantTrackPermission(participant_identity=i, allowed_track_sids=[x.track.sid])
                  for i, x in legs.items()]
@@ -190,11 +183,7 @@ class RoomAgent:
         # not in self.legs until session.join returns: track_subscribed would start a second ASR during the join
         self._joining[p.identity] = p
         try:
-            if person_id is not None:
-                side = await self.session.join(key, person, leg.send_json, leg.send_bytes, lang=lang, person_id=person_id)
-            else:
-                await leg.ensure_track()
-                side = await self.session.join(key, person, leg.send_json, leg.send_bytes)
+            side = await self.session.join(key, person, leg.send_json, leg.send_bytes, lang=lang, person_id=person_id)
         finally:
             left = self._joining.get(p.identity) is not p  # _leave took it: they hung up while we were joining
             if not left:

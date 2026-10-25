@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Building blocks for the non-call screens, ported from design/KinMockups/.../Components/AppUI.swift. Light by
+// Building blocks for the non-call screens. Light by
 // default, dark through the KinColor tokens.
 
 /// A titled rounded group, like an inset grouped list section.

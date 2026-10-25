@@ -1,4 +1,4 @@
-"""On-demand context by gesture, "what's this about?" (docs/ARCHITECTURE.md Amendment 7).
+"""On-demand context by gesture, "what's this about?".
 
 Candidates come from the last lines the caller heard from someone else, rendered with that line's real speaker, through
 the same scan, card builders (world/cards.py), visibility and delivery guard as push cards. A clear top candidate is
@@ -75,7 +75,7 @@ def explain_recent(live: LiveWorld, call_id: int, listener_person_id: int) -> li
 
 
 def _heard(live: LiveWorld, L: int, n: int) -> list[_Line]:
-    """Lines L heard, minus any a privacy delete removed or redacted mid-call (section 10): those words are never
+    """Lines L heard, minus any a privacy delete removed or redacted mid-call: those words are never
     scanned or sent to the model again."""
     lines = live.heard(L, n)
     uids = [ln.utterance_id for ln in lines if ln.utterance_id is not None]
@@ -125,8 +125,8 @@ _SENTENCE_END = ".!?\u3002\uff01\uff1f"
 
 
 def _names(text: str) -> list[str]:
-    """Name-like words of a line, last first, by the tap's _name_like. ponytail: a sentence's first word is skipped
-    (capitalized anyway), so a name that opens a sentence is missed, and a script without case (zh, hi, ta) yields
+    """Name-like words of a line, last first, by the tap's _name_like. Known limit: a sentence's first word is skipped
+    (capitalized anyway), so a name that opens a sentence is missed, and a script without case yields
     none (every short word there would pass); its translation into the listener's language still counts. Upgrade
     path: let the LLM pick among these spans."""
     out = []

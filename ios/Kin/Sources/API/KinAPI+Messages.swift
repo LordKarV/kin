@@ -12,7 +12,7 @@ extension KinAPI {
     func sendMessage(_ text: String) async throws -> MessageOut { try await send("POST", "/api/me/messages", MessageIn(text: text)) }
 }
 
-/// The Messages thread: my texts (blue, right) and KIN's replies (grey, left). ponytail: this session only. The server
+/// The Messages thread: my texts (blue, right) and KIN's replies (grey, left). Known limit: this session only. The server
 /// clears a message's text once it is parsed (privacy), so there is no history to load; "What KIN understood" is the
 /// durable record.
 struct MessageThread: Equatable {

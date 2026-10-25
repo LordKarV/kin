@@ -1,7 +1,7 @@
-"""Common-ground model: knowledge tracing with forgetting (ARCHITECTURE 4). Pure, no DB.
+"""Common-ground model: knowledge tracing with forgetting. Pure, no DB.
 
 p decays toward P_FLOOR with a per-item half-life; each exposure is a BKT learning transition at a rate set by its
-evidence type; "asked" is a BKT incorrect observation. Half-life grows at most once per distinct UTC day (D5).
+evidence type; "asked" is a BKT incorrect observation. Half-life grows at most once per distinct UTC day.
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ LEARN = {"heard": .70, "shown": .50, "said": .95, "authored": .95, "confirmed": 
 H0_DAYS = {"heard": 30, "shown": 21, "said": 60, "authored": 60, "confirmed": 90, "asked": 30}
 GROWTH, H_MAX = 1.5, 365
 FORGOT = 0.35  # reminder below this
-# ponytail: no hysteresis band around FORGOT (D21); a shown card lifts p to ~0.89. Add one if the eval sweep shows flicker.
+# Known limit: no hysteresis band around FORGOT; a shown card lifts p to ~0.89. Add one if the eval sweep shows flicker.
 SLIP, GUESS = 0.05, 0.02  # for "asked"
 
 _COUNTER = {"heard": "n_heard", "shown": "n_shown", "said": "n_said", "authored": "n_said",

@@ -1,7 +1,7 @@
 """Family graph with kinship reasoning: paths, relation labels, kin-term resolution, address terms.
 
 Everything is computed relative to an ego (normally the listener), so the same person is rendered
-"your uncle Ravi mama (Mom's younger brother)" whether the speaker said "my son" or "your uncle" in the heritage language, or "Ravi".
+"your uncle Ravi <kin term> (Mom's younger brother)" whether the speaker said "my son" or "your uncle" in the heritage language, or "Ravi".
 """
 from __future__ import annotations
 
@@ -128,7 +128,7 @@ class FamilyGraph:
                   for t in session.scalars(select(m.Thing).where(m.Thing.family_id == family_id))]
         ego_lang = dict(session.execute(select(m.User.person_id, m.User.lang).join(m.Person, m.Person.id == m.User.person_id)
                                         .where(m.Person.family_id == family_id)).all())
-        return cls(family_id, fam.heritage_lang if fam else "ta", people, edges, things, ego_lang)
+        return cls(family_id, fam.heritage_lang if fam else "en", people, edges, things, ego_lang)
 
     # ---- who's who (any family, any language) --------------------------------
     def learner_slug(self) -> str:
@@ -253,7 +253,7 @@ class FamilyGraph:
             if d and path and any(self.matches(path, pat) for pat in d.patterns):
                 return a
         lang = self.ego_lang.get(ego)
-        if path and lang != "en":  # the en table only repeats the role ("your grandmother Paatti grandmother")
+        if path and lang != "en":  # the en table only repeats the role ("your grandmother <kin term> grandmother")
             from .kin_tables import load_table
             try:
                 terms = load_table(lang or self.heritage_lang).terms

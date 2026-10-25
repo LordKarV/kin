@@ -217,7 +217,7 @@ final class AppModel: ObservableObject {
                 self.error = message
             })
             screen = .call(call)
-            // ponytail: CallController (4E) still reads a one-shot flag; pass `camera` to connect(camera:) once it takes one.
+            // Known limit: CallController still reads a one-shot flag; pass `camera` to connect(camera:) once it takes one.
             if !camera { CallController.audioOnlyNext = true }
             await call.connect()
         } catch let e as KinAPIError where e.isBadToken {

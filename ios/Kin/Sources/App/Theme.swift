@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Visual tokens until the design pass (docs/collab/DESIGN_BRIEF.md) lands. Views use only these.
+/// Visual tokens. Views use only these.
 enum Theme {
     static let background = Color(hex: 0x18191A)
     static let surface = Color(hex: 0x242526)

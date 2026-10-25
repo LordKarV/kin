@@ -16,7 +16,7 @@ struct Invite: Equatable, Sendable {
         guard let c = URLComponents(url: url, resolvingAgainstBaseURL: false), let scheme = c.scheme?.lowercased()
         else { return nil }
         switch scheme {
-        case "https", "http":  // ponytail: http allowed so a localhost dev invite still opens
+        case "https", "http":  // Known limit: http allowed so a localhost dev invite still opens
             guard c.host?.isEmpty == false, c.path.isEmpty || c.path == "/" else { return nil }
         case "kin":
             guard c.host == "join" else { return nil }

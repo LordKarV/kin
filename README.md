@@ -6,7 +6,7 @@ KIN is a calling app for one-to-one calls between friends and family who live fa
 tracks what each person knows about the other's world and fills only the gaps, privately, in each listener's own
 language. Most of the time it shows nothing: it speaks up only when someone would be lost.
 
-Built at HackTX 2026 on Meta Muse Spark and Muse Voice Transcribe, with LiveKit, ElevenLabs, Twilio and SwiftUI.
+Built at HackTX 2026 on Meta Muse Spark and Muse Voice Transcribe, with LiveKit, ElevenLabs and SwiftUI.
 Code written with Claude Code.
 
 ## What it does
@@ -20,7 +20,7 @@ Code written with Claude Code.
 - **Storylines and "Who is X?" cards.** Where an ongoing thread stands, and a one-tap way to add someone new.
 - **Ask for more.** Double-twist the phone, or tap a word in a caption, for a card about what was just said.
 - **Cultural meaning.** Tone and care, not just words.
-- **Texts to KIN.** Text your own news to KIN in the app or by SMS; it stays private.
+- **Texts to KIN.** Text your own news to KIN in the app; it stays private.
 - **Pause and delete.** Everyone sees KIN is on and anyone can pause it. Audio is never kept, and deleted means gone.
 
 ## How it works
@@ -59,7 +59,7 @@ Reproduce with the commands under Evaluation; each run writes its report next to
 ## Run it locally
 
 ```bash
-cp .env.example .env    # set MODEL_API_KEY (Muse); ELEVENLABS_API_KEY and TWILIO_* are optional
+cp .env.example .env    # set MODEL_API_KEY (Muse); ELEVENLABS_API_KEY is optional
 cd backend && python3.12 -m venv .venv && source .venv/bin/activate && pip install -e ".[livekit]"
 livekit-server --dev    # LiveKit on ws://localhost:7880
 uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -107,8 +107,7 @@ One Vultr VM runs the backend and LiveKit, reachable from any network.
 5. **Logs:** `ssh root@<ip> journalctl -u kin-backend -u livekit -f`.
 
 Traffic is plain HTTP and `ws://` to the IP until you add a domain. With one, put Caddy in front for HTTPS and
-`wss://`, and set `LIVEKIT_URL` to the `wss://` host. A Twilio number can point its SMS webhook at
-`http://<ip>:8000/twilio/sms` once `TWILIO_*` and `SMS_NUMBER` are set.
+`wss://`, and set `LIVEKIT_URL` to the `wss://` host.
 
 ## Evaluation
 
@@ -127,4 +126,3 @@ cd backend && python -m eval.run_cg --live     # common-ground decisions vs one 
 | `scripts/` | Kinship-table builder |
 | `backend/eval/`, `eval_scenarios/` | Evaluation harness and its test data |
 | `design/brand/` | App icon, launch screen and brand assets |
-| `overlay/`, `mobile/` | Earlier clients (desktop call overlay, React Native), kept for reference |

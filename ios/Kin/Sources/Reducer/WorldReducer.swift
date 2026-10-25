@@ -1,6 +1,6 @@
 import Foundation
 
-// The call screen's state, built only from `kin` messages (docs/ARCHITECTURE.md 9.1) by a pure reducer. Time is a
+// The call screen's state, built only from `kin` messages by a pure reducer. Time is a
 // parameter everywhere, so tests drive lifetimes with fixed dates.
 
 /// One card on the rail. `born` restarts when a touch ends, so a card never expires while (or right after) it is used.
@@ -81,7 +81,7 @@ func reduce(_ state: WorldState, _ msg: KinWorldMsg, me: String, now: Date) -> W
         // Their final will never come, so live words from someone who left would keep their typing dots.
         if let id = s.partial?.speakerIdentity, !p.participants.contains(where: { $0.identity == id }) { s.partial = nil }
     case .kinStatus(let st):
-        // ponytail: CallController owns KIN on/paused (REST reply + kin_status); one source for the screen. The
+        // Known limit: CallController owns KIN on/paused (REST reply + kin_status); one source for the screen. The
         // server drops speech while paused, so a half line from before the pause would wait for a final that never comes.
         // The paused screen removes every card, so a finger on one never lifts on it; release it here, or it would hold
         // its slot (and dodge the rail cap) for the rest of the call.

@@ -1,4 +1,4 @@
-"""World extraction: prompt, LLM call and validator (docs/ARCHITECTURE.md 6.1, 6.2).
+"""World extraction: prompt, LLM call and validator.
 
 The prompt is privacy-scoped: each speaker's section holds only that speaker's own facts and the entities visible to
 that speaker. The validator drops anything it cannot tie to the right speaker's lines; it never repairs a guess.
@@ -114,7 +114,7 @@ Facts are news worth telling someone you have not talked to in a month: life eve
 Only state what the lines say. Leave out anything you are unsure about. Use "" / null / [] for none."""
 
 # Backstop for the rule above, on text_en (always English, whatever language was spoken). Narrow on purpose: a missed
-# remark costs one stray fact, a dropped piece of news is lost. ponytail: phrase list, not a classifier; widen it when
+# remark costs one stray fact, a dropped piece of news is lost. Known limit: phrase list, not a classifier; widen it when
 # the eval shows other meta remarks getting through.
 _META_RE = re.compile(r"\b(?:this (?:call|app|ui)|the ui|the (?:app|call|connection) (?:is|was|looks|seems|sounds|keeps)"
                       r"|can you hear|hear me|breaking up|cutting out|lagging|laggy|on mute|(?:bad|weak) connection)\b",
@@ -125,7 +125,7 @@ _FILLER = frozenset("haha hahaha lol lmao nice cool ok okay wow yeah yes yep no 
 
 _MENTION_RE = re.compile(r"^\s*(?:mentions|mentioned|talked about|talks about|discussed|discusses|brought up|asked about)\b",
                          re.I)
-MAX_FACTS_PER_SPEAKER = 3  # per extraction window: KIN keeps news, not a transcript (ponytail: a count cap, not a ranker)
+MAX_FACTS_PER_SPEAKER = 3  # per extraction window: KIN keeps news, not a transcript (Known limit: a count cap, not a ranker)
 
 
 def is_smalltalk(text_en: str) -> bool:
@@ -227,7 +227,7 @@ def run_extraction(llm: LLM | None, call_id: int | None, window_lines: list[Line
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# validator (6.2)
+# validator
 
 
 def resolve(token: str, speaker: int | None, refs: dict[str, EntityOut], ctx: ValidateCtx) -> tuple[str, int | str] | None:
@@ -265,7 +265,7 @@ def _one_script(form: str) -> bool:
 
 
 def clean_forms(forms: Iterable[str]) -> list[str]:
-    """One script per form, 1-40 chars, deduped, max 8 (3.3)."""
+    """One script per form, 1-40 chars, deduped, max 8."""
     out = [f.strip() for f in forms if 1 <= len(f.strip()) <= 40 and _one_script(f.strip())]
     return list(dict.fromkeys(out))[:MAX_FORMS]
 

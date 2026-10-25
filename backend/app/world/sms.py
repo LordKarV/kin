@@ -1,4 +1,4 @@
-"""SMS ingest (docs/ARCHITECTURE.md section 7): one text from a user about their own life -> private facts in their world.
+"""SMS ingest: one text from a user about their own life -> private facts in their world.
 
 Every fact is the author's own (subject = speaker = author), never shareable, heard only by the author plus the people
 the author says they told. The body is cleared once parsed. Also holds two small helpers the world REST routes share:
@@ -28,12 +28,11 @@ from .view import WorldView
 
 log = logging.getLogger("kin.world.sms")
 
-BUDGET_S = 8.0  # section 7: reply within the Twilio webhook window (about 15 s, VERIFY)
+BUDGET_S = 8.0  # reply within a few seconds
 MAX_BODY = 1600
 ACK_MAX = 120
 FALLBACK = "Got it."
-UNKNOWN_REPLY = "This number isn't linked to KIN yet. Open You in the app for your code, then text KIN and the code."
-LINKED_REPLY = "Linked. Texts from this number now go to your KIN world."
+UNKNOWN_REPLY = "This number isn't linked to a KIN account."
 SLOW_REPLY = "Slow down a little."
 PREDICATES = frozenset({"did", "started", "plans", "state", "attribute", "lives_in", "from", "works_at", "studies_at"})
 
@@ -59,7 +58,7 @@ Only state what the message says. Use "" / null / [] for none."""
 
 
 def write_evidence(s: Session, evidence: Iterable[Evidence], t: datetime) -> None:
-    """Fold evidence into knowledge rows (section 4). Live calls keep their own cache; this is the out-of-call path."""
+    """Fold evidence into knowledge rows. Live calls keep their own cache; this is the out-of-call path."""
     for knower, kind, item_id, ev in evidence:
         row = s.scalars(select(m.Knowledge).where(m.Knowledge.knower_id == knower, m.Knowledge.item_kind == kind,
                                                   m.Knowledge.item_id == item_id)).first()
@@ -91,7 +90,7 @@ def refresh_calls(space_id: int | None = None, person_id: int | None = None) -> 
             continue
         if space_id is not None and cs.family_id != space_id:
             continue
-        if person_id is not None and f"p{person_id}" not in list(cs.sides):  # D3: world identities are p<person_id>
+        if person_id is not None and f"p{person_id}" not in list(cs.sides):  # world identities are p<person_id>
             continue
         try:
             world.refresh()
@@ -215,12 +214,12 @@ def ingest(s: Session, user: m.User, body: str, sid: str | None = None,
         return _defer(s, msg, ctx, None, now)
     reply = _ack(out)
     try:
-        # The author gets the full ack; the stored copy (Twilio retries) is generic when the news is sensitive,
+        # The author gets the full ack; the stored copy is generic when the news is sensitive,
         # because sensitive facts keep only the topic word (PRODUCT.md, privacy).
         msg.reply = FALLBACK if any(sf.sensitive_kind for sf in out.facts) else reply
         facts = _store(s, ctx, msg, out, now)
         s.commit()
-    except Exception:  # noqa: BLE001  a store bug must not leave the raw body behind (section 7)
+    except Exception:  # noqa: BLE001  a store bug must not leave the raw body behind
         log.exception("sms store for message %s failed; retrying in the background", msg.id)
         s.rollback()
         return _defer(s, s.get(m.Message, msg.id), ctx, None, now)
@@ -261,7 +260,7 @@ def _finish_later(msg_id: int, ctx: _Ctx, fut, now: datetime) -> None:
 
 
 def _fail(msg_id: int, error: str) -> None:
-    """Mark the message failed and drop the raw text: nothing will parse it again, so it must not linger (section 7)."""
+    """Mark the message failed and drop the raw text: nothing will parse it again, so it must not linger."""
     try:
         with session_scope() as s:
             msg = s.get(m.Message, msg_id)

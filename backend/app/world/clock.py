@@ -1,4 +1,4 @@
-"""World clock: real UTC time plus a process-wide offset (ARCHITECTURE D22, set by /api/dev/clock)."""
+"""World clock: real UTC time plus a process-wide offset (set by /api/dev/clock)."""
 from __future__ import annotations
 
 import math

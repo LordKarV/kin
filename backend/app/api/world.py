@@ -1,6 +1,6 @@
-"""World routes (docs/ARCHITECTURE.md 9.2, 2.5, 10): my world view, placing people, and owning my facts.
+"""World routes: my world view, placing people, and owning my facts.
 
-Everything returned is what the viewer may see (section 1.3): a WorldView built for [me] decides it.
+Everything returned is what the viewer may see: a WorldView built for [me] decides it.
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def _seen(view: WorldView, me: int, fact_id: int | None) -> bool:
 
 
 def _target(s: Session, view: WorldView, me: int, space_id: int, body: PlaceIn) -> str | None:
-    """The slug place_person should use, resolved over MY view only (sections 1.3, 2.5): a person I can see (or any
+    """The slug place_person should use, resolved over MY view only: a person I can see (or any
     user: users are addressable), an exact name match among them, or None for a brand-new person. A name that only
     matches someone hidden from me gets a fresh Person here, so place_person's space-wide name match never reaches it."""
     addressable = [p for p in view.people.values() if p.is_user or view.visible(me, "person", p.id)]
@@ -117,7 +117,7 @@ def get_world(user: m.User = Depends(current_user), s: Session = Depends(get_ses
 
 @router.get("/world/relations", response_model=RelationsOut)
 def relations(lang: str = "", user: m.User = Depends(current_user)) -> RelationsOut:
-    """Social kinds plus common kin paths. ponytail: `lang` is accepted for the picker and not used yet; labels are
+    """Social kinds plus common kin paths. Known limit: `lang` is accepted for the picker and not used yet; labels are
     English (the app localizes them); add builder.suggest per kin word if the picker needs language-specific paths."""
     social = [SocialRelationOut(kind=k, label=TIE_LABEL.get(k, k.replace("_", " "))) for k in sorted(TIE_KINDS)]
     return RelationsOut(social=social, kin=[KinRelationOut(path=r["path"], label=r["label"]) for r in builder.relations()])
@@ -150,7 +150,7 @@ def place(body: PlaceIn, background: BackgroundTasks, user: m.User = Depends(cur
         raise HTTPException(422, str(e)) from e
     write_evidence(s, evidence, now)
     s.commit()
-    if person.id > before:  # a new person: fetch cross-script forms off the request path (3.3)
+    if person.id > before:  # a new person: fetch cross-script forms off the request path
         background.add_task(fetch_forms, person.id)
     render = WorldView.build(s, space_id, [me], now).render(me, person.id)
     refresh_calls(person_id=me)
@@ -231,7 +231,7 @@ def patch_fact(fact_id: int, body: FactPatch, user: m.User = Depends(current_use
     for col in ("text", "status", "pinned", "remembered"):
         if getattr(body, col) is not None:
             setattr(f, col, getattr(body, col))
-    if body.text is not None:  # section 10: the old detail must not survive in the source span or the match keys
+    if body.text is not None:  # the old detail must not survive in the source span or the match keys
         f.text_src, f.keys = "", []
     s.flush()
     out = _row(s, f)

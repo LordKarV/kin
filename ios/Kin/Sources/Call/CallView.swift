@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The one call screen (docs/ARCHITECTURE.md 8, 9.1): same for everyone, no roles. Feeds `kin` messages through the
+/// The one call screen: same for everyone, no roles. Feeds `kin` messages through the
 /// pure reducer and turns taps into CallController / REST calls. All drawing is in `CallScreen`, which takes values.
 struct CallView: View {
     @ObservedObject var call: CallController
@@ -8,7 +8,7 @@ struct CallView: View {
     @State private var world = WorldState()
     @Environment(\.scenePhase) private var scenePhase
 
-    /// The double twist listens only in a live call with KIN on and the app in front (Amendment 7).
+    /// The double twist listens only in a live call with KIN on and the app in front.
     private var gestureArmed: Bool { call.isConnected && !call.isPaused && scenePhase == .active }
 
     var body: some View {
@@ -113,7 +113,7 @@ struct CallActions {
     var explain: (String) -> Void = { _ in }
 }
 
-/// Layout rules from docs/collab/design-notes.md: the call fills the screen; left is them, right is you; help lives
+/// Layout rules: the call fills the screen; left is them, right is you; help lives
 /// in the lower third (one card about their world plus at most one bridge, then captions, then controls); the
 /// "KIN on" pill with its pause button is always top left. Paused is one short note, never a separate screen.
 struct CallScreen: View {
@@ -239,7 +239,7 @@ struct RemoteView: View {
     }
 }
 
-/// "KIN on" pill: both people always see it, and its pause button is one tap (Amendment 6). State is written out,
+/// "KIN on" pill: both people always see it, and its pause button is one tap. State is written out,
 /// so color is never the only signal.
 struct KinIndicator: View {
     let on: Bool

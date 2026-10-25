@@ -1,4 +1,4 @@
-/// Which remote tracks to subscribe to and how to play them (docs/ARCHITECTURE.md 8.7). Pure, unit tested.
+/// Which remote tracks to subscribe to and how to play them. Pure.
 
 let agentIdentity = "kin"  // backend/app/rtc/agent.py AGENT_IDENTITY
 

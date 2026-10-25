@@ -1,1 +1,1 @@
-"""Instant glance cards: cultural lexicon + fast matcher + background Wikipedia pictures."""
+"""Cultural lexicon and the fast matcher the live cards use."""

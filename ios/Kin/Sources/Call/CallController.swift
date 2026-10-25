@@ -75,8 +75,8 @@ final class CallController: ObservableObject {
         return stream
     }
 
-    /// Set just before AppModel.startCall() for an audio call, so the camera is never published. ponytail: a
-    /// one-shot flag because AppModel.startCall (2E) has no camera parameter; thread `camera:` through it instead.
+    /// Set just before AppModel.startCall() for an audio call, so the camera is never published. Known limit: a
+    /// one-shot flag because AppModel.startCall has no camera parameter; thread `camera:` through it instead.
     static var audioOnlyNext = false
 
     func connect() async {
@@ -161,12 +161,12 @@ final class CallController: ObservableObject {
 
     func place(_ body: PlaceIn) async throws -> PlaceOut { try await api.place(body) }
 
-    /// Tap-to-explain: the card for a caption word, private to me (Amendment 5).
+    /// Tap-to-explain: the card for a caption word, private to me.
     func explain(_ text: String, utteranceId: Int?) async throws -> [GlanceItem] {
         try await api.explain(callId: callId, text: text, utteranceId: utteranceId)
     }
 
-    /// Double twist: the card for whatever the last lines I heard are about, private to me (Amendment 7).
+    /// Double twist: the card for whatever the last lines I heard are about, private to me.
     func explainRecent() async throws -> [GlanceItem] { try await api.explainRecent(callId: callId) }
 
     func hangUp() async {

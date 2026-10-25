@@ -1,6 +1,5 @@
-"""Transport-agnostic call pipeline: ASR final → linker → fade policy → grounded MT → TTS → peer, with per-stage latencies.
-
-Used by the WebSocket transport (api/ws.py) and by the LiveKit room agent (rtc/agent.py).
+"""Transport-agnostic call pipeline: ASR final -> LiveWorld scan -> grounded MT per listener language -> TTS -> listener,
+with per-stage latencies. Used by the LiveKit room agent (rtc/agent.py).
 """
 from __future__ import annotations
 
@@ -12,19 +11,15 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
 
-from sqlalchemy import select
-
-from ..config import get_settings
 from ..db import models as m
 from ..db.session import session_scope
-from ..mt.translate import Translator, get_translator
 from ..world import clock
 from .asr import ASRSession, make_asr
 from .tts import TTS, get_tts
 
 log = logging.getLogger("kin.pipeline")
-_LAT_LOCK = threading.Lock()  # ponytail: one global lock; per-utterance locks if merges ever contend
-ASR_RETRY_S = 2.0  # ponytail: fixed backoff after a failed ASR connect; exponential if Muse ever rate-limits reconnects
+_LAT_LOCK = threading.Lock()  # Known limit: one global lock; per-utterance locks if merges ever contend
+ASR_RETRY_S = 2.0  # Known limit: fixed backoff after a failed ASR connect; exponential if Muse ever rate-limits reconnects
 INFLIGHT_WAIT_S = 8.0  # leave() waits this long for a final still in MT (about 2 s) so it is stored and extracted
 SendJSON = Callable[[dict], Awaitable[None]]
 SendBytes = Callable[[bytes], Awaitable[None]]
@@ -32,81 +27,44 @@ SendBytes = Callable[[bytes], Awaitable[None]]
 
 @dataclass
 class Side:
-    role: str                    # grandparent | grandchild
+    role: str                    # "participant"
     person: str                  # slug
-    lang: str                    # language this side speaks (ta / en)
+    lang: str                    # language this side speaks
     send_json: SendJSON
     send_bytes: SendBytes
     asr: ASRSession | None = None
     asr_task: asyncio.Task | None = None
     voice_id: str = ""
     speech_end_at: float = 0.0   # perf_counter when the last final was received
-    wants_audio: bool = True     # False for a Twilio leg (Relay speaks the text itself)
-    token: str = field(default_factory=lambda: uuid.uuid4().hex)  # identifies this connection (reconnects reuse the role)
-    identity: str = ""           # sides key: the legacy role, or f"p{person_id}" on world calls (D3)
+    wants_audio: bool = True     # False for a leg that only takes captions
+    token: str = field(default_factory=lambda: uuid.uuid4().hex)  # identifies this connection (reconnects reuse the identity)
+    identity: str = ""           # sides key: f"p{person_id}"
     person_id: int | None = None
     tts_lock: asyncio.Lock = field(default_factory=asyncio.Lock)  # one utterance's audio at a time per listener
-    voice_on: bool = False       # world calls: translated voice is opt-in, captions are the default (Amendment 2)
+    voice_on: bool = False       # translated voice is opt-in, captions are the default
     name: str = ""
     asr_retry_at: float = 0.0    # time.monotonic() before which on_audio does not reopen a failed ASR
-    inflight: asyncio.Task | None = None  # world calls: the ASR final in MT/persist/cards (survives the ASR loop's cancel)
+    inflight: asyncio.Task | None = None  # the ASR final in MT/persist/cards (survives the ASR loop's cancel)
 
 
 @dataclass
 class CallSession:
     call_id: int
     family_id: int
-    translator: Translator
     tts: TTS
     sides: dict[str, Side] = field(default_factory=dict)
-    history: list[tuple[str, str, str]] = field(default_factory=list)  # (speaker slug, src, translation)
-    fade: Callable | None = None   # Phase 4: (listener_slug, text) -> list[str] passthrough tokens
-    on_utterance: Callable | None = None  # Phase 4/6 hook: (utterance dict) -> None
-    bg_tasks: set = field(default_factory=set)  # card enrichment tasks (a reference keeps them from being GC'd mid-flight)
-
-    # ---- membership --------------------------------------------------------
-    watchers: list[SendJSON] = field(default_factory=list)  # read-only viewers (phone captions page)
-    phone_line: bool = False  # a merged phone call (audio/buddy.py) is feeding this session
-    glance_sent: set[str] = field(default_factory=set)        # glance card keys already sent this call (app/cards)
-    glance_tasks: set[asyncio.Task] = field(default_factory=set)  # background picture fetches (kept so they are not GC'd)
-    # ---- world calls (docs/ARCHITECTURE.md 8.1); None/empty on legacy calls ----------------------------------------
+    bg_tasks: set = field(default_factory=set)  # TTS and card tasks (a reference keeps them from being GC'd mid-flight)
     world: Any = None            # app.world.live.LiveWorld
     paused_by: int | None = None
     paused: bool = False
     world_history: dict[str, list[tuple[str, str, str]]] = field(default_factory=dict)  # target lang -> last 6
 
-    def add_watcher(self, send_json: SendJSON) -> None:
-        self.watchers = [*self.watchers, send_json]
-
-    def remove_watcher(self, send_json: SendJSON) -> None:
-        self.watchers = [w for w in self.watchers if w is not send_json]
-
     async def join(self, identity: str, person: str, send_json: SendJSON, send_bytes: SendBytes, wants_audio: bool = True,
                    start_asr: bool = True, *, lang: str | None = None, person_id: int | None = None) -> Side:
-        """Legacy callers pass the role as the identity (D3); world calls pass f"p{person_id}" plus lang and person_id."""
-        if self.world is not None:
-            # world calls are private: only a verified participant (person_id from the rtc token, keyed f"p{id}") gets
-            # in. The legacy /ws/call, buddy and twilio routes pass no person_id, so they can never read a world call.
-            if person_id is None or identity != f"p{person_id}":
-                raise PermissionError("world calls need a verified participant")
-            return await self._join_world(identity, person, send_json, send_bytes, wants_audio, start_asr, lang or "en", person_id)
-        role = identity
-        heritage = self.translator.g.heritage_lang
-        lang = lang or (heritage if role == "grandparent" else "en")
-        side = Side(role, person, lang, send_json, send_bytes, wants_audio=wants_audio, identity=role, person_id=person_id)
-        node = self.translator.g.by_slug.get(person)
-        side.voice_id = getattr(node, "voice_id", "") or ""
-        old = self.sides.get(role)
-        if old is not None:  # reconnect (Wi-Fi blip, second tab): retire the previous connection's ASR quietly
-            await self._stop_asr(old)
-        self.sides[role] = side
-        if start_asr:  # False when one shared ASR feeds both sides (merged phone call)
-            await self._start_asr(side)
-        await self._safe_send(side, {"type": "joined", "role": role, "person": person, "call_id": self.call_id, "peer_present": self.peer(role) is not None})
-        peer = self.peer(role)
-        if peer:
-            await self._safe_send(peer, {"type": "peer", "present": True, "person": person})
-        return side
+        """Calls are private: only a verified participant (person_id from the rtc token, keyed f"p{id}") gets in."""
+        if person_id is None or identity != f"p{person_id}":
+            raise PermissionError("calls need a verified participant")
+        return await self._join_world(identity, person, send_json, send_bytes, wants_audio, start_asr, lang or "en", person_id)
 
     async def _stop_asr(self, side: Side) -> None:
         asr, side.asr = side.asr, None  # cleared first, so the loop's finally knows this stop was ours and stays quiet
@@ -123,32 +81,24 @@ class CallSession:
         await self._stop_asr(side)  # first, so no new final starts while we wait for the one in flight
         t = side.inflight
         if t is not None and not t.done():  # hanging up right after a line must not lose it (stored, captioned, extracted)
-            # ponytail: a line Muse is still endpointing is still lost; needs an endStream flush before the cancel (VERIFY)
+            # Known limit: a line Muse is still endpointing is still lost; it needs an endStream flush before the cancel
             _, late = await asyncio.wait({t}, timeout=INFLIGHT_WAIT_S)
             if late:
                 log.warning("final from %s still in flight after %ss; leaving before it lands", role, INFLIGHT_WAIT_S)
         if role in self.sides:  # rejoined while we waited: world.join already ran for the new connection
             return
-        if self.world is not None:
-            try:
-                await asyncio.to_thread(self.world.leave, role)
-            except Exception as e:  # noqa: BLE001
-                log.warning("LiveWorld.leave failed for %s: %s", role, e)
-            await self._send_participants()
-            return
-        peer = self.peer(role)
-        if peer:
-            await self._safe_send(peer, {"type": "peer", "present": False})
-
-    def peer(self, role: str) -> Side | None:
-        return next((s for r, s in self.sides.items() if r != role), None)
+        try:
+            await asyncio.to_thread(self.world.leave, role)
+        except Exception as e:  # noqa: BLE001
+            log.warning("LiveWorld.leave failed for %s: %s", role, e)
+        await self._send_participants()
 
     # ---- audio in -----------------------------------------------------------
     async def _start_asr(self, side: Side, reopen: bool = False) -> None:
         asr = None
         try:
-            keyterms = self.world.keyterms(side.identity) if self.world is not None else self.translator.linker.keyterms()
-            asr = side.asr = make_asr(language=side.lang, keyterms=keyterms)
+            others = [o.lang for i, o in self.sides.items() if i != side.identity]
+            asr = side.asr = make_asr(language=side.lang, keyterms=self.world.keyterms(side.identity), others=others)
             await asr.start()
         except Exception as e:  # noqa: BLE001
             # clear the dead session so on_audio reopens after the backoff; left in place, the side stayed deaf all call
@@ -171,20 +121,7 @@ class CallSession:
         asr = asr or side.asr
         try:
             async for ev in asr.events():
-                if self.world is not None:
-                    await self._world_event(side, ev)
-                    continue
-                if not ev.final:
-                    await self._broadcast({"type": "partial", "role": side.role, "text": ev.text})
-                    await self._glance(side, ev.text)
-                    continue
-                side.speech_end_at = time.perf_counter()
-                await self._glance(side, ev.text, final=True)
-                try:
-                    await self.process_utterance(side, ev.text, lang_tags=ev.lang_tags, t_start=ev.t_start, t_end=ev.t_end)
-                except Exception as e:  # noqa: BLE001
-                    log.exception("utterance failed: %s", e)
-                    await self._safe_send(side, {"type": "error", "stage": "pipeline", "message": str(e)[:200]})
+                await self._world_event(side, ev)
         finally:
             # still ours: the provider closed the stream. A deliberate stop (leave, reconnect) already cleared it and
             # stays quiet: its "ended" could reach the rejoined client (same LiveKit identity), with no "ok" to follow
@@ -194,7 +131,7 @@ class CallSession:
 
     async def on_audio(self, role: str, pcm16: bytes) -> None:
         side = self.sides.get(role)
-        if not side or self.paused:  # paused: frames are dropped before ASR (privacy, 8.1)
+        if not side or self.paused:  # paused: frames are dropped before ASR (privacy)
             return
         if side.asr is None:  # (re)open lazily: first frame after a drop restarts the provider stream
             if time.monotonic() < side.asr_retry_at:
@@ -209,11 +146,6 @@ class CallSession:
             await self._stop_asr(side)
             await self._safe_send(side, {"type": "status", "asr": "ended", "detail": str(e)[:200]})
 
-    async def _glance(self, side: Side, text: str, final: bool = False) -> None:
-        """Instant glance cards before translation (app/cards/glance.py); never raises."""
-        from ..cards.glance import live_glance
-        await live_glance(self, side, text, final)
-
     async def _safe_send(self, side: Side, msg: dict) -> None:
         try:
             await side.send_json(msg)
@@ -222,144 +154,17 @@ class CallSession:
 
     async def on_text(self, role: str, text: str) -> None:
         side = self.sides.get(role)
-        if side and self.world is not None:
-            if text.strip() and not self.paused:
-                side.speech_end_at = time.perf_counter()
-                await self._world_final(side, text.strip())
-            return
-        if side and text.strip():
+        if side and text.strip() and not self.paused:
             side.speech_end_at = time.perf_counter()
-            await self._glance(side, text.strip(), final=True)
-            await self.process_utterance(side, text.strip())
+            await self._world_final(side, text.strip())
 
-    # ---- the pipeline -----------------------------------------------------
-    async def process_utterance(self, side: Side, text: str, lang_tags=(), t_start: float = 0.0, t_end: float = 0.0) -> dict:
-        t0 = time.perf_counter()
-        peer = self.peer(side.role)
-        listener = peer.person if peer else self._default_listener(side)
-        target_lang = (peer.lang if peer else ("en" if side.role == "grandparent" else self.translator.g.heritage_lang))
-        passthrough = self.fade(listener, text) if (self.fade and target_lang == "en") else []
-        res = await asyncio.to_thread(self.translator.translate_speech, text, side.person, listener, self.history, passthrough, None, target_lang)
-        cards_pending = res.cards
-        if cards_pending is not None and cards_pending.done():  # B already landed: ship its cards with the transcript
-            res, cards_pending = self.translator.with_cards(res), None
-        lat = dict(res.latencies)
-        lat["asr_ms"] = round((t0 - side.speech_end_at) * 1000, 1) if side.speech_end_at else 0.0
-        payload = {"type": "transcript", "call_id": self.call_id, "speaker": side.person, "listener": listener, "role": side.role,
-                   "src_text": text, "src_lang_tags": list(lang_tags), "target_lang": target_lang, "heritage_lang": self.translator.g.heritage_lang,
-                   **res.as_dict(), "latencies": lat}
-        # persist first so the UI gets an id, then show text immediately (audio follows)
-        payload["utterance_id"] = self._persist(side, listener, text, list(lang_tags), t_start, t_end, res, lat)
-        self.history.append((side.person, text, res.result.translation)); self.history = self.history[-6:]
-        await self._broadcast(payload)
-        if cards_pending is not None:  # B lands later as an `enrich` event; it never holds up TTS
-            task = asyncio.create_task(self._enrich(side, payload["utterance_id"], cards_pending))
-            self.bg_tasks.add(task)
-            task.add_done_callback(self.bg_tasks.discard)
-        # TTS to the peer, measuring first byte
-        if peer and peer.wants_audio and res.result.translation:
-            t_tts = time.perf_counter()
-            first = None
-            try:
-                await peer.send_json({"type": "audio_start", "utterance_id": payload["utterance_id"]})
-                async for chunk in self.tts.stream(res.result.translation, voice_id=side.voice_id, language_code=target_lang):
-                    if first is None:
-                        first = time.perf_counter()
-                    await peer.send_bytes(chunk)
-                await peer.send_json({"type": "audio_end", "utterance_id": payload["utterance_id"]})
-            except Exception as e:  # noqa: BLE001  (TTS 4xx, or the peer dropped mid-stream: the speaker's call goes on)
-                log.warning("TTS/peer failed: %s", e)
-                await self._safe_send(peer, {"type": "error", "stage": "tts", "message": str(e)[:200]})
-            lat["tts_first_byte_ms"] = round(((first or time.perf_counter()) - t_tts) * 1000, 1)
-        else:
-            lat["tts_first_byte_ms"] = 0.0
-        lat["total_ms"] = round((time.perf_counter() - t0) * 1000, 1)
-        payload["latencies"] = lat
-        self._update_latencies(payload["utterance_id"], lat)
-        await self._broadcast({"type": "latency", "utterance_id": payload["utterance_id"], "latencies": lat})
-        if self.on_utterance:
-            try:
-                r = self.on_utterance(payload)
-                if asyncio.iscoroutine(r):
-                    await r
-            except Exception as e:  # noqa: BLE001
-                log.warning("on_utterance hook failed: %s", e)
-        return payload
-
-    async def _enrich(self, side: Side, utterance_id: int, cards_future) -> None:
-        """Call B finished after the transcript went out: persist its cards (glossary) and push them to the UI."""
-        try:
-            cards, b_ms = await asyncio.wrap_future(cards_future)
-            if cards:
-                self._attach_cards(side, utterance_id, cards)
-            await self._broadcast({"type": "enrich", "utterance_id": utterance_id, "pragmatics_cards": [c.model_dump() for c in cards], "b_ms": b_ms})
-        except Exception as e:  # noqa: BLE001  (enrichment is optional: the turn already succeeded)
-            log.warning("card enrichment failed for utterance %s: %s", utterance_id, e)
-
-    def _attach_cards(self, side: Side, utterance_id: int, cards) -> None:
-        with session_scope() as s:
-            u = s.get(m.Utterance, utterance_id)
-            if u is None:
-                return
-            u.cards = [c.model_dump() for c in cards]
-            entries = []
-            for c in cards:
-                e = m.GlossaryEntry(family_id=self.family_id, card=c.model_dump(), utterance_id=u.id, speaker_id=u.speaker_id)
-                s.add(e); s.flush(); entries.append((e.id, c.source))
-            if entries and get_settings().glossary_audio:
-                from .glossary_audio import schedule_card_audio
-                schedule_card_audio(entries, side.lang, side.voice_id)
-
-    def _default_listener(self, side: Side) -> str:
-        g = self.translator.g
-        learner = next((p.slug for p in g.people.values() if p.is_learner), None)
-        if side.role == "grandparent":
-            return learner or side.person
-        return next((p.slug for p in g.people.values() if not p.is_learner and p.slug != side.person), side.person)
-
-    async def _broadcast(self, msg: dict) -> None:
-        for s in list(self.sides.values()):
-            try:
-                await s.send_json(msg)
-            except Exception as e:  # noqa: BLE001
-                log.debug("send failed to %s: %s", s.role, e)
-        for w in list(self.watchers):
-            try:
-                await w(msg)
-            except Exception as e:  # noqa: BLE001  (a closed captions tab must not break the call)
-                log.debug("send failed to watcher: %s", e)
-
-    def _persist(self, side, listener, text, lang_tags, t_start, t_end, res, lat) -> int:
-        g = self.translator.g
-        with session_scope() as s:
-            u = m.Utterance(call_id=self.call_id, speaker_id=g.by_slug[side.person].id if side.person in g.by_slug else None,
-                            listener_id=g.by_slug[listener].id if listener in g.by_slug else None, t_start=t_start, t_end=t_end,
-                            src_text=text, src_lang_tags=lang_tags, translation=res.result.translation,
-                            grounded_spans=[sp.model_dump() for sp in res.result.grounded_spans],
-                            cards=[c.model_dump() for c in res.result.pragmatics_cards], passthrough=res.passthrough, latencies=lat)
-            s.add(u); s.flush()
-            entries = []
-            for c in res.result.pragmatics_cards:
-                e = m.GlossaryEntry(family_id=self.family_id, card=c.model_dump(), utterance_id=u.id, speaker_id=u.speaker_id)
-                s.add(e); s.flush(); entries.append((e.id, c.source))
-            if entries and get_settings().glossary_audio:
-                from .glossary_audio import schedule_card_audio
-                schedule_card_audio(entries, side.lang, side.voice_id)
-            return u.id
-
-    def _update_latencies(self, utterance_id: int, lat: dict) -> None:
-        with session_scope() as s:
-            u = s.get(m.Utterance, utterance_id)
-            if u:
-                u.latencies = lat
-
-    # ---- world calls (docs/ARCHITECTURE.md 8.1-8.3). Legacy calls never reach anything below. ----------------------
+    # ---- the pipeline -------------------------------------------------------
     async def _join_world(self, identity: str, person: str, send_json: SendJSON, send_bytes: SendBytes, wants_audio: bool,
                           start_asr: bool, lang: str, person_id: int | None) -> Side:
         side = Side("participant", person, lang, send_json, send_bytes, wants_audio=wants_audio, identity=identity,
                     person_id=person_id, name=await asyncio.to_thread(_person_name, person_id) or person)
         old = self.sides.get(identity)
-        if old is not None:  # reconnect: same replace semantics as legacy; keep the listener's voice choice
+        if old is not None:  # reconnect: the new connection replaces the old one and keeps the listener's voice choice
             side.voice_on = old.voice_on
             await self._stop_asr(old)
         self.sides[identity] = side
@@ -395,7 +200,7 @@ class CallSession:
         return {"on": False, "paused_by": {"person": slug, "name": name} if slug else None}
 
     async def set_paused(self, by_person_id: int | None, paused: bool) -> dict:
-        """Anyone in the call can pause KIN; everyone is told (privacy, section 10). Returns the kin state."""
+        """Anyone in the call can pause KIN; everyone is told (privacy). Returns the kin state."""
         self.paused, self.paused_by = paused, (by_person_id if paused else None)
         kin = await self._kin_state()
         for s in list(self.sides.values()):
@@ -422,7 +227,7 @@ class CallSession:
                        "lang": side.lang, "text": ev.text}
                 for s in list(self.sides.values()):
                     await self._safe_send(s, msg)
-                await self._deliver(self.world.on_partial(side.identity, ev.text))  # sync, in memory (8.2)
+                await self._deliver(self.world.on_partial(side.identity, ev.text))  # sync, in memory
                 return
             side.speech_end_at = time.perf_counter()
             # shielded: hanging up cancels this ASR loop, and leave() waits for the line instead of cutting it mid-MT
@@ -439,9 +244,9 @@ class CallSession:
         t0 = time.perf_counter()
         try:
             fr = await asyncio.to_thread(self.world.on_final, side.identity, text)  # writes card_log: off the loop
-        except Exception as e:  # noqa: BLE001  (a card-engine bug must not silence captions, plan section 3)
+        except Exception as e:  # noqa: BLE001  (a card-engine bug must not silence captions)
             log.exception("LiveWorld.on_final failed: %s", e)
-            from ..world.live import FinalResult  # local: live imports heavy deps, legacy calls never need it
+            from ..world.live import FinalResult  # local: live imports heavy deps
             fr = FinalResult({}, [])
         scan_ms = round((time.perf_counter() - t0) * 1000, 1)
         await self._deliver(fr.sends)
@@ -450,7 +255,7 @@ class CallSession:
 
     async def _process_world(self, side: Side, text: str, spans=(), lang_tags=(), t_start: float = 0.0, t_end: float = 0.0,
                              t0: float | None = None, scan_ms: float = 0.0) -> dict | None:
-        """8.3: one MT call per distinct target language, one Utterance, one transcript per listener."""
+        """One MT call per distinct target language, one Utterance, one transcript per listener."""
         if self.paused:
             return None
         t0 = t0 or time.perf_counter()
@@ -463,7 +268,7 @@ class CallSession:
         spans = list(spans)
         res = dict(zip(groups, await asyncio.gather(*(self._translate_group(side, text, lang, Ls, spans)
                                                       for lang, Ls in groups.items()))))
-        if self.paused:  # paused during MT (8.1): nothing transcribed, stored, carded or counted as evidence
+        if self.paused:  # paused during MT: nothing transcribed, stored, carded or counted as evidence
             return None
         lat = {"scan_ms": scan_ms, "asr_ms": round((t0 - side.speech_end_at) * 1000, 1) if side.speech_end_at else 0.0}
         for lang, r in res.items():
@@ -523,7 +328,7 @@ class CallSession:
 
     def _render_for(self, L: Side, r, spans: list[dict], mt_failed: bool = False) -> dict:
         """Transcript fields for one listener. Spans are re-rendered for L; a node L cannot see becomes its surface text
-        with node_id null (2.4)."""
+        with node_id null."""
         def view(source: str, node_id: str | None) -> tuple[str, str | None]:
             rendered = self.world.render(L.identity, node_id) if node_id else None
             return (rendered, node_id) if rendered is not None else (source, None)
@@ -592,7 +397,7 @@ class CallSession:
         try:
             out = await asyncio.wrap_future(cards_future)
             cards, b_ms = out[0], out[1]
-            new_people = out[2] if len(out) > 2 else []  # (cards, b_ms, new_people) with a roster (2D handoff)
+            new_people = out[2] if len(out) > 2 else []  # (cards, b_ms, new_people) with a roster
             msg = {"type": "enrich", "utterance_id": uid, "pragmatics_cards": [c.model_dump() for c in cards], "b_ms": b_ms}
             for L in Ls:
                 await self._safe_send(L, msg)
@@ -641,14 +446,6 @@ def _person_name(person_id: int | None) -> str:
     return _person_ref(person_id)[1]
 
 
-def _record_exposures(payload: dict) -> None:
-    """Fade evidence: the learner heard these heritage words with their translation (weak evidence)."""
-    if payload.get("target_lang") != "en":
-        return
-    from ..fade.service import record_exposures
-    record_exposures(payload["listener"], payload["src_text"], payload.get("heritage_lang"))
-
-
 def _end_world(cs: CallSession) -> None:
     from ..world.privacy import run_sweep
     try:
@@ -669,21 +466,16 @@ class CallRegistry:
         if call_id not in self._calls:
             with session_scope() as s:
                 call = s.get(m.Call, call_id)
-                family_id = call.family_id if call else get_settings().sample_family_id
-                world = call is not None and call.mode == "world"
-            cs = CallSession(call_id=call_id, family_id=family_id, translator=get_translator(family_id), tts=get_tts())
-            if world:  # Fade is the optional legacy mode; world calls run LiveWorld instead (8.1)
-                from ..world import live
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:  # ponytail: only a sync caller lands here; LiveWorld then has no loop for emit
-                    loop = None
-                cs.world = live.LiveWorld(call_id, family_id, emit=cs._send_to, loop=loop)
-                cs.fade, cs.on_utterance = None, None
-            else:
-                from ..fade.policy import make_fade_policy  # Phase 4 (safe no-op until mastery exists)
-                cs.fade = make_fade_policy(family_id)
-                cs.on_utterance = _record_exposures
+                if call is None or call.mode != "world":
+                    raise LookupError(f"call {call_id} is not a KIN call")
+                family_id = call.family_id
+            from ..world import live
+            cs = CallSession(call_id=call_id, family_id=family_id, tts=get_tts())
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:  # Known limit: only a sync caller lands here; LiveWorld then has no loop for emit
+                loop = None
+            cs.world = live.LiveWorld(call_id, family_id, emit=cs._send_to, loop=loop)
             self._calls[call_id] = cs
         return self._calls[call_id]
 
@@ -692,13 +484,12 @@ class CallRegistry:
 
     def drop_if_empty(self, call_id: int) -> None:
         cs = self._calls.get(call_id)
-        if cs and not cs.sides and not cs.watchers:
+        if cs and not cs.sides:
             self._calls.pop(call_id, None)
-            if cs.world is not None:  # the world call ended: final extraction, then the third-party sweep (section 10)
-                try:
-                    asyncio.get_running_loop().run_in_executor(None, _end_world, cs)
-                except RuntimeError:
-                    _end_world(cs)
+            try:  # the call ended: final extraction, then the third-party sweep
+                asyncio.get_running_loop().run_in_executor(None, _end_world, cs)
+            except RuntimeError:
+                _end_world(cs)
 
     def active(self) -> list[CallSession]:
         return list(self._calls.values())

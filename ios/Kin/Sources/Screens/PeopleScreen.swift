@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Home after sign-up: People and Messages tabs (design app-04, app-07).
+/// Home after sign-up: People and Messages tabs.
 struct MainTabs: View {
     @ObservedObject var model: AppModel
 
@@ -150,8 +150,8 @@ struct PeopleList<Destination: View>: View {
     }
 }
 
-/// One person: who they are to you and their language when it differs. ponytail: the mockup's "11:04 PM in
-/// Shanghai" needs a `tz`/place on ContactOut (design-notes "Proposed contract additions"); add it when the server does.
+/// One person: who they are to you and their language when it differs. Known limit: a local time and
+/// place line needs a `tz`/place on ContactOut; add it when the server does.
 struct PersonRow: View {
     let contact: ContactOut
     let showLanguage: Bool

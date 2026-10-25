@@ -1,1 +1,1 @@
-"""Common-ground engine: world graph, knowledge model, live cards (docs/ARCHITECTURE.md)."""
+"""Common-ground engine: world graph, knowledge model, live cards."""

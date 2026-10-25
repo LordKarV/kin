@@ -13,7 +13,7 @@ struct ExplainIn: Encodable, Equatable {
     }
 }
 
-/// The gesture's body, `{"text": null, "recent": true}` (Amendment 7): the server picks from the last lines I heard.
+/// The gesture's body, `{"text": null, "recent": true}`: the server picks from the last lines I heard.
 struct RecentExplainIn: Encodable {
     enum CodingKeys: String, CodingKey { case text, recent }
 
@@ -27,7 +27,7 @@ struct RecentExplainIn: Encodable {
 struct ExplainOut: Decodable, Equatable { let items: [GlanceItem] }
 
 extension KinAPI {
-    /// Tap-to-explain (ARCHITECTURE Amendment 5, backend/app/api/explain.py): `POST /api/calls/{id}/explain`.
+    /// Tap-to-explain (backend/app/api/explain.py): `POST /api/calls/{id}/explain`.
     /// Returns a who/what/storyline/term card, a single "ask" item, or nothing when the text is not a name or term.
     func explain(callId: Int, text: String, utteranceId: Int?) async throws -> [GlanceItem] {
         let out: ExplainOut = try await send("POST", "/api/calls/\(callId)/explain",
@@ -35,7 +35,7 @@ extension KinAPI {
         return out.items
     }
 
-    /// Double-twist "what's this about?" (Amendment 7): same route and reply as a tap; `[]` when nothing is clear.
+    /// Double-twist "what's this about?": same route and reply as a tap; `[]` when nothing is clear.
     func explainRecent(callId: Int) async throws -> [GlanceItem] {
         let out: ExplainOut = try await send("POST", "/api/calls/\(callId)/explain", RecentExplainIn())
         return out.items

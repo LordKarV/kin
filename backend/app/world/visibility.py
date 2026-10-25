@@ -1,4 +1,4 @@
-"""Fact visibility and disclosure, one definition (ARCHITECTURE 1.3). Pure, no DB."""
+"""Fact visibility and disclosure, one definition. Pure, no DB."""
 from __future__ import annotations
 
 from dataclasses import dataclass

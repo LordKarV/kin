@@ -1,4 +1,4 @@
-"""Cross-script alias matching over live transcripts (ARCHITECTURE.md section 3.1 and 3.2). Pure, stdlib only.
+"""Cross-script alias matching over live transcripts. Pure, stdlib only.
 
 One char trie over fold(form) plus a skeleton trie for Latin forms, scanned from every position of the folded text.
 Works without word segmentation (scripts written without spaces) and on partial transcripts. Offsets in every Hit
@@ -24,7 +24,7 @@ _CASED_KINDS = {"person"}
 CUE_BEFORE = set("和跟与同叫给找带问对是让") | {"と"}
 CUE_AFTER = set("说她他也都的呢吗们") | {"さん", "ちゃん", "くん", "君", "と", "が", "は", "も"}
 # Last chars of common time words, connectives and verbs: a single-ideograph name right after one is a new word.
-# ponytail: a longer word that starts with one of these chars still gives its next char; a word breaker is the upgrade.
+# Known limit: a longer word that starts with one of these chars still gives its next char; a word breaker is the upgrade.
 _WORD_END = set("了天后以就还又才但说见")
 _LEADING_VOWELS = set("เแโใไເແໂໃໄ")   # vowels written before their consonant
 _SCRIPT_ALIASES = {"cjk": "han", "ideographic": "han"}
@@ -135,7 +135,7 @@ def _form_script(folded_form: str) -> str:
 
 
 class AliasIndex:
-    # ponytail: pure-Python dict trie, about 1 ms per 300-char line at 5k forms; switch to pyahocorasick past ~50k forms.
+    # Known limit: pure-Python dict trie, about 1 ms per 300-char line at 5k forms; switch to pyahocorasick past ~50k forms.
     def __init__(self, forms: Iterable[tuple[str, str, int]]):
         self._exact: dict = {}
         self._skel: dict = {}
@@ -217,7 +217,7 @@ class AliasIndex:
                 return True
             # A same-script letter on the left is the same word even with a cue on the right, unless it ends a
             # common word (_WORD_END); a letter of another script or punctuation on the left is a boundary.
-            # Deliberately stricter than ARCHITECTURE 3.2: with no cue BOTH sides must be boundaries, else a longer
+            # Deliberately strict: with no cue BOTH sides must be boundaries, else a longer
             # word at text start that begins with the name gives the name. Cost: any other same-script char before
             # the name and a name at text start with no cue after it give nothing (pinned in test_match.py).
             left_ok = not left or left in _WORD_END or _other_script(left, script)
@@ -238,7 +238,7 @@ class AliasIndex:
             spans.append((idx[fi], e, term, exact))
         spans.sort(key=lambda c: (-(c[1] - c[0]), not c[3], c[0]))
         # Case is a signal only when the transcript has any capital, so all-lowercase STT and romanized heritage text still match.
-        # ponytail: a sentence-initial "Will you" still matches, and a lowercase kin word ("my <kin term>") in cased
+        # Known limit: a sentence-initial "Will you" still matches, and a lowercase kin word ("my <kin term>") in cased
         # text is lost unless that person also has a lowercase form; a POS tagger is the upgrade.
         cased = any(c.isupper() for c in text)
         taken = [False] * len(text)
@@ -276,7 +276,7 @@ def _isolating_ok(s: str, i: int, j: int, script: str) -> bool:
     if script in _ABUGIDA:
         # a leading vowel before the match belongs to its first consonant, a vowel sign or tone mark after it to
         # its last: neither is the name.
-        # ponytail: no syllable segmentation, so a longer word or a consonant cluster that contains the name still
+        # Known limit: no syllable segmentation, so a longer word or a consonant cluster that contains the name still
         # gives it; a word breaker for the script is the upgrade.
         if i > 0 and s[i - 1] in _LEADING_VOWELS:
             return False

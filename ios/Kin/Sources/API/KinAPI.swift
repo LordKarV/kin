@@ -24,7 +24,7 @@ struct DeleteMeOut: Decodable, Equatable {
     let utterances: Int
 }
 
-/// Async URLSession client for the KIN backend (docs/ARCHITECTURE.md 9.2). Every call times out after 15 s.
+/// Async URLSession client for the KIN backend. Every call times out after 15 s.
 /// The X-KIN-User token goes on every call except sign-up; the KIN key (from an invite) only when present.
 struct KinAPI: Sendable {
     static let timeout: TimeInterval = 15
@@ -36,7 +36,7 @@ struct KinAPI: Sendable {
         try await send("POST", "/api/users", UserIn(name: name, lang: lang, phone: phone), auth: false)
     }
     func me() async throws -> MeOut { try await send("GET", "/api/me") }
-    /// Deletes my account and everything KIN holds about me (PRODUCT: deleted means gone).
+    /// Deletes my account and everything KIN holds about me (deleted means gone).
     func deleteMe() async throws -> DeleteMeOut { try await send("DELETE", "/api/me") }
     func contacts() async throws -> [ContactOut] { try await send("GET", "/api/contacts") }
     func world() async throws -> WorldOut { try await send("GET", "/api/world") }
@@ -53,7 +53,7 @@ struct KinAPI: Sendable {
     func typeText(callId: Int, text: String) async throws -> OkOut {
         try await send("POST", "/api/calls/\(callId)/text", TextIn(text: text))
     }
-    /// Amendment 2: per-call translated-voice toggle. The response shape is not in 9.2, so it is not decoded.
+    /// Per-call translated-voice toggle. The response body is not decoded.
     func voice(callId: Int, on: Bool) async throws {
         _ = try await raw("POST", "/api/calls/\(callId)/voice", try JSONEncoder().encode(["on": on]), auth: true)
     }

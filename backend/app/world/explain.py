@@ -1,4 +1,4 @@
-"""On-demand context: a listener taps a word in a caption (docs/ARCHITECTURE.md Amendment 5).
+"""On-demand context: a listener taps a word in a caption.
 
 The tapped span runs through the same alias index, ranking, card builders (world/cards.py) and delivery guard as push
 cards, for this listener only, so a tap never reveals anything a push card could not. The tap is `asked` evidence (the
@@ -24,7 +24,7 @@ log = logging.getLogger("kin.world.explain")
 
 # card_log has no `via` column; kind = "explain" marks a tap (the card's own kind is the key prefix: who:/what:/ask:)
 VIA = "explain"
-# ponytail: sentence-initial words are capitalized too; this short list keeps "The" from becoming "Who is The?".
+# Known limit: sentence-initial words are capitalized too; this short list keeps "The" from becoming "Who is The?".
 # Upgrade path: send the tap's offset in the caption and skip offset 0.
 _NOT_NAMES = frozenset("i the a an and but so oh ok okay yes no we you he she they it my your our their this that "
                        "what who when where why how hi hey".split())
@@ -72,8 +72,8 @@ def _kin_term(text: str, langs: set[str]) -> bool:
 
 def _name_like(text: str, lex: list) -> bool:
     """Decided from the span alone, never from the hidden graph, so a hidden name and an unknown one get the same
-    answer. ponytail: a script without letter case (zh, hi, ta) has no capital to go by, so any short span there that
-    is no lexicon term counts; a common zh word gets "Who is X?". Upgrade path: a per-language common-word list."""
+    answer. Known limit: a script without letter case has no capital to go by, so any short span there that
+    is no lexicon term counts; a common word there gets "Who is X?". Upgrade path: a per-language common-word list."""
     t = text.strip()
     if any(ch.isupper() or ch.islower() for ch in t):
         return len(t) >= 2 and t[0].isupper() and t.lower() not in _NOT_NAMES
@@ -100,9 +100,9 @@ def explain(live: LiveWorld, call_id: int, listener_person_id: int, text: str,
         slang = next((lg for p, lg in live.parts.values() if p == S), None) or (v.people[S].lang if S in v.people else "")
         hits = [h for h in snap.index.scan(text, slang) if h.kind in C.ENTITY_KINDS]
         kw_hits = snap.kw.scan(text, slang)
-        # The text is the caller's, so S may disclose (D9) only what S said in the line: every tapped entity and
+        # The text is the caller's, so S may disclose only what S said in the line: every tapped entity and
         # storyline keyword must occur in it, else the tap renders with no speaker (only what L heard themselves).
-        # ponytail: a span mixing said and unsaid items loses the speaker for all of them; split per hit if needed.
+        # Known limit: a span mixing said and unsaid items loses the speaker for all of them; split per hit if needed.
         said = {(h.kind, i) for t, lg in lines for idx in (snap.index, snap.kw) for h in idx.scan(t, lg) for i in h.ids}
         sp = S if all(any((h.kind, i) in said for i in h.ids) for h in hits + kw_hits) else None
         # rank as sp too: ranking as S would let S's hidden ties pick the winner of a name S never said

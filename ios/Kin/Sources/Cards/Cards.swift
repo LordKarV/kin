@@ -1,7 +1,7 @@
 import SwiftUI
 
-// Call cards, ported from design/KinMockups/Sources/KinDesign/Components/Cards.swift. Cards about THEIR world sit on
-// the left above the captions; your private bridge chip sits on the right in your blue (design-notes layout rule 1).
+// Call cards. Cards about THEIR world sit on
+// the left above the captions; your private bridge chip sits on the right in your blue.
 // Each takes the wire types plus closures, so the call logic stays in CallView.
 
 private struct CallCardSurface: ViewModifier {
@@ -193,8 +193,8 @@ struct StorylineCard: View {
     static let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 }
 
-/// "Who is Ravi mama?": the two most likely relations are one tap each; "Not now" is always there.
-/// ponytail: the mockup's "Someone else" picker is skipped; add it with GET /api/world/relations when asked for.
+/// "Who is Anna?": the two most likely relations are one tap each; "Not now" is always there.
+/// Known limit: the "Someone else" picker is skipped; add it with GET /api/world/relations when asked for.
 struct AskCard: View {
     let term: String
     let speakerName: String

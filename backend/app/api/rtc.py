@@ -1,17 +1,14 @@
 """Join a KIN call room (LiveKit). Each join mints a room token whose metadata says who this person is, and makes sure
 the KIN agent is in the room.
 
-Two bodies (ARCHITECTURE 8.7): the legacy `{family_id, role, call_id?}` (grandchild starts, grandparent opens the link)
-and the world `{call_id?, invite?}` with header X-KIN-User. A body with `family_id` is legacy; anything else is world.
-Joining an existing world call needs the call's invite code (returned by every world join) or an existing seat."""
+The body is `{call_id?, invite?}` with header X-KIN-User. Joining an existing call needs the call's invite code
+(returned by every join) or an existing seat."""
 from __future__ import annotations
 
 import asyncio
 import hashlib
 import hmac
 import secrets
-from typing import Literal
-
 from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError
@@ -20,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from ..db import models as m
 from ..db.session import get_session
-from ..mt.translate import get_translator
 from ..world import clock
 from ..world.users import user_by_token
 from ..rtc.agent import agents, livekit_creds, mint_token, room_name
@@ -28,18 +24,12 @@ from ..rtc.agent import agents, livekit_creds, mint_token, room_name
 router = APIRouter(prefix="/api/rtc", tags=["call app"])
 
 
-class JoinIn(BaseModel):
-    family_id: int
-    role: Literal["grandchild", "grandparent"]
-    call_id: int | None = None  # None: start a new call (grandchild); set: join the shared link (grandparent)
-
-
 class WorldJoinIn(BaseModel):
     call_id: int | None = None  # None: start a new world call; set: join that call
     invite: str | None = None  # the code from the invite link; not needed to rejoin a call I already sat in
 
 
-# ponytail: per-process secret, so a restart invalidates outstanding invites (people already in a call rejoin through
+# Known limit: per-process secret, so a restart invalidates outstanding invites (people already in a call rejoin through
 # their CallParticipant row). Multi-worker deploys need a shared secret (settings) instead.
 _INVITE_SECRET = secrets.token_bytes(32)
 
@@ -58,39 +48,10 @@ def _parse(model: type[BaseModel], raw: dict) -> BaseModel:
 @router.post("/join")
 async def join(raw: dict = Body(...), x_kin_user: str | None = Header(None),
                s: Session = Depends(get_session)) -> dict:
-    # Sync DB work (and the legacy graph build) runs off the loop; agents.ensure needs the loop, so it stays here.
-    if "family_id" in raw:
-        out = await asyncio.to_thread(_legacy_join, _parse(JoinIn, raw), s)
-    else:
-        out = await asyncio.to_thread(_world_join, _parse(WorldJoinIn, raw), x_kin_user, s)
+    # Sync DB work runs off the loop; agents.ensure needs the loop, so it stays here.
+    out = await asyncio.to_thread(_world_join, _parse(WorldJoinIn, raw), x_kin_user, s)
     agents.ensure(out["call_id"])
     return out
-
-
-def _legacy_join(body: JoinIn, s: Session) -> dict:
-    fam = s.get(m.Family, body.family_id)
-    if fam is None or fam.kind == "space":  # world calls live in the space: the legacy body must never reach them
-        raise HTTPException(404, "no such family: set one up first")
-    if body.call_id is None:
-        call = m.Call(family_id=body.family_id, transport="livekit")
-        s.add(call)
-        s.flush()
-        call_id = call.id
-        s.commit()
-    else:
-        call = s.get(m.Call, body.call_id)
-        if call is None or call.family_id != body.family_id or call.mode == "world":
-            raise HTTPException(404, "unknown call for this family")
-        call_id = call.id
-    g = get_translator(body.family_id).g
-    person = g.learner_slug() if body.role == "grandchild" else g.elder_slug()
-    node = g.by_slug.get(person)
-    room = room_name(call_id)
-    token = mint_token(room, identity=f"{body.role}-{call_id}", name=node.name if node else body.role,
-                       metadata={"role": body.role, "person": person})
-    url, _, _ = livekit_creds()
-    return {"call_id": call_id, "room": room, "token": token, "url": url, "role": body.role, "person": person,
-            "name": node.name if node else "", "heritage_lang": g.heritage_lang}
 
 
 def _world_join(body: WorldJoinIn, token: str | None, s: Session) -> dict:

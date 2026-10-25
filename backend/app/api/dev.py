@@ -1,4 +1,4 @@
-"""Dev routes (docs/ARCHITECTURE.md 9.2, D22): world clock, direct world updates, SMS without Twilio, and sign-in as
+"""Dev routes: world clock, direct world updates, a typed text to KIN, and sign-in as
 an existing user. All 404 when settings.dev_endpoints is false, and on a locked server (security.locked()) also to any
 caller that is not loopback, because the KIN key travels in every invite link. No X-KIN-User: these are for local
 development through the real server."""
@@ -8,14 +8,14 @@ import logging
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import security
 from ..config import get_settings
 from ..db import models as m
-from ..db.session import get_session, session_scope
+from ..db.session import get_session
 from ..world import clock
 from ..world.apply import ApplyCtx, apply_update
 from ..world.contracts import AppliedEntity, ClockIn, ClockOut, DevApplyIn, DevApplyOut, DevSmsIn, DevSmsOut, FactBrief
@@ -94,7 +94,7 @@ def dev_apply(body: DevApplyIn, s: Session = Depends(get_session)) -> DevApplyOu
 
 @router.post("/sms", response_model=DevSmsOut)
 def dev_sms(body: DevSmsIn, s: Session = Depends(get_session)) -> DevSmsOut:
-    """The Twilio path without a signature or a number (section 7)."""
+    """A text to KIN from a phone number, without an SMS provider."""
     phone = normalize_phone(body.from_)
     user = s.scalars(select(m.User).where(m.User.phone == phone)).first() if phone else None
     if user is None:

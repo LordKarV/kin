@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Push this working tree to the Vultr VM, (re)run setup, restart, and smoke-test.
+# Push this working tree to the Vultr VM, (re)run setup, restart, and check /health.
 # Usage: deploy/vultr/deploy.sh root@<server-ip>
 # Never sends .env or databases; copy secrets once yourself: scp .env root@<server-ip>:/opt/kin/.env
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 HOST="${1:?usage: deploy/vultr/deploy.sh root@<server-ip>}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 EXCLUDES=(--exclude .venv --exclude __pycache__ --exclude '*.egg-info' --exclude '*.db' --exclude '*.db-*'
-          --exclude media --exclude eval/audio_out --exclude .pytest_cache --exclude '.env*')
+          --exclude eval/audio_out --exclude .pytest_cache --exclude '.env*')
 
 ssh "$HOST" 'mkdir -p /opt/kin'
 for dir in backend scripts deploy; do

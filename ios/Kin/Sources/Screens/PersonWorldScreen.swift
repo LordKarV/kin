@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A person's world as KIN knows it (design app-06): a shared notebook, not a dossier. Plain sentences, where each
+/// A person's world as KIN knows it: a shared notebook, not a dossier. Plain sentences, where each
 /// came from, and a way to correct or delete what you said (PATCH/DELETE /api/me/facts/{id},
 /// DELETE /api/me/world/people/{slug}).
 struct PersonWorldScreen: View {

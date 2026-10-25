@@ -1,6 +1,6 @@
 import Foundation
 
-// REST shapes for the People, person-world and Messages screens (docs/ARCHITECTURE.md 9.2, backend/app/world/
+// REST shapes for the People, person-world and Messages screens (backend/app/world/
 // contracts.py FactRow/FactsOut/DeletePersonOut). Contracts.swift does not have them yet; field names match the JSON.
 
 struct HeardBy: Codable, Sendable, Equatable {
@@ -63,7 +63,7 @@ struct DeletePersonOut: Decodable {
     enum CodingKeys: String, CodingKey { case deletedFacts = "deleted_facts", personDeleted = "person_deleted" }
 }
 
-/// GET /api/me, read only for KIN's SMS number. ponytail: MeOut has no `sms_number` today (only the sign-up reply
+/// GET /api/me, read only for KIN's SMS number. Known limit: MeOut has no `sms_number` today (only the sign-up reply
 /// does); decoding it optionally here shows the number as soon as the server adds it.
 struct MeSms: Decodable { let smsNumber: String?; enum CodingKeys: String, CodingKey { case smsNumber = "sms_number" } }
 
@@ -96,7 +96,7 @@ struct PersonWorld: Equatable {
 
     static func build(slug: String, name: String, world: WorldOut, facts: FactsOut?) -> PersonWorld {
         var out = PersonWorld()
-        // ponytail: WorldOut has no per-link provenance (speaker, date), so every row cites the calls with this
+        // Known limit: WorldOut has no per-link provenance (speaker, date), so every row cites the calls with this
         // person; the tie context is added to the line when the render does not already say it.
         var context: [String: String] = [:]
         for t in world.ties where t.src == slug || t.dst == slug { context[t.src == slug ? t.dst : t.src] = t.context ?? "" }

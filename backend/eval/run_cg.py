@@ -1,4 +1,4 @@
-"""Common-ground eval (docs/ARCHITECTURE.md 11): gap, bridge and storyline precision/recall, latency, hard fails.
+"""Common-ground eval: gap, bridge and storyline precision/recall, latency, hard fails.
 
     python -m eval.run_cg [--limit N] [--out path] [--sweep] [--extra file.jsonl] [--live]
 
@@ -170,7 +170,7 @@ def _people(s, sc: Scenario) -> dict[str, int]:
 
 
 def _refs_in(text: str, sc: Scenario, pid: dict[str, int], subject: str) -> list[tuple[str, int]]:
-    # ponytail: refs from a name scan of the fact text (extraction would return them); forms only, no anaphora
+    # Known limit: refs from a name scan of the fact text (extraction would return them); forms only, no anaphora
     idx = AliasIndex((f, "person", pid[p.key]) for p in sc.people if p.key != subject for f in (p.name, *p.forms))
     return [("person", h.ids[0]) for h in idx.scan(text) if len(h.ids) == 1]
 
@@ -403,7 +403,7 @@ def _hard(c: Counter, sc: Scenario, facts: dict, must_not: dict, listener: str, 
             c["must_not_cite"] += 1
         if can_use is not None and not can_use(listener, k):
             c["unusable_cite"] += 1
-    if p.text:  # ponytail: substring of the folded fact text; misses paraphrases, catches a body rendered verbatim
+    if p.text:  # Known limit: substring of the folded fact text; misses paraphrases, catches a body rendered verbatim
         seen = fold(p.text)[0]
         for f in sc.facts:
             if f.key in cites or f.speaker == listener:
@@ -736,7 +736,7 @@ def main(argv: list[str] | None = None) -> int:
     if out == (ROOT / "eval" / "results.md").resolve():
         ap.error("eval/results.md belongs to run_eval; pick another --out")
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
-    os.environ["BRIDGE_RERANK"] = "0"  # score the default engine (D8); the rerank would call the LLM
+    os.environ["BRIDGE_RERANK"] = "0"  # score the default engine; the rerank would call the LLM
     os.environ["SEED_SAMPLE_FAMILY"] = "0"
     if not a.live:
         os.environ["MODEL_API_KEY"] = "offline-eval-dummy"

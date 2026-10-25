@@ -1,7 +1,7 @@
-"""WorldView: an immutable per-call snapshot of the world graph (docs/ARCHITECTURE.md section 2).
+"""WorldView: an immutable per-call snapshot of the world graph.
 
 Built in a worker thread at join/leave/refresh; every read here is pure Python over the snapshot. All rendering is
-listener-relative and walks only hops the listener may see (or the current speaker may disclose, section 1.3).
+listener-relative and walks only hops the listener may see (or the current speaker may disclose).
 """
 from __future__ import annotations
 
@@ -107,7 +107,7 @@ class WorldView:
     audience: dict[int, frozenset[int]]
     storylines: dict[int, StoryV]
     first_mention: dict[int, datetime]
-    # Indexes beyond 2.1, defaulted so a fake built from the 2.1 fields alone still constructs.
+    # Indexes beyond the core fields, defaulted so a fake built from the core fields alone still constructs.
     now: datetime = field(default_factory=lambda: datetime.now(timezone.utc))  # clock for visible()/render()
     # entity -> (link fact, endpoints)
     links: dict[Key, tuple[tuple[int | None, frozenset[int]], ...]] = field(default_factory=dict)
@@ -135,7 +135,7 @@ class WorldView:
             nb[a].add(b)
             nb[b].add(a)
         for mem in by_group.values():
-            for p in mem:  # ponytail: O(members^2) per group; fine for friend groups, index by group if they get big
+            for p in mem:  # Known limit: O(members^2) per group; fine for friend groups, index by group if they get big
                 nb[p] |= mem.keys() - {p}
 
         # Facts a member heard or said: every fact any listener here could see or the speaker could disclose.
@@ -263,7 +263,7 @@ class WorldView:
             return True
         if kind == "storyline" and id in self.storylines and self.storylines[id].owner_id == viewer:
             return True
-        # Only the entity being resolved counts as "just mentioned" (D9), never the link's other endpoint.
+        # Only the entity being resolved counts as "just mentioned", never the link's other endpoint.
         mentioned = frozenset({id}) if kind == "person" else frozenset()
         for fid, ends in self.links.get((kind, id), ()):
             if viewer in ends or self._fact_ok(fid, viewer, speaker, mentioned):
@@ -271,7 +271,7 @@ class WorldView:
         return any(self._fact_ok(fid, viewer, speaker, mentioned) for fid in self.about.get((kind, id), ()))
 
     def _hop_ok(self, listener: int, speaker: int | None, a: int, h: Hop, mentioned: frozenset[int]) -> bool:
-        """mentioned: the entity being rendered (D9); a hop's endpoints do not count as mentioned by themselves."""
+        """mentioned: the entity being rendered; a hop's endpoints do not count as mentioned by themselves."""
         if h.kind == "group":  # two memberships behind one hop: both must be visible
             return all(p == listener or self._fact_ok(f, listener, speaker, mentioned)
                        for f, p in self.gpair[(a, h.to, h.label)])
@@ -294,7 +294,7 @@ class WorldView:
         return any(self.facts[f].subject_id == knower and self.facts[f].speaker_id == knower
                    for f in self.about.get((kind, id), ()))
 
-    # ---- render (2.3) -----------------------------------------------------------------------------------------------
+    # ---- render -----------------------------------------------------------------------------------------------------
     def render(self, listener: int, person_id: int, speaker: int | None = None) -> str:
         mentioned = frozenset({person_id})
         return self._render(listener, person_id, speaker, lambda a, h: self._hop_ok(listener, speaker, a, h, mentioned))
@@ -377,7 +377,7 @@ class WorldView:
         """The title `listener` may see, and the fact a card must cite for it. The title comes from the founding
         (seq 1) fact (apply._storyline), which may be an SMS only its author saw. It shows when that fact is usable,
         to the owner, or when the owner is speaking and could disclose the fact but for a later self-report that
-        superseded it (apply._supersede). Only a usable fact is cited: the D13 guard rejects a superseded one."""
+        superseded it (apply._supersede). Only a usable fact is cited: the delivery guard rejects a superseded one."""
         f0 = self.facts.get(st.states[0][3]) if st.states else None
         if f0 is not None and usable(f0, self.audience.get(f0.id, frozenset()), listener, speaker, mentioned, now):
             return st.title, (f0.id,)
@@ -422,7 +422,7 @@ class WorldView:
             parts.append(f"first mentioned {_day(self.first_known[(listener, kind, id)])}")
         return ", ".join(parts), tuple(dict.fromkeys(f.id for f in cited))
 
-    # ---- prompts (2.4) ----------------------------------------------------------------------------------------------
+    # ---- prompts ----------------------------------------------------------------------------------------------------
     def roster(self, listeners: frozenset[int], speaker: int, recent_ids: Iterable[int] = ()) -> str:
         """PEOPLE section of a world call's MT prompt. recent_ids: person ids linked in the last 6 utterances."""
         listeners = frozenset(listeners)
@@ -447,7 +447,7 @@ class WorldView:
 
     def _third(self, listeners: frozenset[int], speaker: int, e: int) -> str:
         """Third person relative to the speaker over hops every listener may walk ("Arjun's uncle Ravi").
-        ponytail: string swap of the leading "your"; the kin parenthetical stays speaker-relative ("Mom's ...")."""
+        Known limit: string swap of the leading "your"; the kin parenthetical stays speaker-relative ("Mom's ...")."""
         mentioned = frozenset({e})
         text = self._render(speaker, e, None,
                             lambda a, h: all(self._hop_ok(L, speaker, a, h, mentioned) for L in listeners))

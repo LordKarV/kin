@@ -18,7 +18,7 @@ from .kinship import WORD, FamilyGraph
 from .ontology import normalize_term
 
 PLACEHOLDER_NOTE = "Not named yet"
-LEARNER_BIRTH_YEAR = 2005  # ponytail: assumed; only orders generations (who is the "elder"), never shown
+LEARNER_BIRTH_YEAR = 2005  # Known limit: assumed; only orders generations (who is the "elder"), never shown
 GENERATION_YEARS = 28
 
 # step -> (gender, how the new person attaches to the current one)

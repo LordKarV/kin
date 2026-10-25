@@ -3,7 +3,7 @@
 Deterministic (random.Random seeded with seed and scenario id), no LLM, no network. Filler goes BEFORE the scenario's
 own history (days before min(0, earliest scenario day)) and only through the existing Scenario fields:
 - per pair of users, CALLS_PER_MONTH calls of 20 to 30 lines (one FactS per line, said by the line's speaker, heard by
-  the other), plus TEXTS_PER_MONTH private SMS facts per user; each line in its speaker's language (en/zh/ta, else en);
+  the other), plus TEXTS_PER_MONTH private SMS facts per user; each line in its speaker's language (any language with a filler table, else en);
 - "heard" evidence for the filler people each call discusses, so listeners do know some filler entities.
 Distractors (keys start with DX): a near-name person per scenario person ("Lina" next to "Lin"), the pair's privately
 discussed person (never mentioned to anyone else), and a stale storyline whose later states the listener never heard.
@@ -151,7 +151,7 @@ class _Builder:
     def fact(self, prefix: str, subject: str, speaker: str, text: str, day: float, audience: list[str],
              topic: list[str] | None = None, sms: bool = False, **kw) -> str | None:
         if not self.g.text_ok(text):
-            return None  # ponytail: drop a colliding line rather than rewrite it; the guard test pins zero collisions
+            return None  # Known limit: drop a colliding line rather than rewrite it; the guard test pins zero collisions
         self.n += 1
         key = f"{prefix}{self.n}"
         keys = [topic] if topic and self.g.key_ok(topic) else []
@@ -275,7 +275,7 @@ def history_size(sc: Scenario) -> tuple[int, int]:
     from eval.run_cg import naive_system, render_user_message  # lazy: run_cg imports this module from main()
     user = render_user_message(sc.model_dump(mode="json"))
     text = naive_system() + user
-    # ponytail: ~4 ASCII chars per token, ~1 token per non-ASCII char; swap in a real tokenizer if the number matters
+    # Known limit: ~4 ASCII chars per token, ~1 token per non-ASCII char; swap in a real tokenizer if the number matters
     ascii_n = sum(ch.isascii() for ch in text)
     lines = user.split("\nHISTORY", 1)[1].split("\n\nCALL NOW", 1)[0].count("\n- ")
     return lines, ascii_n // 4 + (len(text) - ascii_n)

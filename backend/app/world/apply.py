@@ -1,5 +1,5 @@
-"""Write a validated WorldUpdateOut into the world graph (docs/ARCHITECTURE.md 6.3, 6.4) and place people from
-"Who is X?" answers (2.5). Pure DB writes plus returned evidence; never calls the LLM. The caller commits and applies
+"""Write a validated WorldUpdateOut into the world graph and place people from
+"Who is X?" answers. Pure DB writes plus returned evidence; never calls the LLM. The caller commits and applies
 the evidence to its knowledge cache.
 """
 from __future__ import annotations
@@ -56,7 +56,7 @@ class ApplyResult:
 
 
 def world_slug(prefix: str, name: str, row_id: int) -> str:
-    """Section 1.1: prefix_<ascii fold>_<id>; a name with no ASCII letters or digits gives prefix_<id>."""
+    """Slug format: prefix_<ascii fold>_<id>; a name with no ASCII letters or digits gives prefix_<id>."""
     folded = _fold(name)
     return f"{prefix}_{folded}_{row_id}" if folded else f"{prefix}_{row_id}"
 
@@ -117,7 +117,7 @@ def _entity(s: Session, ctx: ApplyCtx, e: EntityOut, prefer: list[str]) -> tuple
     if e.existing_id is not None:
         if table == "person":
             person = s.get(m.Person, e.existing_id)
-            _add_person_forms(s, person, forms, prefer, "asr")  # known name heard in a new script (3.3)
+            _add_person_forms(s, person, forms, prefer, "asr")  # known name heard in a new script
         elif table == "thing":
             thing = s.get(m.Thing, e.existing_id)
             thing.aliases = list(dict.fromkeys([*(thing.aliases or []), *forms]))
@@ -269,7 +269,7 @@ def _tie(s: Session, ctx: ApplyCtx, kind: str, context: str, tie_fact: dict, res
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# storylines (6.4)
+# storylines
 
 
 def _concepts(keys: list) -> list[set[str]]:
@@ -351,7 +351,7 @@ def _contradict(s: Session, f: m.Fact, other_id: int, speaker: int, story: m.Sto
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# "Who is X?" answers (2.5)
+# "Who is X?" answers
 
 
 def _find_person(s: Session, space_id: int, name: str) -> m.Person | None:
@@ -361,7 +361,7 @@ def _find_person(s: Session, space_id: int, name: str) -> m.Person | None:
     for p in s.scalars(select(m.Person).where(m.Person.family_id == space_id)):
         forms = [p.display_name, p.lang_name, *(a.alias for a in p.aliases)]
         if any(f and fold(f)[0].strip() == key for f in forms):
-            return p  # ponytail: first name match wins; two people with one name need the slug from the ask card
+            return p  # Known limit: first name match wins; two people with one name need the slug from the ask card
     return None
 
 
@@ -451,8 +451,8 @@ def place_person(s: Session, space_id: int, me: int, name: str, owner: int, rela
 
 def _share_parents(s: Session, space_id: int, before: set[int]) -> None:
     """Siblings share parents: each sibling edge placed since `before` makes either sibling the child of the other's
-    parents. FamilyGraph walks only stored edges, so without this Paatti (Arjun's mother's mother) would see Arjun's
-    mother's younger brother Ravi as plain 'Ravi', not her son. The new edges join the placement's card fact."""
+    parents. FamilyGraph walks only stored edges, so without this a grandmother would see her grandchild's
+    mother's younger brother as a plain name, not her son. The new edges join the placement's card fact."""
     edges = list(s.scalars(select(m.Edge).where(m.Edge.family_id == space_id)))
     parents: dict[int, set[int]] = {}
     for e in edges:
@@ -492,7 +492,7 @@ def link_kin(s: Session, space_id: int, anchor_id: int, path: str, person_id: in
                 s.flush()  # before _existing, so a second placement finds her instead of adding a duplicate edge
             found = builder._existing(s, space_id, cur.id, step)
             if last:
-                if found != person.id:  # ponytail: an unnamed placeholder already at the last step stays; merge it if that shows up
+                if found != person.id:  # Known limit: an unnamed placeholder already at the last step stays; merge it if that shows up
                     builder._attach(s, fam, cur, person, step, "")
                 break
             if found is None:

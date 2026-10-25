@@ -11,9 +11,9 @@ apt-get update -qq
 apt-get install -y -qq python3-venv python3-pip rsync ufw curl openssl >/dev/null
 
 id kin >/dev/null 2>&1 || useradd --system --home "$KIN" --shell /usr/sbin/nologin kin
-# The service runs as kin: it writes the DB (data/) and backend/media (mounted at startup; glossary audio, picture cache).
-mkdir -p "$KIN/data" "$KIN/backend/media" "$ETC"
-chown kin:kin "$KIN/data" "$KIN/backend/media"
+# The service runs as kin: it writes the DB (data/).
+mkdir -p "$KIN/data" "$ETC"
+chown kin:kin "$KIN/data"
 if [ -f "$KIN/.env" ]; then chown root:kin "$KIN/.env"; chmod 640 "$KIN/.env"; fi
 
 command -v livekit-server >/dev/null || curl -sSL https://get.livekit.io | bash

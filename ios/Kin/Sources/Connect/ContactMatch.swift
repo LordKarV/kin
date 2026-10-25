@@ -18,7 +18,7 @@ enum ContactMatch {
         let digits = raw.unicodeScalars.filter { $0.properties.numericType == .decimal }
             .compactMap { $0.properties.numericValue }.map { String(Int($0)) }.joined()
         let leadingPlus = raw.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("+")
-        // ponytail: bare 10 digits = US, the server's rule; other local formats need a country, add one with it
+        // Known limit: bare 10 digits = US, the server's rule; other local formats need a country, add one with it
         let full = digits.count == 10 && !leadingPlus ? "1" + digits : digits
         return (8...15).contains(full.count) ? "+" + full : nil
     }
@@ -30,7 +30,7 @@ enum ContactMatch {
 
     /// Unique hashes of the numbers that normalize, at most `maxHashes`.
     static func hashes(of numbers: [String]) -> [String] {
-        // ponytail: an address book over 2000 numbers is cut, not batched; send several requests if that happens
+        // Known limit: an address book over 2000 numbers is cut, not batched; send several requests if that happens
         Array(Set(numbers.compactMap(normalize).map(hash)).sorted().prefix(maxHashes))
     }
 

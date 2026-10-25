@@ -1,6 +1,6 @@
-"""LiveWorld: the one object the call pipeline talks to (docs/ARCHITECTURE.md 8.5).
+"""LiveWorld: the one object the call pipeline talks to.
 
-Partials stay in memory (D6): scan, stability gate, per-listener gaps, delivery guard. Finals confirm or retract
+Partials stay in memory: scan, stability gate, per-listener gaps, delivery guard. Finals confirm or retract
 partial cards and write evidence into the knowledge cache; DB writes (knowledge flush, card_log, told rows) and
 extraction run on `_WORLD_POOL`. Results that touch live state come back to the event loop via call_soon_threadsafe.
 Card selection itself lives in world/cards.py; localization and extraction jobs live in world/live_jobs.py.
@@ -58,7 +58,7 @@ RECENT_LINES = 6
 KEYTERMS_CAP = 100
 LOG_WINDOW = C.BRIDGE_REPEAT
 
-# 3.5, English only. Possessive word -> tie kind.
+# English only. Possessive word -> tie kind.
 REL_KIND = {"friend": "friend", "roommate": "roommate", "boss": "coworker", "coworker": "coworker",
             "girlfriend": "partner", "boyfriend": "partner", "partner": "partner", "classmate": "classmate",
             "teammate": "teammate"}
@@ -126,7 +126,7 @@ def _row_state(r: m.Knowledge) -> kn.State:
 
 
 def _alive(s: Session, keys: Iterable[KKey]) -> frozenset[KKey]:
-    """Knowledge keys whose knower and item still exist. A privacy delete mid-call (section 10) must not bring a row
+    """Knowledge keys whose knower and item still exist. A privacy delete mid-call must not bring a row
     back: knower_id has an FK that rolls back the whole flush, and item_id has none, so a reused id would inherit it."""
     keys = frozenset(keys)
     ids: dict[str, set[int]] = defaultdict(set)
@@ -155,7 +155,7 @@ class LiveWorld(LiveJobs):
         self.loop = loop
         self.guard_drops = 0
         self.parts: dict[str, tuple[int, str]] = {}  # identity -> (person id, lang)
-        self._ever: dict[str, tuple[int, str]] = {}  # everyone who joined: the call-end extraction needs them (6.1)
+        self._ever: dict[str, tuple[int, str]] = {}  # everyone who joined: the call-end extraction needs them
         self._state = threading.RLock()
         self._snap: _Snap | None = None
         self._seq = itertools.count(1)
@@ -177,8 +177,8 @@ class LiveWorld(LiveJobs):
         self._translators: dict[str, "Translator"] = {}
         self._l10n: dict[tuple[str, str, str], str] = {}
         self._l10n_inflight: frozenset[tuple[str, str, str]] = frozenset()
-        self._span_speaker: dict[str, int] = {}  # node slug -> speaker of the latest final that mentioned it (D9)
-        self._told_aud: dict[int, frozenset[int]] = {}  # 5.6 told rows not yet in a rebuilt view
+        self._span_speaker: dict[str, int] = {}  # node slug -> speaker of the latest final that mentioned it
+        self._told_aud: dict[int, frozenset[int]] = {}  # told rows not yet in a rebuilt view
         self._jobs: set[concurrent.futures.Future] = set()
         self._tasks: set[asyncio.Task] = set()
 
@@ -231,7 +231,7 @@ class LiveWorld(LiveJobs):
 
     @_locked
     def _swap(self, snap: _Snap) -> None:
-        """Swap in a rebuilt view, keeping told rows (5.6) whose async write the rebuild may have missed. Join, leave,
+        """Swap in a rebuilt view, keeping told rows whose async write the rebuild may have missed. Join, leave,
         refresh and extraction rebuild concurrently: a build that started before the current one is dropped."""
         if self._snap is not None and snap.seq < self._snap.seq:
             log.info("call %s: dropped view build %s, older than %s", self.call_id, snap.seq, self._snap.seq)
@@ -309,7 +309,7 @@ class LiveWorld(LiveJobs):
 
     def _resync(self) -> None:
         """Catch kcache up with writes made outside this call (refresh_calls runs after each). A privacy delete
-        (section 10) removed people or items: their keys leave the cache, or the next flush would bring them back.
+        removed people or items: their keys leave the cache, or the next flush would bring them back.
         /world/place and SMS ingest fold evidence straight into the DB: a clean key takes its row when that row is
         newer. A dirty key keeps the cache (last write wins, the stated ceiling in _upsert)."""
         with self._state:
@@ -335,7 +335,7 @@ class LiveWorld(LiveJobs):
         with self._lock:
             start, end = self._extracted, len(self._lines)
             self._extracted = end
-        # ponytail: an extraction still running on the pool may finish after this; its rows are written anyway.
+        # Known limit: an extraction still running on the pool may finish after this; its rows are written anyway.
         if end > start and self._snap is not None:
             res = self._extract(start, end)
             if res is not None:
@@ -446,7 +446,7 @@ class LiveWorld(LiveJobs):
     # ---- delivery ---------------------------------------------------------------------------------------------------
     def _admit(self, v: WorldView, identity: str, listener: int, speaker: int, cards: list[C.Card],
                mentioned: frozenset[int], now: datetime) -> list[C.Card]:
-        """Dedupe per (identity, key) (D7) and run the delivery guard (D13) on every card."""
+        """Dedupe per (identity, key) and run the delivery guard on every card."""
         out = []
         for c in cards:
             k = (identity, c.key)
@@ -466,7 +466,7 @@ class LiveWorld(LiveJobs):
 
     def _payload(self, identity: str, lang: str, card: C.Card, partial: bool) -> dict:
         """Cached localization or English. A miss schedules a lazy localization only for a final card: partials make
-        no LLM calls (D6); a confirmed partial card is localized from on_final."""
+        no LLM calls; a confirmed partial card is localized from on_final."""
         p = card.payload
         if lang == "en" or not p.get("body"):
             return p
@@ -543,7 +543,7 @@ class LiveWorld(LiveJobs):
         relational = self._relational(snap, speaker, text, resolved + ambiguous)
         resolved = sorted(resolved + relational, key=lambda h: h.start)
         self.last_hits[speaker] = frozenset()
-        # confirm by entity, not offset: the final often adds a filler or a comma before the name (D6)
+        # confirm by entity, not offset: the final often adds a filler or a comma before the name
         seen = {(h.kind, h.ids[0]) for h in resolved} | {("lex", mt.entry.key) for mt in lex}
         mentioned = frozenset(h.ids[0] for h in resolved if h.kind == "person")
         sends: Sends = defaultdict(list)
@@ -558,7 +558,7 @@ class LiveWorld(LiveJobs):
                 self._lazy(ident, self.parts[ident][1], p.card)  # sent in English on the partial
             else:
                 retract[ident].append(p.card.key)
-                self.sent = self.sent - {k}  # a wrong partial must not poison dedupe (D6)
+                self.sent = self.sent - {k}  # a wrong partial must not poison dedupe
                 self.delivered = {d: c for d, c in self.delivered.items() if d != k}
         self.pending = {k: p for k, p in self.pending.items() if p.speaker != speaker}
         for ident, keys in retract.items():
@@ -570,7 +570,7 @@ class LiveWorld(LiveJobs):
             confirmed += [(L, c) for c in cards]
             if cards:
                 sends[ident].append(self._glance(speaker, ident, lang, cards, False))
-        # Section 4 ordering: decisions above read the state before this utterance; shown goes in before heard.
+        # Ordering: decisions above read the state before this utterance; shown goes in before heard.
         self._evidence([e for L, c in confirmed for e in self._card_evidence(L, c)], now)
         self._log([(L, None, c) for L, c in confirmed], now)
         audience = [p for _i, p, _l in self._listeners(speaker)]
@@ -784,12 +784,12 @@ class LiveWorld(LiveJobs):
 
     @_locked
     def heard(self, listener: int, n: int) -> list[_Line]:
-        """Amendment 7: the last `n` final lines `listener` heard from someone else (never their own), oldest first."""
+        """The last `n` final lines `listener` heard from someone else (never their own), oldest first."""
         return [ln for ln in self._lines if ln.speaker != listener and listener in ln.audience][-n:]
 
     @_locked
     def keyterms(self, speaker: str) -> list[str]:
-        """3.3 ASR bias: Latin forms of entities in the speaker's world. Non-Latin keywords are VERIFY for Muse."""
+        """ASR bias: Latin forms of entities in the speaker's world. Non-Latin keywords are untested with Muse."""
         snap = self._snap
         if snap is None or speaker not in self.parts:
             return []
@@ -816,10 +816,10 @@ class LiveWorld(LiveJobs):
 
     @staticmethod
     def _upsert(items: dict[KKey, kn.State]) -> None:
-        """Concurrent calls by one user: last write wins per row (4, stated ceiling). One INSERT ... ON CONFLICT, so
+        """Concurrent calls by one user: last write wins per row (a stated ceiling). One INSERT ... ON CONFLICT, so
         two flushes adding the same new key cannot fail each other's batch on the unique constraint. Keys whose
-        knower or item was deleted mid-call are skipped (section 10).
-        ponytail: one statement per flush; chunk it if a flush ever nears SQLite's 32766 bound parameters."""
+        knower or item was deleted mid-call are skipped.
+        Known limit: one statement per flush; chunk it if a flush ever nears SQLite's 32766 bound parameters."""
         if not items:
             return
         with session_scope() as s:

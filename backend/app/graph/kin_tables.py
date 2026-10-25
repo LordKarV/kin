@@ -31,7 +31,7 @@ NATIVE = {"ar": "العربية", "bn": "বাংলা", "nl": "Nederlands", "
 # Unicode blocks for heritage-script detection ("" = Latin script, indistinguishable from English by script alone)
 SCRIPT = {"ar": "[؀-ۿ]", "bn": "[ঀ-৿]", "he": "[֐-׿]", "hi": "[ऀ-ॿ]", "mr": "[ऀ-ॿ]", "ja": "[぀-ヿ一-鿿]",
           "kn": "[ಀ-೿]", "ko": "[가-힯ᄀ-ᇿ]", "zh": "[一-鿿]", "ta": "[஀-௿]", "te": "[ఀ-౿]", "th": "[฀-๿]"}
-# BCP-47 locales for Twilio ConversationRelay <Language code>. Check each against Twilio's voice-configuration table before using phone calls.
+# BCP-47 locale per language.
 LOCALE = {"ar": "ar-SA", "bn": "bn-IN", "nl": "nl-NL", "en": "en-US", "fr": "fr-FR", "de": "de-DE", "he": "he-IL", "hi": "hi-IN", "id": "id-ID", "it": "it-IT",
           "ja": "ja-JP", "kn": "kn-IN", "ko": "ko-KR", "ms": "ms-MY", "zh": "zh-CN", "mr": "mr-IN", "pl": "pl-PL", "pt": "pt-BR", "es": "es-ES", "tl": "tl-PH",
           "ta": "ta-IN", "te": "te-IN", "th": "th-TH", "tr": "tr-TR", "vi": "vi-VN"}

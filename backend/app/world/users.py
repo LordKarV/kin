@@ -1,8 +1,7 @@
-"""World space and user helpers (docs/ARCHITECTURE.md section 1.2). Pure DB helpers, no HTTP."""
+"""World space and user helpers. Pure DB helpers, no HTTP."""
 from __future__ import annotations
 
 import hashlib
-import hmac
 import re
 import secrets
 import unicodedata
@@ -75,32 +74,14 @@ def user_by_token(s: Session, token: str | None) -> m.User | None:
     return s.scalars(select(m.User).where(m.User.token_hash == _hash(token))).first()
 
 
-def phone_code(user: m.User) -> str:
-    """The code a user texts ("KIN <code>") to link the number they text from. Keyed by the token hash, which never
-    leaves the server, so only the signed-in user (GET /api/me/phone-code) can learn it."""
-    return hmac.new(user.token_hash.encode(), b"kin-phone-link", hashlib.sha256).hexdigest()[:6]
-
-
-def link_phone(s: Session, phone: str, code: str) -> m.User | None:
-    """Give `phone` to the unlinked user whose phone_code is `code`; None when no one matches.
-    ponytail: scans unlinked users (one HMAC each); store the code in a column if users reach the thousands."""
-    code = code.strip().lower()
-    for user in s.scalars(select(m.User).where(m.User.phone.is_(None))):
-        if hmac.compare_digest(phone_code(user), code):
-            user.phone = phone
-            s.flush()
-            return user
-    return None
-
-
 def normalize_phone(raw: str | None) -> str | None:
-    """E.164 '+<digits>' (8-15 digits) or None, so a typed number matches Twilio's From.
+    """E.164 '+<digits>' (8-15 digits) or None, so two people's typed numbers compare equal.
     Any Unicode decimal digit counts (other scripts' digits, fullwidth)."""
     if not raw:
         return None
     digits = "".join(str(unicodedata.digit(c)) for c in raw if c.isdecimal())
     if len(digits) == 10 and not raw.strip().startswith("+"):
-        digits = "1" + digits  # ponytail: bare 10 digits = US; add a country picker if non-US users type local numbers
+        digits = "1" + digits  # Known limit: bare 10 digits = US; add a country picker if non-US users type local numbers
     if not 8 <= len(digits) <= 15:
         return None
     return "+" + digits
