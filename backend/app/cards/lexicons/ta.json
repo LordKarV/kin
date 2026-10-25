@@ -2280,7 +2280,9 @@
     "கண்ணே",
     "kanne",
     "கண்ணுகளா",
-    "kannukala"
+    "kannukala",
+    "கண்ணா",
+    "kanna"
    ],
    "translate_as": "dear, my eye",
    "category": "address",
@@ -2382,6 +2384,22 @@
    "category": "address",
    "note": "Rough-loving hey endings only for close juniors.",
    "wiki_title": "Tamil honorifics"
+  },
+  {
+   "key": "ilaichutta_gotten_thin",
+   "forms": [
+    "இளைச்சுட்ட",
+    "இளைச்சிட்ட",
+    "இளைச்சு போயிட்ட",
+    "ilaichutta",
+    "ilaichitta",
+    "ilachitta",
+    "ilaichu poyitta"
+   ],
+   "translate_as": "you've gotten thin [care]",
+   "category": "saying",
+   "note": "From an elder it is worry and love, a nudge to eat, not criticism.",
+   "wiki_title": ""
   },
   {
    "key": "aathiram_puthi_mattu",
