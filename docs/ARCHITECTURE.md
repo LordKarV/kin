@@ -33,6 +33,16 @@ lists every contradiction between the three designs and how it was resolved.
    what other listeners see.
 6. **Pause stays tiny:** the existing pause (`kin_status`) is one tap in the "KIN on" pill, visible to everyone in the
    call with who paused; no separate pause screen in the client.
+7. **On-demand by gesture ("what's this about?").** `POST /api/calls/{call_id}/explain` also accepts `{"text": null,
+   "recent": true}`. The server builds candidates from the last 4 final utterances the caller heard (not their own lines):
+   alias-matcher hits, storyline keywords and relational spans, filtered by the same WorldView visibility and
+   deliver_ok as push cards, scored by recency and (1 - p_know) for this listener; already-shown-this-call items rank
+   lower, not out. If the top candidate beats the next by a clear margin (or is the only one), it is returned with no LLM
+   call. Otherwise Muse Spark (app/llm.py, effort minimal, strict schema `{"choice": "<candidate id>" | "none"}`, 2.5 s
+   timeout) gets those lines plus the candidate list (ids and display names only) and picks one; "none" widens the
+   window to the last 12 utterances and repeats once; timeout or failure falls back to the top-ranked candidate. The LLM
+   never sees facts the listener cannot see and can only return a candidate id. Same response shape and ASKED evidence
+   as item 5; card_log via = "gesture". Empty result -> `{"items": []}` (client plays a soft "nothing" haptic).
 
 Verified against the code while writing this (no files other than this one were changed):
 

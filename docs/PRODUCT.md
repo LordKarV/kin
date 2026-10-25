@@ -42,11 +42,14 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
      when it comes up and you are behind on it.
    - **"Who is X?" learning cards:** a suggested relationship (kinship or social) plus a name; one tap adds the person
      to the right world and the next mention is grounded.
-   - **On-demand context (tap a word):** KIN's push cards will sometimes miss (it thought you remembered Lin). Every
-     name, place or term in the caption is quietly tappable; tapping it shows that thing's card, or a "Who is X?" card
-     if KIN knows nothing yet. Private to you, limited by the same visibility rules as push cards, and the tap counts
-     as evidence that you did not know (the model learns to card you next time). No gestures like tilt: phones move too
-     much during calls.
+   - **On-demand context (a twist of the phone):** KIN's push cards will sometimes miss (it thought you remembered
+     Lin). A quick double twist of the wrist (gyroscope and accelerometer, with a light haptic tap) brings up a card for
+     whatever the conversation is about right now. KIN ranks what you might be lost on in the last few lines (people,
+     places, terms, storylines you are allowed to see; most recent and least known first). If one candidate is clear it
+     answers instantly; if not (e.g. "that trip was insane" with no name), Muse Spark picks which visible candidate the
+     recent lines refer to, or says it cannot tell, and KIN looks further back. Private to you, never more than a push
+     card could show, and it counts as evidence that you did not know. Tapping a word in the caption is a quiet
+     fallback.
    - **Pause, kept tiny:** one tap in the "KIN on" pill pauses listening for everyone; both people see who paused;
      one tap resumes. No separate screen. Consent is per moment, not per install (Mei about to talk about her mom's
      surgery, Paatti about Saroja's health).
