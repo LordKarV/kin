@@ -1,7 +1,0 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    { "name": "kin-backend", "runtimeExecutable": "/Users/nithinravikumar/Documents/GitHub/hacktx/backend/.venv/bin/uvicorn", "runtimeArgs": ["app.main:app", "--port", "8000", "--app-dir", "/Users/nithinravikumar/Documents/GitHub/hacktx/backend"], "port": 8000 },
-    { "name": "kin-frontend", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "/Users/nithinravikumar/Documents/GitHub/hacktx/frontend", "run", "dev"], "port": 5173 }
-  ]
-}
