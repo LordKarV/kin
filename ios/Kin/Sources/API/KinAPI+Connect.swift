@@ -1,0 +1,30 @@
+import Foundation
+
+/// Connect without a link (backend/app/api/connect.py): a KIN handle, requests to a handle, accept or decline.
+struct HandleOut: Decodable, Equatable { let handle: String }
+struct ConnectIn: Encodable { let handle: String }
+/// status: "pending" (request sent) or "accepted" (they had already asked me, or we were connected).
+struct ConnectOut: Decodable, Equatable {
+    let status: String
+    let user: RingPeer
+}
+struct ConnectRequestOut: Decodable, Equatable, Identifiable {
+    let from: RingPeer
+    let createdAt: String
+    var id: String { from.slug }
+    enum CodingKeys: String, CodingKey {
+        case from
+        case createdAt = "created_at"
+    }
+}
+struct ConnectStatusOut: Decodable, Equatable { let status: String }
+
+extension KinAPI {
+    func myHandle() async throws -> HandleOut { try await send("GET", "/api/me/handle") }
+    func connect(handle: String) async throws -> ConnectOut { try await send("POST", "/api/connect", ConnectIn(handle: handle)) }
+    func connectRequests() async throws -> [ConnectRequestOut] { try await send("GET", "/api/connect/requests") }
+    func answerRequest(from slug: String, accept: Bool) async throws -> ConnectStatusOut {
+        let path = slug.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? slug
+        return try await send("POST", "/api/connect/\(path)/\(accept ? "accept" : "decline")")
+    }
+}

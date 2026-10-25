@@ -23,9 +23,12 @@ struct PeopleScreen: View {
     @State private var error: String?
     @State private var myLang: String?
     @State private var confirm: ConfirmDelete?
+    @State private var requests: [ConnectRequestOut] = []
+    @State private var adding = false
 
     var body: some View {
         PeopleList(contacts: contacts, error: error, myLang: myLang, joining: model.joining,
+                   requests: requests, onAnswer: answer, onAdd: { adding = true },
                    onCall: { Task { await model.startCall() } }, onRing: { model.call($0, video: true) },
                    onSignOut: { model.signOut() },
                    onDeleteAccount: {
@@ -37,12 +40,26 @@ struct PeopleScreen: View {
         }
         .task { await load() }
         .refreshable { await load() }
+        .onChange(of: model.contactsVersion) { Task { await load() } }
+        .sheet(isPresented: $adding) { AddPersonSheet(api: model.api) { Task { await load() } } }
         .confirmDelete($confirm)
+    }
+
+    private func answer(_ request: ConnectRequestOut, _ accept: Bool) {
+        Task {
+            do {
+                _ = try await model.api.answerRequest(from: request.from.slug, accept: accept)
+                await load()  // accepted: they show up under Friends with the Call button
+            } catch {
+                if !model.signOutIfBadToken(error) { self.error = "Could not answer \(request.from.name): \(error.localizedDescription)" }
+            }
+        }
     }
 
     private func load() async {
         do {
             contacts = try await model.api.contacts()
+            requests = try await model.api.connectRequests()
             error = nil
             myLang = try await model.api.me().lang
         } catch {
@@ -57,6 +74,9 @@ struct PeopleList<Destination: View>: View {
     let error: String?
     let myLang: String?
     let joining: Bool
+    var requests: [ConnectRequestOut] = []  // incoming connect requests (Connect/)
+    var onAnswer: (ConnectRequestOut, Bool) -> Void = { _, _ in }
+    var onAdd: () -> Void = {}  // add someone by their KIN handle
     let onCall: () -> Void  // a new call with an invite to share
     var onRing: (ContactOut) -> Void = { _ in }  // ring this person
     var onSignOut: () -> Void = {}
@@ -70,6 +90,7 @@ struct PeopleList<Destination: View>: View {
         ScrollView {
             VStack(spacing: 22) {
                 if let error { LoadError(message: error, retry: retry) }
+                if !requests.isEmpty { RequestsSection(requests: requests, onAnswer: onAnswer) }
                 if let contacts, contacts.isEmpty { empty }
                 ForEach(Self.circles, id: \.key) { circle in
                     let rows = (contacts ?? []).filter { $0.circle == circle.key }
@@ -91,6 +112,7 @@ struct PeopleList<Destination: View>: View {
         .background(K.grouped)
         .navigationTitle("People")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) { Button("Add person", action: onAdd) }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Start a call", systemImage: "video.badge.plus", action: onCall)
@@ -115,6 +137,8 @@ struct PeopleList<Destination: View>: View {
                 .font(KinFont.subhead).foregroundStyle(K.text2).multilineTextAlignment(.center).padding(.horizontal, 24)
             CapsuleButton(title: "Start a call", symbol: "video.fill", busy: joining, action: onCall)
                 .frame(width: 220).padding(.top, 8)
+            CapsuleButton(title: "Add by handle", symbol: "person.badge.plus", primary: false, action: onAdd)
+                .frame(width: 220)
         }
         .frame(maxWidth: .infinity)
     }

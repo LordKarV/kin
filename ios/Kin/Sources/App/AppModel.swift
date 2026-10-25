@@ -22,6 +22,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var pendingInvite: Invite?
     /// Bumped on every sign-in, so the home tabs rebuild (and reload) for the new account.
     @Published private(set) var account = 0
+    /// Bumped on a contact.request or contact.accepted event, so People reloads (Connect/).
+    @Published private(set) var contactsVersion = 0
     /// The current call's invite code (from its join reply), for the share link.
     private var invite: (callId: Int, code: String)?
     /// Ringing before a call (Calling/RingState.swift); RootView covers every screen while it is not idle.
@@ -264,6 +266,7 @@ final class AppModel: ObservableObject {
     }
 
     func handle(_ event: CallEvent) {
+        if event == .contacts { contactsVersion += 1; return }
         if case .incoming(let id, _, _) = event, busy {
             Task { await perform(.decline(id)) }  // already in a call: the caller hears "declined" now, not in 45 s
             return

@@ -247,7 +247,7 @@ class RingIn(BaseModel):
 
 def _create_ring(s: Session, user: m.User, body: RingIn) -> tuple[int, int, dict]:
     """A world call with seats for both people, so the callee joins with no invite code. Callee must be one of my
-    contacts (GET /api/contacts: a shared call, tie or edge); anyone else answers 404 like an unknown person."""
+    contacts (GET /api/contacts: a shared call, tie, edge or accepted connect request); anyone else answers 404 like an unknown person."""
     if body.to not in {c.person for c in contacts(user=user, s=s)}:
         raise HTTPException(404, "unknown person")
     me = s.get(m.Person, user.person_id)

@@ -172,7 +172,8 @@ def delete_me(user: m.User = Depends(current_user), s: Session = Depends(get_ses
 
 @router.get("/contacts", response_model=list[ContactOut])
 def contacts(user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> list[ContactOut]:
-    """Users I share a call, a tie or an edge with."""
+    """Users I share a call, a tie or an edge with, or an accepted connect request (api/connect.py)."""
+    from .connect import connected_person_ids  # lazy: connect imports current_user from here
     me = user.person_id
     my_calls = select(m.CallParticipant.call_id).where(m.CallParticipant.person_id == me)
     ids = set(s.scalars(select(m.CallParticipant.person_id).where(m.CallParticipant.call_id.in_(my_calls))))
@@ -181,6 +182,7 @@ def contacts(user: m.User = Depends(current_user), s: Session = Depends(get_sess
                      *s.execute(select(m.Edge.src_person, m.Edge.dst_person).where(
                          or_(m.Edge.src_person == me, m.Edge.dst_person == me)))):
         ids |= {src, dst}
+    ids |= connected_person_ids(s, user.id)
     ids &= set(s.scalars(select(m.User.person_id)))
     ids.discard(me)
     if not ids:

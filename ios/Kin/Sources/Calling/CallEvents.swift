@@ -28,6 +28,7 @@ enum CallEvent: Sendable, Equatable {
     case declined(callId: Int)
     case cancelled(callId: Int)
     case missed(callId: Int)
+    case contacts  // contact.request | contact.accepted: People reloads its requests and contacts
     case ping
 
     private struct Wire: Decodable {
@@ -45,6 +46,7 @@ enum CallEvent: Sendable, Equatable {
     static func decode(_ data: Data) -> CallEvent? {
         guard let w = try? JSONDecoder().decode(Wire.self, from: data) else { return nil }
         if w.type == "ping" { return .ping }
+        if w.type == "contact.request" || w.type == "contact.accepted" { return .contacts }
         guard let id = w.callId else { return nil }
         switch w.type {
         case "call.incoming": return w.from.map { .incoming(callId: id, from: $0, video: w.video ?? true) }

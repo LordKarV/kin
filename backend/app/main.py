@@ -112,6 +112,8 @@ from .api import messages  # noqa: E402  in-app twin of texting KIN
 app.include_router(messages.router)
 app.include_router(explain.router)
 app.include_router(events.router)
+from .api import connect  # noqa: E402  handles and connect requests (contacts without a link)
+app.include_router(connect.router)
 
 
 @app.get("/", include_in_schema=False)
