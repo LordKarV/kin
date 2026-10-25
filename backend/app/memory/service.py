@@ -65,7 +65,9 @@ EXTRACT_SYS = ("From this numbered transcript, extract new people (with how the 
 
 def _transcript_text(s, call_id: int) -> tuple[str, list[m.Utterance]]:
     utts = s.scalars(select(m.Utterance).where(m.Utterance.call_id == call_id).order_by(m.Utterance.id)).all()
-    people = {p.id: p.display_name for p in s.scalars(select(m.Person))}
+    call = s.get(m.Call, call_id)
+    fid = call.family_id if call else None
+    people = {p.id: p.display_name for p in s.scalars(select(m.Person).where(m.Person.family_id == fid))}  # never another family's names
     lines = [f"{i}. {people.get(u.speaker_id, '?')}: {u.src_text}" + (f"  → {u.translation}" if u.translation else "") for i, u in enumerate(utts, 1)]
     return "\n".join(lines), utts
 
@@ -118,10 +120,15 @@ def end_call(call_id: int) -> dict:
         return {"call_id": call_id, "summary": summary, "extracted": extracted, "approved": False, "n_utterances": len(utts), "error": err}
 
 
-def _slug(prefix: str, name: str) -> str:
+def _slug(prefix: str, name: str, taken: set[str]) -> str:
+    """ASCII fold of the name, with a numeric suffix when the fold is empty (CJK, Tamil) or already taken."""
     base = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
-    base = re.sub(r"[^a-z0-9]+", "_", base).strip("_") or "x"
-    return f"{prefix}_{base}"
+    base = re.sub(r"[^a-z0-9]+", "_", base).strip("_")
+    stem = f"{prefix}_{base}" if base else prefix
+    slug, n = (stem, 2) if base else (f"{stem}_1", 2)
+    while slug in taken:
+        slug, n = f"{stem}_{n}", n + 1
+    return slug
 
 
 def approve_call(call_id: int, remember_topics: list[str]) -> dict:
@@ -134,25 +141,28 @@ def approve_call(call_id: int, remember_topics: list[str]) -> dict:
             raise ValueError("call has no summary yet; call /end first")
         fid = call.family_id
         g = get_translator(fid)
+        speaker, listener = g.g.elder_slug(), g.g.learner_slug()  # this call's family, not the Krishnan seed
         x = cs.extracted or {}
-        existing = {t.slug for t in s.scalars(select(m.Thing).where(m.Thing.family_id == fid))}
+        things = s.scalars(select(m.Thing).where(m.Thing.family_id == fid)).all()
+        existing = {t.slug for t in things}
+        thing_names = {t.name.casefold() for t in things}
         for kind, prefix, key in (("dish", "d", "dishes"), ("place", "pl", "places"), ("event", "ev", "events")):
             for item in x.get(key, []):
                 name = item["name"].strip()
-                if not name or g.linker.link(name, "p_kamala", "p_arjun"):  # already known to the family graph
+                if not name or name.casefold() in thing_names or g.linker.link(name, speaker, listener):  # already known
                     continue
-                slug = _slug(prefix, name)
-                if slug in existing:
-                    continue
+                slug = _slug(prefix, name, existing)
                 s.add(m.Thing(family_id=fid, slug=slug, kind=kind, name=name, lang_name="", aliases=[name], note=item.get("note") or item.get("when", "")))
-                existing.add(slug); added_things.append(slug)
+                existing.add(slug); thing_names.add(name.casefold()); added_things.append(slug)
+        people = s.scalars(select(m.Person).where(m.Person.family_id == fid)).all()
+        slugs = {p.slug for p in people}
+        names = {p.display_name.casefold() for p in people}
         for person in x.get("people", []):
             name = person["name"].strip()
-            if not name or g.linker.link(name, "p_kamala", "p_arjun"):
+            if not name or name.casefold() in names or g.linker.link(name, speaker, listener):
                 continue
-            slug = _slug("p", name)
-            if s.scalar(select(m.Person).where(m.Person.family_id == fid, m.Person.slug == slug)):
-                continue
+            slug = _slug("p", name, slugs)
+            slugs.add(slug); names.add(name.casefold())
             p = m.Person(family_id=fid, slug=slug, display_name=name, notes=f"Mentioned as '{person['how_referred']}'; {person['inferred_relation']} (unverified, from call {call_id})")
             p.aliases = [m.Alias(alias=name, lang="en", kind="name"), m.Alias(alias=person["how_referred"], lang="ta", kind="address")]
             s.add(p); added_people.append(slug)

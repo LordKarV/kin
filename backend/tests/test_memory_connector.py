@@ -110,3 +110,81 @@ def test_summary_prompt_carries_the_sensitivity_rule(mock_llm, monkeypatch):
         cid = _call_with_utterances(c)
         c.post(f"/api/calls/{cid}/end")
     assert seen and "health" in seen[0].lower() and "topic word" in seen[0].lower()
+
+
+# ---- legacy leak fixes (ARCHITECTURE section 10) ----------------------------------------------------------------
+
+def _other_family_call(extracted: dict) -> int:
+    from app.db import models as m
+    from app.db.session import init_db, session_scope
+    init_db()
+    with session_scope() as s:
+        fam = m.Family(name="Chen", heritage_lang="zh")
+        s.add(fam); s.flush()
+        s.add_all([m.Person(family_id=fam.id, slug="p_nainai", display_name="Nainai", birth_year_approx=1950),
+                   m.Person(family_id=fam.id, slug="p_wei", display_name="Wei", is_learner=True)])
+        call = m.Call(family_id=fam.id)
+        s.add(call); s.flush()
+        s.add(m.CallSummary(call_id=call.id, summary="", extracted=extracted))
+        return call.id
+
+
+def test_approve_in_a_non_krishnan_family_uses_that_familys_slugs(monkeypatch):
+    from app.graph.linker import Linker
+    from app.memory.service import approve_call
+    seen = []
+    orig = Linker.link
+    def spy(self, text, speaker, listener, context=None):
+        seen.append((speaker, listener)); return orig(self, text, speaker, listener, context)
+    monkeypatch.setattr(Linker, "link", spy)
+    cid = _other_family_call({"people": [{"name": "Lin", "how_referred": "Lin", "inferred_relation": "friend", "sensitive": False}],
+                              "dishes": [{"name": "jiaozi", "note": "", "sensitive": False}], "places": [], "events": [], "topics": []})
+    r = approve_call(cid, [])
+    assert r["added_people"] == ["p_lin"] and r["added_things"] == ["d_jiaozi"]
+    assert seen and set(seen) == {("p_nainai", "p_wei")}
+
+
+def test_two_chinese_names_get_distinct_slugs():
+    from app.memory.service import approve_call
+    ppl = [{"name": n, "how_referred": n, "inferred_relation": "friend", "sensitive": False} for n in ("林", "王")]
+    cid = _other_family_call({"people": ppl, "dishes": [], "places": [], "events": [], "topics": []})
+    r = approve_call(cid, [])
+    assert len(r["added_people"]) == 2 and len(set(r["added_people"])) == 2 and "p_x" not in r["added_people"]
+
+
+def test_fade_learner_lookup_is_family_scoped():
+    from app.db import models as m
+    from app.db.session import init_db, session_scope
+    from app.fade.service import _learner_id
+    init_db()
+    with session_scope() as s:
+        a, b = m.Family(name="A", heritage_lang="ta"), m.Family(name="B", heritage_lang="zh")
+        s.add_all([a, b]); s.flush()
+        pa, pb = m.Person(family_id=a.id, slug="p_kid", display_name="Kid"), m.Person(family_id=b.id, slug="p_kid", display_name="Kid")
+        s.add_all([pa, pb]); s.flush()
+        assert _learner_id(s, "p_kid", b.id) == pb.id and _learner_id(s, "p_kid", a.id) == pa.id
+        with pytest.raises(ValueError):
+            _learner_id(s, "p_kid", b.id + 99)
+
+
+def test_fade_verification_by_utterance_writes_the_listeners_own_family():
+    from sqlalchemy import select
+    from app.db import models as m
+    from app.db.session import init_db, session_scope
+    from app.fade.service import record_verification
+    init_db()
+    with session_scope() as s:
+        a, b = m.Family(name="A", heritage_lang="ta"), m.Family(name="B", heritage_lang="ta")
+        s.add_all([a, b]); s.flush()
+        pa, pb = m.Person(family_id=a.id, slug="p_kid", display_name="Kid"), m.Person(family_id=b.id, slug="p_kid", display_name="Kid")
+        s.add_all([pa, pb]); s.flush()
+        call = m.Call(family_id=b.id)
+        s.add(call); s.flush()
+        u = m.Utterance(call_id=call.id, listener_id=pb.id, src_text="சாப்பிட்டியா கண்ணா")
+        s.add(u); s.flush()
+        ids = (pa.id, pb.id, u.id)
+    r = record_verification({"utterance_id": ids[2], "understood": True})
+    assert r["lemmas"]
+    with session_scope() as s:
+        learners = set(s.scalars(select(m.Mastery.learner_id)))
+    assert learners == {ids[1]}

@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, create_model, model_validator
+
+from ..world.contracts import NewPerson  # noqa: F401  (one definition, docs/ARCHITECTURE.md 2.5)
 
 
 class GroundedSpan(BaseModel):
@@ -45,6 +47,12 @@ class SpeechOut(BaseModel):
         return v
 
 
-# Call B (enrichment, off the hot path): pragmatics cards only.
+# Call B (enrichment, off the hot path): pragmatics cards, plus unresolved names on world calls.
+# new_people defaults to [] so old replies and mocks without it still validate.
 class CardsOut(BaseModel):
     pragmatics_cards: list[PragmaticsCard]
+    new_people: list[NewPerson] = []
+
+# Legacy call B (roster None): the pre-world schema under the same name, so its strict response_format stays
+# byte-identical (to_strict_schema would make new_people required and ask the model for it).
+LegacyCardsOut = create_model("CardsOut", pragmatics_cards=(list[PragmaticsCard], ...))

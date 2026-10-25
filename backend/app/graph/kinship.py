@@ -87,14 +87,20 @@ class FamilyGraph:
 
     # ---- construction -------------------------------------------------------
     @classmethod
-    def from_session(cls, session: Session, family_id: int) -> "FamilyGraph":
+    def from_session(cls, session: Session, family_id: int, person_ids: set[int] | None = None) -> "FamilyGraph":
+        """person_ids, when given, keeps only those people and the edges between them (a world call's scope)."""
         fam = session.get(m.Family, family_id)
+        pq = select(m.Person).where(m.Person.family_id == family_id)
+        eq = select(m.Edge).where(m.Edge.family_id == family_id)
+        if person_ids is not None:
+            pq = pq.where(m.Person.id.in_(person_ids))
+            eq = eq.where(m.Edge.src_person.in_(person_ids), m.Edge.dst_person.in_(person_ids))
         people = []
-        for p in session.scalars(select(m.Person).where(m.Person.family_id == family_id)):
+        for p in session.scalars(pq):
             people.append(Node(p.id, p.slug, p.display_name, p.lang_name, p.gender, p.birth_year_approx, p.is_learner, p.is_deceased,
                                p.notes, [(a.alias, a.lang, a.kind) for a in p.aliases], list(p.cues or [])))
         edges = [(e.src_person, e.dst_person, e.relation, e.lang_term, e.meta or {})
-                 for e in session.scalars(select(m.Edge).where(m.Edge.family_id == family_id))]
+                 for e in session.scalars(eq)]
         things = [ThingNode(t.id, t.slug, t.kind, t.name, t.lang_name, list(t.aliases or []), t.note)
                   for t in session.scalars(select(m.Thing).where(m.Thing.family_id == family_id))]
         return cls(family_id, fam.heritage_lang if fam else "ta", people, edges, things)
@@ -152,6 +158,11 @@ class FamilyGraph:
         return paths
 
     def shortest_path(self, ego: int, target: int) -> list[str] | None:
+        steps = self.shortest_steps(ego, target)
+        return None if steps is None else [s for s, _n in steps]
+
+    def shortest_steps(self, ego: int, target: int) -> list[tuple[str, int]] | None:
+        """shortest_path with the node each step lands on, so callers can check every hop it walks."""
         if ego == target:
             return []
         q = deque([(ego, [])]); seen = {ego}
@@ -162,8 +173,8 @@ class FamilyGraph:
                 if other in seen:
                     continue
                 if other == target:
-                    return path + [step]
-                seen.add(other); q.append((other, path + [step]))
+                    return path + [(step, other)]
+                seen.add(other); q.append((other, path + [(step, other)]))
         return None
 
     def distance(self, a: int, b: int) -> int:

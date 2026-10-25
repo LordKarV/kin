@@ -7,6 +7,7 @@ Task-specific instructions live at the end of the user message. A linker-only fa
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -15,10 +16,10 @@ from functools import lru_cache
 
 from ..graph.kinship import FamilyGraph
 from ..graph.linker import Linker, Span
-from ..graph.kin_tables import load_table
+from ..graph.kin_tables import MUSE_LANGUAGES, load_table
 from ..llm import LLM, StructuredOutputError, get_llm
 from .pragmatics import filter_cards
-from .schemas import CardsOut, GroundedSpan, PragmaticsCard, SpeechOut, TranslationOut
+from .schemas import CardsOut, GroundedSpan, LegacyCardsOut, PragmaticsCard, SpeechOut, TranslationOut
 
 log = logging.getLogger("kin.mt")
 
@@ -32,6 +33,12 @@ SPEECH_TASK = ("\nTask: output the spoken translation (a_translation), grounded_
                "Pragmatics cards are made by a separate call: here just translate an idiom's meaning naturally.")
 CARDS_TASK = ("\nTask: output ONLY pragmatics_cards for this utterance, per rule 3. "
               "Most utterances need none: then return an empty list.")
+# World calls only (roster given); the legacy B prompt stays CARDS_TASK alone.
+NEW_PEOPLE_TASK = (" Also list in new_people each person named in this utterance who is NOT in the roster (unresolved names only; "
+                   "none: empty list): source = the name as said, name = its usual spelling, owner = whose world they belong to "
+                   "(speaker, listener or other) with owner_name, relation = their relation to the owner if stated (friend, roommate, "
+                   "sister...; \"question\" when the speaker asks who they are; else \"\"), context = how they were described, else \"\".")
+SEVERAL_LISTENERS = 'Several listeners: use names, never "your".'
 
 LANG_NAMES = {"ta": "Tamil", "te": "Telugu", "hi": "Hindi", "es": "Spanish", "vi": "Vietnamese", "ml": "Malayalam", "kn": "Kannada"}
 
@@ -56,7 +63,7 @@ class TranslateResult:
     latencies: dict = field(default_factory=dict)
     error: str | None = None
     generic: bool = False
-    cards: Future | None = None  # call B still running: resolves to (cards, b_ms); see Translator.with_cards
+    cards: Future | None = None  # call B still running: (cards, b_ms), or (cards, b_ms, new_people) with a roster; see with_cards
 
     def as_dict(self) -> dict:
         return {"translation": self.result.translation, "grounded_spans": [s.model_dump() for s in self.result.grounded_spans],
@@ -66,12 +73,13 @@ class TranslateResult:
 
 
 class Translator:
-    def __init__(self, graph: FamilyGraph, llm: LLM | None = None):
+    def __init__(self, graph: FamilyGraph, llm: LLM | None = None, lang: str | None = None):
+        """lang: the speaker's language for the linker and kin table (world calls); default graph.heritage_lang."""
         self.g = graph
-        self.linker = Linker(graph)
+        self.linker = Linker(graph, lang=lang)
         self._llm = llm
         try:
-            self.table = load_table(graph.heritage_lang)
+            self.table = load_table(lang or graph.heritage_lang)
         except (KeyError, FileNotFoundError):
             self.table = load_table("ta")
         self.lang = self.table.name
@@ -82,29 +90,46 @@ class Translator:
         return self._llm or get_llm()
 
     # ---- prompts -------------------------------------------------------------
-    def system_prompt(self, listener: str) -> str:
-        if listener in self._system_cache:
+    def system_prompt(self, listener: str | None, roster: str | None = None) -> str:
+        """roster None: today's prompt, byte-identical. A roster string (WorldView.roster) replaces the FAMILY ROSTER block."""
+        if roster is None and listener in self._system_cache:
             return self._system_cache[listener]
-        li = self.g.by_slug[listener].id
-        lines = [RULES, "", f"Heritage language: {self.lang}. Listener: {self.g.people[li].name} ({listener}).", "",
-                 f"FAMILY ROSTER (relative to the listener {self.g.people[li].name}):"]
-        for row in self.g.roster(li):
-            extra = f" Also called: {', '.join(row['aliases'])}." if row["aliases"] else ""
-            p = self.g.by_slug[row["id"]]
-            by = f" b.~{p.birth_year}." if p.birth_year else ""
-            dead = " (deceased)" if row["deceased"] else ""
-            lines.append(f"- {row['id']}: {row['name']} ({row['lang_name']}) → {row['render']}{dead}.{by}{extra} {row['notes']}")
-        lines += ["", "DISHES / PLACES / EVENTS (keep the family's names):"]
-        for t in self.g.things:
-            lines.append(f"- {t.slug} [{t.kind}]: {t.name} ({t.lang_name}); also {', '.join(a for a in t.aliases[:6])}. {t.note}")
+        node = self.g.by_slug.get(listener) if listener else None
+        if node is not None:
+            lines = [RULES, "", f"Heritage language: {self.lang}. Listener: {node.name} ({listener}).", ""]
+        else:  # several listeners, or a slug this graph does not know: neutral naming
+            lines = [RULES, "", f"Heritage language: {self.lang}. Listener: {'several listeners' if listener is None else listener}.", ""]
+        if roster is not None:
+            lines += [f"ROSTER (slug | name | native | rendering | aliases){f' relative to the listener {node.name}' if node else ''}:", roster]
+        elif node is not None:
+            lines.append(f"FAMILY ROSTER (relative to the listener {node.name}):")
+            for row in self.g.roster(node.id):
+                extra = f" Also called: {', '.join(row['aliases'])}." if row["aliases"] else ""
+                p = self.g.by_slug[row["id"]]
+                by = f" b.~{p.birth_year}." if p.birth_year else ""
+                dead = " (deceased)" if row["deceased"] else ""
+                lines.append(f"- {row['id']}: {row['name']} ({row['lang_name']}) → {row['render']}{dead}.{by}{extra} {row['notes']}")
+        else:
+            lines.append("FAMILY ROSTER:")
+            lines += [f"- {p.slug}: {p.name} ({p.lang_name})." for p in self.g.people.values()]
+        if roster is None:  # world calls: things are not listener-scoped in the graph, so only the roster/extra_spans name them
+            lines += ["", "DISHES / PLACES / EVENTS (keep the family's names):"]
+            for t in self.g.things:
+                lines.append(f"- {t.slug} [{t.kind}]: {t.name} ({t.lang_name}); also {', '.join(a for a in t.aliases[:6])}. {t.note}")
         lines += ["", f"{self.lang.upper()} KIN TERMS: " + "; ".join(f"{d.term}={d.gloss}" for d in self.table.terms if d.kind == "kin")]
         s = "\n".join(lines)
-        self._system_cache[listener] = s
+        if roster is None:  # world rosters change per utterance: not cached
+            self._system_cache[listener] = s
         return s
 
-    def user_prompt(self, text: str, speaker: str, listener: str, spans: list[Span], history, passthrough: list[str]) -> str:
-        sp, li = self.g.by_slug[speaker], self.g.by_slug[listener]
-        lines = [f"Speaker: {sp.name} ({self.g.render(li.id, sp.id)}). Listener: {li.name}."]
+    def user_prompt(self, text: str, speaker: str, listener: str | None, spans: list[Span], history, passthrough: list[str]) -> str:
+        sp, li = self.g.by_slug.get(speaker), self.g.by_slug.get(listener) if listener else None
+        if sp is not None and li is not None:
+            lines = [f"Speaker: {sp.name} ({self.g.render(li.id, sp.id)}). Listener: {li.name}."]
+        else:  # unknown slug or several listeners: neutral naming, never a KeyError
+            lines = [f"Speaker: {sp.name if sp else speaker}. Listener: {li.name if li else (listener or 'several listeners')}."]
+        if listener is None:
+            lines.append(SEVERAL_LISTENERS)
         if history:
             lines.append("Recent context (oldest first):")
             for who, src, tr in list(history)[-6:]:
@@ -130,27 +155,39 @@ class Translator:
         return "\n".join(lines)
 
     # ---- translation ---------------------------------------------------------
-    def translate(self, text: str, speaker: str, listener: str, history=(), passthrough=(), reasoning_effort: str | None = None,
+    def translate(self, text: str, speaker: str, listener: str | None, history=(), passthrough=(), reasoning_effort: str | None = None,
                   target_lang: str = "en") -> TranslateResult:
         """A and B together (API, eval, buddy). Live calls use translate_speech and attach cards when B lands."""
         return self.with_cards(self.translate_speech(text, speaker, listener, history, passthrough, reasoning_effort, target_lang))
 
-    def translate_speech(self, text: str, speaker: str, listener: str, history=(), passthrough=(), reasoning_effort: str | None = None,
-                         target_lang: str = "en") -> TranslateResult:
-        """Call A, with call B started in parallel and returned unresolved in `.cards`. reasoning_effort overrides both."""
+    def translate_speech(self, text: str, speaker: str, listener: str | None, history=(), passthrough=(), reasoning_effort: str | None = None,
+                         target_lang: str = "en", extra_spans=(), roster: str | None = None) -> TranslateResult:
+        """Call A, with call B started in parallel and returned unresolved in `.cards`. reasoning_effort overrides both.
+
+        World calls (docs/ARCHITECTURE.md 8.4): `roster` replaces the FAMILY ROSTER block and keys the prompt cache;
+        `listener=None` means several listeners; `extra_spans` (dicts from LiveWorld.on_final) join the linker spans.
+        With a roster, `.cards` resolves to (cards, b_ms, new_people); without one, to (cards, b_ms) as before."""
         t0 = time.perf_counter()
         ctx = [src for _who, src, _tr in history]
-        spans = self.linker.link(text, speaker, listener, context=ctx)
+        linked = self.linker.link(text, speaker, listener, context=ctx)
+        if roster is not None:  # privacy: graph things are space-wide, not filtered to this listener; world things come in extra_spans
+            linked = [s for s in linked if s.node not in self.g.thing_by_slug]
+        spans = _merge_spans(linked, extra_spans, text)
         t_link = (time.perf_counter() - t0) * 1000
         # Fade guardrail: never pass through a token inside a grounded span
         safe_pt = [p for p in passthrough if not any(p in s.source or s.source in p for s in spans if s.node)]
-        system = self.system_prompt(listener)
+        system = self.system_prompt(listener, roster)
         user = self.user_prompt(text, speaker, listener, spans, history, safe_pt)
         if target_lang != "en":
-            tl = LANG_NAMES.get(target_lang, target_lang)
-            user += f"\nTarget language: {tl}. The listener speaks {tl}; translate INTO {tl} (natural spoken {tl}, Tamil script), keeping names and kin terms the family uses."
-        cache_key = f"kin-{self.g.family_id}-{listener}"
-        cards = _CARDS_POOL.submit(self._cards, system, user + CARDS_TASK, text, reasoning_effort or CARDS_EFFORT, cache_key)
+            tl = MUSE_LANGUAGES.get(target_lang) or LANG_NAMES.get(target_lang, target_lang)
+            user += f"\nTarget language: {tl}. The listener speaks {tl}; translate INTO {tl} (natural spoken {tl}, {tl} script), keeping names and kin terms the family uses."
+        if roster is None:
+            cache_key = f"kin-{self.g.family_id}-{listener}"
+            cards = _CARDS_POOL.submit(self._cards, system, user + CARDS_TASK, text, reasoning_effort or CARDS_EFFORT, cache_key)
+        else:
+            cache_key = f"kin-{self.g.family_id}-{target_lang}-{hashlib.sha1(roster.encode()).hexdigest()[:10]}"
+            cards = _CARDS_POOL.submit(self._cards, system, user + CARDS_TASK + NEW_PEOPLE_TASK, text, reasoning_effort or CARDS_EFFORT,
+                                       cache_key, True)
         t1 = time.perf_counter()
         error = None
         try:
@@ -166,10 +203,11 @@ class Translator:
         lat = {"link_ms": round(t_link, 1), "a_ms": a_ms, "mt_ms": a_ms, "total_ms": round((time.perf_counter() - t0) * 1000, 1)}
         return TranslateResult(out, spans, safe_pt, lat, error, cards=cards)
 
-    def _cards(self, system: str, user: str, text: str, effort: str, cache_key: str) -> tuple[list[PragmaticsCard], float]:
+    def _cards(self, system: str, user: str, text: str, effort: str, cache_key: str, with_people: bool = False) -> tuple:
         t0 = time.perf_counter()
-        out = self.llm.structured(CardsOut, system=system, user=user, reasoning_effort=effort, max_completion_tokens=3000, prompt_cache_key=cache_key)
-        return filter_cards(out.pragmatics_cards, text), round((time.perf_counter() - t0) * 1000, 1)
+        out = self.llm.structured(CardsOut if with_people else LegacyCardsOut, system=system, user=user, reasoning_effort=effort, max_completion_tokens=3000, prompt_cache_key=cache_key)
+        res = (filter_cards(out.pragmatics_cards, text), round((time.perf_counter() - t0) * 1000, 1))
+        return (*res, list(out.new_people)) if with_people else res
 
     @staticmethod
     def with_cards(res: TranslateResult) -> TranslateResult:
@@ -177,7 +215,7 @@ class Translator:
         if res.cards is None:
             return res
         try:
-            cards, b_ms = res.cards.result()
+            cards, b_ms = res.cards.result()[:2]
         except Exception as e:  # noqa: BLE001  (enrichment is optional; A's result stands)
             log.warning("pragmatics cards call failed (%s); returning the translation without cards", e)
             return replace(res, cards=None, latencies={**res.latencies, "b_error": f"{type(e).__name__}: {e}"[:200]})
@@ -221,7 +259,8 @@ class Translator:
 
     def _reconcile(self, model_spans: list[GroundedSpan], linker_spans: list[Span], listener: str) -> list[GroundedSpan]:
         """Keep the model's spans but make sure every confidently linked entity is represented with a valid node id."""
-        valid = set(self.g.by_slug) | set(self.g.thing_by_slug)
+        # linker span nodes: world spans (extra_spans) may name entities outside this graph; legacy ones are all inside it
+        valid = set(self.g.by_slug) | set(self.g.thing_by_slug) | {s.node for s in linker_spans if s.node}
         out = [s for s in model_spans if s.node_id in valid]
         have = {s.node_id for s in out}
         for s in linker_spans:
@@ -229,6 +268,20 @@ class Translator:
                 out.append(GroundedSpan(source=s.source, rendered=s.display, node_id=s.node))
                 have.add(s.node)
         return out
+
+
+def _merge_spans(spans: list[Span], extra, text: str) -> list[Span]:
+    """Linker spans plus world spans (dicts start/end/source/node_id/type/rendered/confidence) that overlap none of them."""
+    out = list(spans)
+    for d in extra:
+        if not (0 <= d.get("start", -1) < d.get("end", -1) <= len(text)) or not d.get("source"):
+            log.warning("dropping malformed world span %r", d)
+            continue
+        if any(d["start"] < s.end and s.start < d["end"] for s in out):
+            continue  # ponytail: first span wins on overlap (linker first: it knows kin chains); no scoring
+        out.append(Span(d["start"], d["end"], d["source"], d.get("node_id"), d.get("type", "person"), float(d.get("confidence", 0.9)),
+                        d.get("method", "world"), display=d.get("rendered", "") or d["source"], candidates=list(d.get("candidates", []))))
+    return sorted(out, key=lambda s: s.start)
 
 
 @lru_cache(maxsize=4)

@@ -15,8 +15,11 @@ from .lemmas import heritage_lemmas, lemma
 bkt = BKT()
 
 
-def _learner_id(s, slug: str) -> int:
-    p = s.scalar(select(m.Person).where(m.Person.slug == slug))
+def _learner_id(s, slug: str, family_id: int | None = None) -> int:
+    q = select(m.Person).where(m.Person.slug == slug)
+    if family_id is not None:  # slugs are only unique per family
+        q = q.where(m.Person.family_id == family_id)
+    p = s.scalars(q).first()
     if p is None:
         raise ValueError(f"unknown learner {slug}")
     return p.id
@@ -54,13 +57,17 @@ def record_verification(data: dict) -> dict:
     understood = bool(data.get("understood", True))
     text = data.get("text", "")
     with session_scope() as s:
+        lid = lang = None
         if not text and data.get("utterance_id"):
             u = s.get(m.Utterance, int(data["utterance_id"]))
             text = u.src_text if u else ""
-            if u and u.listener_id:
-                learner = s.get(m.Person, u.listener_id).slug
-        lms = heritage_lemmas(text, _lang_of(s, learner))
-        lid = _learner_id(s, learner)
+            if u and u.listener_id:  # use the listener row itself: slugs are only unique per family
+                p = s.get(m.Person, u.listener_id)
+                learner, lid = p.slug, p.id
+                fam = s.get(m.Family, p.family_id)
+                lang = fam.heritage_lang if fam else None
+        lms = heritage_lemmas(text, lang or _lang_of(s, learner))
+        lid = lid or _learner_id(s, learner)
         for lm in lms:
             r = _row(s, lid, lm)
             r.p_known = bkt.update(r.p_known, correct=understood); r.n_verified += 1
@@ -89,7 +96,7 @@ def passthrough_tokens(learner: str, text: str, family_id: int | None = None, kn
     `known` overrides the DB (used by the simulation so it never touches the learner's real rows)."""
     if known is None:
         with session_scope() as s:
-            lid = _learner_id(s, learner)
+            lid = _learner_id(s, learner, family_id)
             known = {r.lemma for r in s.scalars(select(m.Mastery).where(m.Mastery.learner_id == lid, m.Mastery.p_known >= MASTERY_THRESHOLD))}
     if not known:
         return []

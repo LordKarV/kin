@@ -74,7 +74,7 @@ cities.
   mama**, Mom's younger brother (Adyar is his flat in Chennai).
 - Later: "ரவி கோவையில புது கடை திறந்திருக்காரு" ("Ravi opened a new shop in Kovai"). That is **Ravi periyappa**, Dad's
   elder brother, in Coimbatore. The respectful verb ending is another clue.
-- Generic translation says "Ravi called" both times; KIN names the right uncle. Our eval: generic 53% entity errors,
+- Generic translation says "Ravi called" both times; KIN names the right uncle. Our eval: generic 54% entity errors,
   KIN 1%.
 - The first time KIN hears "Ravi mama" with no Ravi in the graph, it shows "Who is Ravi mama?" with suggestions from
   the Tamil kinship table ("Mom's brother", "Dad's sister's husband"). One tap, and the next mention is grounded.
@@ -112,5 +112,5 @@ All calls are one-to-one. Translation is shown as captions; a translated voice i
 4. Next day, same sentence: silence.
 5. 30 seconds with Paatti in Tamil: Story 6 (the two Ravis), Story 9 (the hiking-with-Mei bridge and Paatti's card
    about Mei), and a cultural meaning card.
-6. One proof slide: generic 53% vs KIN 1% entity errors; cards shown only when needed vs a naive shared-context
+6. One proof slide: generic 54% vs KIN 1% entity errors; cards shown only when needed vs a naive shared-context
    baseline (the eval in EVAL_SCENARIOS_BRIEF.md).

@@ -29,7 +29,7 @@ when someone would be lost.
 | `feat/live-cards` | Instant culture cards on partial transcripts (~0.15 ms), split translation (p50 1.9 s, was 3.0 s), LiveKit call agent, `mobile/` web call app |
 | `feat/common-ground` | The pivot: `docs/PRODUCT.md`, `docs/ARCHITECTURE.md`, and (in progress) the common-ground engine, connected graph, bridges, storylines, SMS, group calls, native iOS app (SwiftUI + LiveKit) |
 
-Measured so far: generic AI gets the family member wrong 53% of the time on our eval, KIN 1%. Cards reach the screen
+Measured so far: generic AI gets the family member wrong 54% of the time on our eval, KIN 1%. Cards reach the screen
 mid-sentence (about 2 s into a 3.5 s sentence). Translation p50 1.9 s.
 
 Stack: FastAPI backend (Python 3.12), Meta Muse Spark (LLM) and Muse Voice Transcribe (speech-to-text, 25 languages),
