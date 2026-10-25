@@ -1,15 +1,18 @@
 """Connect without a link: every user has a KIN handle (arjun-4821); a request to a handle, once accepted, makes the
-two users contacts (GET /api/contacts, POST /api/calls/ring). No world Tie is written: a connection is not a fact."""
+two users contacts (GET /api/contacts, POST /api/calls/ring). No world Tie is written: a connection is not a fact.
+POST /api/connect/match finds which of my phone contacts are KIN users, by hashed number (Nudge's pattern)."""
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import re
 import secrets
 import unicodedata
 from datetime import datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import ForeignKey, String, UniqueConstraint, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, Session, mapped_column
@@ -21,6 +24,7 @@ from .users import current_user
 
 router = APIRouter(prefix="/api", tags=["connect"])
 HANDLE_TRIES = 20
+MAX_MATCH_HASHES = 2000
 
 
 # ponytail: new tables, not columns, because the schema has no migrations (create_all builds these on startup).
@@ -42,7 +46,22 @@ class ConnectRequest(m.Base):
 
 
 class ConnectIn(BaseModel):
-    handle: str = Field(min_length=1, max_length=60)
+    """Exactly one: a typed handle, or a slug from POST /api/connect/match (a matched user may have no handle yet)."""
+    handle: str | None = Field(None, min_length=1, max_length=60)
+    slug: str | None = Field(None, min_length=1, max_length=64)
+
+    @model_validator(mode="after")
+    def _one_target(self) -> "ConnectIn":
+        if (self.handle is None) == (self.slug is None):
+            raise ValueError("send a handle or a slug")
+        return self
+
+
+class MatchIn(BaseModel):
+    # Each hash is lowercase hex sha256 of world.users.normalize_phone(number): digits only (any Unicode decimal
+    # digit), a bare 10 digits without a leading + gets US 1, then "+" in front (E.164, e.g. +15125550100).
+    # The iOS ContactMatch.normalize mirrors it. Hashes are used for this one lookup, never stored or logged.
+    hashes: list[Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]] = Field(max_length=MAX_MATCH_HASHES)
 
 
 def connected_person_ids(s: Session, user_id: int) -> set[int]:
@@ -87,13 +106,23 @@ def my_handle(user: m.User = Depends(current_user), s: Session = Depends(get_ses
     raise HTTPException(503, "could not pick a handle; try again")
 
 
-def _request(s: Session, me: m.User, handle: str) -> tuple[dict, int | None, dict | None]:
-    """(response, person id to notify, event). Unknown handle and yourself fail before anything is written."""
-    target_id = s.scalar(select(UserHandle.user_id).where(UserHandle.handle == handle.strip().lstrip("@").lower()))
+def _target(s: Session, body: ConnectIn) -> int:
+    """The user a request is for, by handle or by slug; 404 when there is no such user."""
+    if body.handle is not None:
+        q = select(UserHandle.user_id).where(UserHandle.handle == body.handle.strip().lstrip("@").lower())
+    else:
+        q = select(m.User.id).join(m.Person, m.Person.id == m.User.person_id).where(m.Person.slug == body.slug)
+    target_id = s.scalar(q)
     if target_id is None:
-        raise HTTPException(404, "no one with that handle")
+        raise HTTPException(404, f"no one with that {'handle' if body.handle is not None else 'slug'}")
+    return target_id
+
+
+def _request(s: Session, me: m.User, body: ConnectIn) -> tuple[dict, int | None, dict | None]:
+    """(response, person id to notify, event). Unknown target and yourself fail before anything is written."""
+    target_id = _target(s, body)
     if target_id == me.id:
-        raise HTTPException(422, "that is your own handle")
+        raise HTTPException(422, "that is your own handle" if body.handle is not None else "that is you")
     theirs = s.scalar(select(ConnectRequest).where(ConnectRequest.from_user == target_id, ConnectRequest.to_user == me.id))
     mine = s.scalar(select(ConnectRequest).where(ConnectRequest.from_user == me.id, ConnectRequest.to_user == target_id))
     them = _who(s, target_id)
@@ -113,10 +142,35 @@ def _request(s: Session, me: m.User, handle: str) -> tuple[dict, int | None, dic
 
 @router.post("/connect")
 async def send_request(body: ConnectIn, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> dict:
-    out, notify, msg = await asyncio.to_thread(_request, s, user, body.handle)
+    out, notify, msg = await asyncio.to_thread(_request, s, user, body)
     if notify is not None:
         await events.send_to(notify, msg)
     return out
+
+
+def _relations(s: Session, me_id: int) -> dict[int, str]:
+    """Other user id -> connected | incoming (they asked, pending) | requested (I asked; declined looks pending)."""
+    rank = {"connected": 3, "incoming": 2, "requested": 1}
+    out: dict[int, str] = {}
+    for r in s.scalars(select(ConnectRequest).where(or_(ConnectRequest.from_user == me_id, ConnectRequest.to_user == me_id))):
+        mine = r.from_user == me_id
+        rel = ("connected" if r.status == "accepted" else "requested" if mine
+               else "incoming" if r.status == "pending" else None)
+        other = r.to_user if mine else r.from_user
+        if rel and rank[rel] > rank.get(out.get(other, ""), 0):
+            out[other] = rel
+    return out
+
+
+@router.post("/connect/match")
+def match(body: MatchIn, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> dict:
+    """KIN users whose linked phone hashes to one of `hashes`, never me. Reveals only that they exist (slug, name),
+    never their number. ponytail: hashes every linked phone per call, O(users); add an indexed hash column at scale."""
+    want = set(body.hashes)
+    rows = s.execute(select(m.User.id, m.User.phone).where(m.User.phone.is_not(None), m.User.id != user.id))
+    found = [uid for uid, phone in rows if hashlib.sha256(phone.encode()).hexdigest() in want]
+    rel = _relations(s, user.id) if found else {}
+    return {"results": [{**_who(s, uid), "relation": rel.get(uid, "none")} for uid in found]}
 
 
 @router.get("/connect/requests")

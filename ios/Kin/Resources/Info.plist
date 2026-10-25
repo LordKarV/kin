@@ -38,6 +38,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>KIN uses the camera so the people you call can see you.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>KIN checks which of your contacts are on KIN. Numbers are hashed on your phone and never stored.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>KIN connects to a KIN server on your local network (development builds).</string>
 	<key>NSMicrophoneUsageDescription</key>

@@ -18,6 +18,9 @@ struct AddPersonSheet: View {
                 VStack(spacing: 22) {
                     KinSection(title: "Your handle", footer: "Share it so people can add you without a link.") { mine }
                     KinSection(title: "Their KIN handle") { theirs }
+                    KinSection(footer: "Numbers are hashed on your phone and never stored.") {
+                        ContactMatchSection(api: api, onConnected: onConnected)
+                    }
                 }
                 .padding(.top, 8)
             }
