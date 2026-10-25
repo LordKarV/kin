@@ -1,33 +1,41 @@
 # KIN slides (6)
 
-Plain backgrounds, one idea per slide, large type. Screenshots are from the real app during the film shoot.
+Plain backgrounds, one idea per slide, large type. Screenshots are from the real app during the film shoot. Any phone
+screenshot shows both people's phones side by side, never one alone.
 
 ## 1. Title
 
 - **Text:** "KIN" / "Common ground for people who live apart."
-- **Visual:** the frozen frame from the cold open: Arjun's blank face as Mei says "Lin and I finally did the trip."
+- **Visual:** the frozen split-screen frame from the cold open: Arjun in his room and Mei in Shanghai, both faces and
+  both phones in frame, as Mei says "Lin and I finally did the trip" and Arjun's face goes blank.
 
 ## 2. The problem
 
-- **Text:** "She told you about Lin six weeks ago. You forgot. She never heard your news."
-- **Small text:** "Common ground: the shared context that makes conversation easy (Clark & Brennan, 1991). KIN applies it
-  to calls between people who live apart."
+- **Text:** "She told you about Lin six weeks ago. You haven't told her you started bouldering."
+- **Small text:** "Common ground: what two people both know, which makes conversation easy (Clark & Brennan, 1991).
+  Distance wears it down."
 - **Visual:** two phones far apart with a calendar strip between them labelled "6 weeks".
 
-## 3. How it works, and why it is AI
+## 3. Proof
 
-- **Text:** "KIN models what each person knows, forgets the way people do, and speaks only on a gap."
-- **Three rows:** "Never heard of Lin -> card" / "Heard last week -> nothing" / "Six weeks ago -> a reminder".
-- **Proof strip:** "Same Muse Spark model, with and without KIN's graph: 54% vs 1% entity errors. Same-name people: 97%
-  vs 0%." Footnote: "105-sentence Tamil family test set, 150 entity spans, muse-spark-1.3. Not yet reviewed by a
-  native speaker."
-- **Visual:** the two-column "What Arjun knows / What Mei knows" graphic from the film, plus a bar pair.
+- **Text:** "Help only where someone would be lost."
+- **Two rows, same scenarios:**
+  - "An AI given everyone's full history: a card for someone who already knew [X%] of the time. One person's words
+    shown to someone else: [Y leaks]."
+  - "KIN: [X%]. [Y leaks]."
+  - Footnote: "[N] planted scenarios, same Muse Spark model. [CONFIRM: from eval 4A]"
+- **Proof strip:** "Captions, same Muse Spark model with and without KIN's graph: 54% vs 1% entity errors. Same-name
+  people: 97% vs 0%." Footnote: "105-sentence Tamil family test set, 150 entity spans, muse-spark-1.3. Not yet
+  reviewed by a native speaker."
+- **Visual:** Arjun's and Mei's phones side by side during the same line: his with the Lin card, hers with captions
+  only.
+- If the eval 4A numbers are not in by judging, drop the two rows and keep the proof strip and the visual.
 
 ## 4. Private by design
 
 - **Text, four lines:** "Everyone sees KIN is on. Anyone can pause it." / "Audio is not kept." / "Bridges use only your
   own facts." / "Every card is checked against what that listener can see. Delete means gone."
-- **Visual:** screenshots of the "KIN is on" banner with Pause, and the delete screen.
+- **Visual:** both phones showing the "KIN is on" banner, one with Pause tapped, plus the delete screen.
 
 ## 5. Built with
 
@@ -41,4 +49,5 @@ Plain backgrounds, one idea per slide, large type. Screenshots are from the real
 
 - **Text:** "Every relationship. One app." / "Friends abroad. Friends at other colleges. Grandparents."
 - **Small text:** repo URL https://github.com/LordKarV/hacktx and the Devpost link.
-- **Visual:** three call screenshots side by side: Mei (Mandarin captions), Priya (English), Paatti (Tamil card).
+- **Visual:** three calls in a row, each as a pair of phones: Arjun and Mei (Mandarin captions), Arjun and Priya
+  (English), Arjun and Paatti (her Tamil card about Mei).

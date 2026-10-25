@@ -17,11 +17,17 @@ promise, the close. Cast details are in CASTING.md; rules in RULES.md.
 - The six-week gap is simulated with the dev clock, and the film says so on screen.
 - A beat whose code does not run end to end at the go/no-go check is cut, not faked. The minimum film is listed at
   the end.
+- Both people, always. Every call shot shows Arjun's phone and the other person's phone side by side (split screen),
+  so the viewer sees that each person gets something different. Only the title cards (shots 2, 3, 6) and the
+  how-it-works graphic (shot 10) are full frame.
+- Everything happens during a call. No shot shows anything after a call ends: no summaries, no recaps.
 - The proof number is 54% vs 1% (backend/eval/results.md). PRODUCT.md and STORIES.md say 53%; that is a typo. The
-  gap-precision number against a naive shared-context baseline is not measured yet, so it is not in the film unless
-  someone builds and runs that eval before the edit locks.
+  comparison against an AI given everyone's full history (eval 4A) has no numbers yet, so it is not in the film unless
+  that eval runs before the edit locks.
 - Never show: photos popping up on a mention, call reminders, follow-up nudges, topic lists, Wikipedia pictures, a
-  family-tree archive. Those read as Nudge, Roots or HeirLoom.
+  family-tree archive, storyline cards. They belong to other kinds of apps and blur what KIN is.
+- Words to keep out of the VO and on-screen text: "remember", "memory", "notes", "recall", "context". Say "she told
+  him six weeks ago", "he hasn't told her yet", "it stays quiet".
 
 ## App state recipe (how to set up each shot)
 
@@ -43,25 +49,29 @@ restart the server with `CLOCK_OFFSET_DAYS=42` between call 1 and call 2 (the se
 | S1 call 1 done | 0 | Real call 1, Mei says the Lin line | `/api/dev/apply` with speaker Mei, audience [Arjun], fact "Lin: friend from the Fudan climbing wall" |
 | S2 news told to Priya | 35 | Arjun texts KIN "started bouldering at the campus gym", then real call with Priya where he says it | `/api/dev/sms`; or `/api/dev/apply` speaker Arjun, audience [Priya] |
 | S3 Mei's hike | 36 | Arjun texts KIN "Mei visited and we went hiking" (his own fact) | `/api/dev/apply` speaker Arjun, audience [] |
-| S4 call 2 | 42 | Real call 2 | Typed line via `/api/calls/{id}/text` if ASR drops 林 |
-| S5 next day | 43 | Same call 2 line again | same |
-| S6 Paatti | 43 | Before the call, Arjun places Ravi mama (Mom's younger brother, Adyar, Chennai) and Ravi periyappa (Dad's elder brother, Coimbatore) from the graph screen (`POST /api/world/place`) | Typed Tamil lines |
+| S4 call 2 | 42 | Real call 2: the Lin line, the same line again a minute later, then Arjun tells her his news | Typed line via `/api/calls/{id}/text` if ASR drops 林 |
+| S5 Paatti | 43 | Before the call, Arjun places Ravi mama (Mom's younger brother, Adyar, Chennai) and Ravi periyappa (Dad's elder brother, Coimbatore) from the graph screen (`POST /api/world/place`) | Typed Tamil lines |
 
 Planting call 1 with `/api/dev/apply` is fine for rehearsal. For the film, try the real call 1 first, since it is
 also footage.
 
 ## Shot list
 
-Framing terms: OTS = over the shoulder of the person holding the phone, phone in focus, face soft. SCREEN = clean iOS
-screen recording composited in edit. PIP = the other person's face in a small window.
+Framing terms: SPLIT = the frame divided down the middle, Arjun's side on the left, the other person's on the right.
+Each side holds that person's face and their phone. OTS = over the shoulder of the person holding the phone, phone in
+focus, face soft. SCREEN = clean iOS screen recording composited in edit, used inside a SPLIT so both phones are
+always on screen together.
 
 ### 1. Cold open (0:00-0:10)
 
-- **Location:** Arjun's room or a quiet corner, evening, a lamp on, window behind camera.
-- **On screen:** Arjun, on a video call. Mei in his phone.
-- **Arjun's phone:** call 2 (state S4). Mei's video; her Mandarin line with the English caption under it.
-- **Framing:** start medium close on Arjun's face, laughing at something she said. Then a slow push-in as she says
-  "我和林终于去了莫干山". His face goes blank for a beat.
+- **Location:** two places at once. Left: Arjun's room, evening, a lamp on, window behind camera. Right: Mei in
+  Shanghai, morning, wherever she takes calls.
+- **On screen:** SPLIT. Two old friends on a video call: Arjun holding his phone, Mei holding hers, both faces and both
+  phones in frame. They are laughing about something from high school.
+- **Phones:** call 2 (state S4). Arjun's phone shows Mei's video with her Mandarin line captioned in English; Mei's
+  shows Arjun.
+- **Framing:** start medium on both. Slow push-in on both halves as she says "我和林终于去了莫干山". His face goes
+  blank for a beat; hers is lit up, telling the story.
 - **Audio:** real call audio only. No music, no VO.
 - **Edit:** cut to black before the Lin card appears (it arrives about 3 s after she finishes). This is the same
   take as shot 7, so the payoff later is literally the next second.
@@ -80,18 +90,19 @@ screen recording composited in edit. PIP = the other person's face in a small wi
 
 ### 4. It starts empty (0:25-0:37)
 
-- **Location:** same as shot 1, daytime. Lower third: "September".
-- **On screen:** SCREEN of Arjun's phone (state S0): an empty graph, add Mei. Then OTS of call 1: Mei says the Lin
-  line in Mandarin; the English caption appears under her video.
+- **Location:** same as shot 1, daytime on Arjun's side. Lower third: "September".
+- **On screen:** SPLIT. 4 s of both phones before the call: Arjun's empty graph as he adds Mei, Mei's own empty graph.
+  Then call 1: Mei says the Lin line in Mandarin; Arjun's phone shows the English caption, Mei's shows nothing extra.
 - **VO:** "KIN is a calling app for one-to-one video and audio calls. Nothing is pre-loaded. It learns who is in each
   other's lives from the calls themselves."
-- **Edit:** 4 s on the empty graph, 8 s on call 1. Captions are on by default; show the voice toggle off.
+- **Edit:** 4 s on the empty graphs, 8 s on call 1. Captions are on by default; show the voice toggle off.
 
 ### 5. His news, told to someone else (0:37-0:45)
 
-- **Location:** a hallway or campus bench (different from shot 1, so it reads as another day).
-- **On screen:** Arjun, phone to ear or on speaker, Priya on the line. If the SMS route works, a 2 s SCREEN of the
-  text "started bouldering at the campus gym" and KIN's short reply.
+- **Location:** Arjun on a hallway or campus bench (different from shot 1, so it reads as another day). Priya
+  wherever she is.
+- **On screen:** SPLIT, Arjun and Priya, both faces and both phones. If the SMS route works, a 2 s inset on Arjun's
+  half of the text "started bouldering at the campus gym" and KIN's short reply.
 - **Audio:** Arjun: "I started bouldering at the campus gym." Priya reacts.
 - **VO:** "He tells Priya his news. Not Mei."
 
@@ -100,75 +111,86 @@ screen recording composited in edit. PIP = the other person's face in a small wi
 - **On screen:** "Six weeks later" with a smaller line: "Time advanced with a dev clock for this demo."
 - **Edit:** something visible changes for shot 7: Mei's shirt, the light, the date on the phone status bar.
 
-### 7. Hero: the reminder card and the bridge chip (0:49-1:12)
+### 7. Hero: who Lin is, on one phone only (0:49-1:04)
 
-- **Location:** shot 1 again.
-- **On screen:** split screen, both phones side by side as SCREENs, Arjun's face OTS behind his.
+- **Location:** shot 1 again (the same take).
+- **On screen:** SPLIT, both faces, both phones as SCREENs next to each face.
 - **Arjun's phone (S4):** English caption of Mei's line, then the card "Lin: Mei's friend from the Fudan climbing
   wall. She mentioned her Sept 14." About a second later the private chip "You haven't told Mei: you started
   bouldering."
-- **Mei's phone:** captions of Arjun's English in Chinese. No card, no chip.
-- **Audio:** real call. Arjun: "Oh, I actually started bouldering!" Mei reacts.
-- **VO (over the card, ducked under the call):** "Arjun has probably forgotten Lin, so he gets one line of context.
-  Mei is talking about climbing and hasn't heard his news, so he gets something of his own to say back. Only on his
+- **Mei's phone:** her own call view. No card, no chip.
+- **Audio:** real call. Mei keeps going with the story; Arjun glances at the chip and keeps listening.
+- **VO (ducked under the call):** "She told him about Lin six weeks ago. His phone tells him who Lin is. Hers shows
+  nothing; she knows Lin. And since she's talking about climbing, he gets something of his own to say. Only on his
   screen."
 - **Edit:** a soft highlight ring on Mei's empty screen for 1 s. Do not speed up the card arrival; real timing is
   part of the claim.
 
-### 8. Silence (1:12-1:19)
+### 8. The same line again (1:04-1:11)
 
-- **On screen:** lower third "Next day". SCREEN of Arjun's phone (S5): the same sentence, captions, no card. Text
-  overlay: "No card."
-- **VO:** "Say it again tomorrow, and KIN stays quiet. It only speaks when you would be lost."
+- **On screen:** SPLIT, same call, about a minute later. Mei wraps up the story with the same line:
+  "反正，我和林终于去了莫干山。" ("Anyway, Lin and I finally did Moganshan.") Both phones: captions only. Nothing
+  appears.
+- **VO:** none. Hold on the two quiet screens for 2 s.
 - **Music:** drops to a single sustained note.
 
-### 9. How it works (1:19-1:28)
+### 9. Now she knows (1:11-1:19)
 
-- **On screen:** one motion graphic, built in Keynote and exported as video. Two columns, "What Arjun knows" and
-  "What Mei knows". Lin sits in Mei's column; a faint copy in Arjun's column fades over six weeks. The faded item
-  turns into the card. Arjun's "started bouldering" sits in his column with a dot for Priya and none for Mei; that
-  gap turns into the chip.
-- **VO:** "KIN keeps a model of what each person knows about the other's world, and forgets the way people do. A card
-  appears only where there is a gap."
+- **On screen:** SPLIT, same call. Arjun: "Oh, I actually started bouldering!" Mei: "真的吗？" ("Really?") On Arjun's
+  phone the chip goes away.
+- **Audio:** real call; Mei's reaction is the end of the beat.
+- **VO:** none.
+- **Edit:** [VERIFY] the chip has to leave on its own (a retract when he says the news) for this to play as shot. If
+  that is not built, show his thumb tapping the chip away as he speaks, and keep it visible.
 
-### 10. Paatti (1:28-1:52)
+### 10. How it works (1:19-1:27)
+
+- **On screen:** one motion graphic, built in Keynote and exported as video. Two phone outlines side by side,
+  "What Arjun knows" and "What Mei knows". Lin sits in Mei's; a faint copy in Arjun's fades over six weeks. The faded
+  item turns into the card on his phone. Arjun's "started bouldering" sits in his with a dot for Priya and none for
+  Mei; that gap turns into the chip, and the chip goes when Mei's dot appears.
+- **VO:** "What he knows. What she knows. KIN fills only the gaps."
+
+### 11. Paatti (1:27-1:50)
 
 - **Location:** Paatti's home (remote video call), morning light. Arjun in shot 1's location.
-- **On screen:** OTS of Arjun's phone first, then a SCREEN of Paatti's phone.
-- **Arjun's phone (S6):** Tamil line 1 with the caption "your uncle Ravi mama (Mom's younger brother) called from
+- **On screen:** SPLIT, Arjun and Paatti, both faces and both phones for the whole shot.
+- **Arjun's phone (S5):** Tamil line 1 with the caption "your uncle Ravi mama (Mom's younger brother) called from
   Adyar". Line 2: "Ravi periyappa (Dad's elder brother) opened a new shop in Kovai". Then she asks about his friends
   and his chip reads "You haven't told Paatti: you went hiking with Mei when she visited."
 - **Paatti's phone:** Tamil captions of his English, then the Tamil card "Mei: Arjun's friend from high school, now
   in Shanghai."
 - **Audio:** real call. Arjun: "Mei and I went hiking when she visited."
 - **VO:** "Same app, every relationship. With his grandmother, KIN knows which Ravi is which. When he mentions Mei,
-  Paatti gets a card in Tamil about who Mei is to him. Only his facts, never anything Mei said."
-- **Edit:** show the Tamil card full screen for 2 s with the English meaning as a subtitle. If Paatti's card is not
-  built, cut it and end the beat on the two Ravis.
+  Paatti's phone tells her who Mei is to him, in Tamil. Only his news, never anything Mei told him."
+- **Edit:** enlarge Paatti's half for 2 s on the Tamil card, with the English meaning as a subtitle, without cutting
+  Arjun's half out of frame. If Paatti's card is not built, cut it and end the beat on the two Ravis.
 
-### 11. Proof (1:52-2:02)
+### 12. Proof (1:50-2:01)
 
 - **On screen:** two bars. "Generic translation: 54% entity errors" and "KIN: 1%". Under them: "Two people with the
-  same name: 97% wrong vs 0%." Small print: "Muse Spark 1.3, same model and context with and without KIN's graph.
+  same name: 97% wrong vs 0%." Small print: "Muse Spark 1.3, same model and input with and without KIN's graph.
   105-sentence Tamil family test set, 150 entity spans."
 - **VO:** "Same model, with and without KIN's graph: 54% of names and relationships wrong, versus 1%."
-- **If the common-ground eval has run:** add one line, "Cards shown when needed: X% for KIN vs Y% for a shared-context
-  baseline (N scenarios)", with the measured values only.
+- **If eval 4A has run:** add one line, "An AI given everyone's full history: a card for someone who already knew
+  [X%] of the time, [Y leaks]. KIN: [X%], [Y leaks]. [N] scenarios." [CONFIRM: from eval 4A] Measured values only.
 
-### 12. Privacy (2:02-2:10)
+### 13. Privacy (2:01-2:10)
 
-- **On screen:** SCREEN of the "KIN is on" banner both people see, a finger tapping Pause, then the "your world"
-  screen and Delete.
+- **On screen:** SPLIT, Arjun and Mei on a call. Both phones show the "KIN is on" banner. Mei taps Pause; both phones
+  show that she paused. Then Arjun's half shows his "your world" screen and Delete while Mei's stays on the paused
+  call.
 - **VO:** "Everyone on the call sees KIN is on, and anyone can pause it. Audio isn't kept. KIN only suggests your own
   news. Delete means gone."
 
-### 13. Close (2:10-2:20)
+### 14. Close (2:10-2:20)
 
-- **On screen:** KIN wordmark and "Common ground for people who live apart." Then the credits line: "Built at HackTX
-  2026 on Meta Muse Spark and Muse Voice Transcribe, with LiveKit, ElevenLabs, Twilio and SwiftUI. Code written with
-  Claude Code." Repo URL: https://github.com/LordKarV/hacktx. If Option B names were used (CASTING.md), add "Real
-  people on real calls through KIN. Names and the six-week gap were set up for this demo."
-- **Music:** resolves and ends on the last frame.
+- **On screen:** the last seconds of the SPLIT call, Arjun and Mei still talking and laughing, then the KIN wordmark
+  and "Common ground for people who live apart." over it. Then the credits line: "Built at HackTX 2026 on Meta Muse
+  Spark and Muse Voice Transcribe, with LiveKit, ElevenLabs, Twilio and SwiftUI. Code written with Claude Code." Repo
+  URL: https://github.com/LordKarV/hacktx. If Option B names were used (CASTING.md), add "Real people on real calls
+  through KIN. Names and the six-week gap were set up for this demo."
+- **Music:** resolves and ends on the last frame. The call is still on; never show it ending.
 
 ## Music
 
@@ -179,13 +201,17 @@ Royalty-free and safe for YouTube Content ID:
 - Pixabay Music (pixabay.com/music, Pixabay Content License, no attribution required).
 - Uppbeat free tier (credit line required in the description).
 
-Mood: cold open silent; reveal to shot 10 warm and sparse (piano or acoustic, around 90 BPM); proof and privacy pulled
+Mood: cold open silent; reveal to shot 11 warm and sparse (piano or acoustic, around 90 BPM); proof and privacy pulled
 back to a pad; close resolves. No vocals. Duck music to -18 dB under call audio and VO.
 
 ## Equipment
 
 - Three iPhones with the KIN build: Arjun, Mei (or her own via TestFlight), Paatti (or her family member's).
-- A fourth phone or any camera for the face shots.
+- One camera per person on every call, for the SPLIT shots: a spare phone on a tripod at Arjun's end, and at Mei's and
+  Paatti's ends a second phone held by a friend or family member (or the laptop webcam as a last resort). Each camera
+  frames the face and the KIN phone together.
+- Screen recording on every KIN phone for every take (Control Center > Screen Recording), so both screens exist for
+  each SPLIT.
 - A tripod or a stack of books, and a phone clamp if available.
 - A quiet room with good window light; a desk lamp for the evening shots.
 - AirPods or a lav mic for each speaker. Each person also records a Voice Memo as a backup audio track (clap at the
@@ -201,7 +227,7 @@ back to a pad; close resolves. No vocals. Duck music to -18 dB under call audio 
 | Oct 24 by 6:00pm | Cast confirmed, lines and release sent (CASTING.md). Remote install path decided |
 | 6:00-7:00pm | Feature freeze for filmed beats. Fresh DB, users created, every dev route checked |
 | 7:00-8:00pm | Dry run of every beat with teammates on the real server. Go/no-go for each beat, written down |
-| 8:00-9:00pm | Mei: rehearsal, call 1, call 2, next-day take (9-10am Shanghai) |
+| 8:00-9:00pm | Mei: rehearsal, call 1, call 2 (Lin line, same line again, his news), privacy split (9-10am Shanghai) |
 | 9:00-9:45pm | Paatti call (7:30-8:15am IST) |
 | 9:45-10:30pm | Priya call, SMS screen, empty-graph and privacy screens, B-roll |
 | 10:30pm-12:00am | Retakes. Native checkers review raw captions |
@@ -220,12 +246,15 @@ back to a pad; close resolves. No vocals. Duck music to -18 dB under call audio 
 | A caption or card is wrong (native checker) | Retake. Never fix it in the edit |
 | Card arrives late | Keep the real timing; trim the reaction around it |
 | SMS route not built | Cut the SMS shot; Priya call alone carries the news |
-| Bridge chip not built | Cut the chip from shots 7 and 10; VO loses the bridge lines |
-| Paatti's Tamil card not built | End shot 10 on the two Ravis |
+| Bridge chip not built | Cut shot 9 and the chip from shots 7 and 11; VO loses the bridge lines |
+| Chip does not leave when Arjun says his news | Shot 9 with his thumb tapping it away, visible; or cut shot 9 |
+| Paatti's Tamil card not built | End shot 11 on the two Ravis |
 | Dev clock route missing | Restart the server with `CLOCK_OFFSET_DAYS` set per state |
 | Mei or Paatti cannot make it | Fallbacks in CASTING.md; Paatti audio-only is better than a stand-in |
-| LiveKit call drops | Retake; record both screens every take so either side can be used |
+| LiveKit call drops | Retake; record both screens every take so both halves of the SPLIT exist |
+| One side's face camera fails | Retake; a shot with only one person in it is not usable |
 | Upload stuck processing | Upload by 8:00am; if still SD at 9:00am, submit the link anyway, it upgrades later |
 
-Minimum film if most new beats fail: cold open, reveal, call 2 with the Lin card only, next-day silence, the two
-Ravis, proof, privacy, close. About 1:40.
+Minimum film if most new beats fail: cold open, reveal, call 2 with the Lin card (shot 7 without the chip), the same
+line again with nothing on either phone (shot 8), the two Ravis, proof, privacy, close, all in SPLIT. About 1:45. The
+first beat to restore is shot 9 (8 s), then the chip in shot 7.

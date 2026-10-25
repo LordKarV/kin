@@ -3,14 +3,18 @@
 Short, honest answers. If the true answer is "not measured" or "not built", say that.
 
 1. **Isn't this just recall with shared context? Give a chatbot the history and it does the same.**
-   A model with the history explains Lin every time she comes up, to both people. KIN keeps a separate knowledge
-   state per listener, with forgetting: Arjun gets the card after six weeks, nothing the next day, and Mei never sees
-   one. The quiet second time is the feature. We have not yet measured gap precision against a shared-context
-   baseline; 39 scenarios are written and the runner is next.
+   Watch what happens on the two phones. Help arrives while Mei is still mid-sentence, and it is different for each
+   person: Arjun gets who Lin is, because she told him six weeks ago; Mei gets nothing, because Lin is her friend.
+   When she says the same line again, neither phone shows anything. It stays quiet because KIN tracks what each
+   listener knows, per person, with forgetting. An AI handed everyone's full history has no idea who already knows
+   what, so it explains Lin every time. And the history itself is the risk: what Mei told Arjun never reaches Paatti,
+   and bridges use only your own news. We built that comparison as an eval on [N] planted scenarios: a card for
+   someone who already knew [X%] vs [X%], [Y leaks] vs [Y leaks]. [CONFIRM: from eval 4A; until it runs, say "not
+   measured yet".]
 
 2. **How is this different from Nudge?**
    Nudge starts calls and shows photos when you mention an event, then nudges you to follow up. KIN has no reminders,
-   no photos, no topic lists. It works inside a call and shows something only when one listener lacks context, and
+   no photos, no topic lists. It works inside a call and shows something only when one listener is missing something, and
    most of the time it shows nothing.
 
 3. **Isn't this a grandma translator?**
@@ -19,7 +23,7 @@ Short, honest answers. If the true answer is "not measured" or "not built", say 
 
 4. **What does 54% vs 1% actually measure?**
    Entity errors in translation on 105 Tamil family sentences (150 entity spans), same Muse Spark model and same
-   context, with and without KIN's graph. It measures grounded translation. It does not measure the common-ground
+   input, with and without KIN's graph. It measures grounded translation. It does not measure the common-ground
    engine.
 
 5. **How accurate is it in other languages?**
@@ -30,7 +34,7 @@ Short, honest answers. If the true answer is "not measured" or "not built", say 
 6. **Who wrote the test set? Is it biased toward you?**
    It was drafted with Claude and has not had a native-speaker review. The linker's cue words were written alongside
    it, so there is no held-out split. The comparison is still fair between the two conditions, because both see the
-   same sentences and context.
+   same sentences and the same family details.
 
 7. **How fast are captions?**
    p50 3.0 s, p95 4.8 s per sentence for grounded translation, plus about 3.5 s of ASR end-of-turn detection. A split
@@ -54,7 +58,7 @@ Short, honest answers. If the true answer is "not measured" or "not built", say 
     world; SQLite secure_delete is on, so deleted rows are overwritten.
 
 12. **Sensitive things: health, money, a fight?**
-    Stored as a single topic word (for example "health") unless someone taps "remember this". No details are kept by
+    Stored as a single topic word (for example "health") unless someone taps to keep the details. No details are kept by
     default.
 
 13. **Why Meta?**

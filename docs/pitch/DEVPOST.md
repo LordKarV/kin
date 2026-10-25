@@ -19,8 +19,8 @@ Six weeks after a call, a friend in Shanghai says "Lin and I finally did the tri
 feels like admitting you weren't listening. She told you. You forgot. And she has no idea you started bouldering,
 because you told a different friend.
 
-Psychologists call the shared context that makes conversation easy common ground (Clark and Brennan, "Grounding in
-communication", 1991). When people live apart it wears down: you lose track of who is in each other's lives, and your
+Psychologists call what two people both know, the thing that makes conversation easy, common ground (Clark and
+Brennan, "Grounding in communication", 1991). When people live apart it wears down: you lose track of who is in each other's lives, and your
 own news reaches some people and not others. Add a language gap, as with a grandmother who speaks Tamil, and it wears
 down faster. We wanted a calling app that notices those gaps and fills only them.
 
@@ -53,7 +53,7 @@ started bouldering." Each person sees only their own help. Most of the time KIN 
 
 - **Muse Spark 1.3** (Meta Model API, strict JSON-schema output) does grounded translation, cultural-meaning cards
   ("you've gotten thin" from a grandmother is care) and fact extraction from calls. Without KIN's graph, the same
-  model with the same context gets 54% of entity spans wrong on our Tamil family test set; with it, 1%.
+  model with the same input gets 54% of entity spans wrong on our Tamil family test set; with it, 1%.
 - **Muse Voice Transcribe** does real-time speech recognition with Tamil-English code-switching, keyword biasing with
   names from the graph, and speaker separation.
 - **Not AI:** finding names in a transcript is an alias table plus fuzzy matching (2% error on its own, 2 ms per
@@ -81,7 +81,7 @@ started bouldering." Each person sees only their own help. Most of the time KIN 
 
 ## Results
 
-| On our 105-sentence Tamil family test set (muse-spark-1.3) | Generic (same model, same context, no graph) | KIN |
+| On our 105-sentence Tamil family test set (muse-spark-1.3) | Generic (same model, same input, no graph) | KIN |
 |---|---|---|
 | Entity errors overall (n=150) | 54% | 1% |
 | Kinship terms (n=54) | 72% | 4% |
@@ -99,7 +99,7 @@ native-speaker review yet.
 - Bridges use only facts about you. KIN never suggests repeating what someone else told you.
 - People who are discussed but are not users: only what was said, visible only to those who heard it, expiring after
   120 days unless pinned.
-- Health, money and conflict are stored as a single topic word unless someone taps "remember this".
+- Health, money and conflict are stored as a single topic word unless someone taps to keep the details.
 - Every card lists the facts it uses, and a last-line check drops any card that cites a fact the listener cannot see.
 - You can see, correct and delete what KIN holds about you; SQLite secure_delete is on.
 - KIN never reads message histories.
@@ -130,8 +130,9 @@ native-speaker review yet.
 
 ## What's next
 
-- Run the common-ground eval (39 planted scenarios are written) for gap precision and recall against a naive
-  shared-context baseline.
+- Publish the common-ground eval (39 planted scenarios are written): how often a card appears exactly when someone is
+  missing something, and how often one person's words reach someone else, for KIN and for an AI given everyone's full
+  history.
 - Native-speaker review of the Tamil test set and of the 24 draft kinship tables, then evals beyond Tamil, starting
   with Mandarin.
 - Storyline cards ("Mei's job search: applied in September, second round in October").

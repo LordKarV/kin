@@ -49,16 +49,18 @@ labelled what she is ("Arjun's aunt", "a family friend").
 ## Mei (friend abroad, Mandarin)
 
 - **Who:** Arjun's high school friend, studying in Shanghai, speaks Mandarin and English and switches between them.
-- **On camera:** two calls with Arjun. Face in picture-in-picture, her phone screen recorded. In call 2 her screen
-  must show captions only, which proves the Lin card is private to Arjun.
+- **On camera:** two calls with Arjun, shown split screen. Her face needs its own camera (a second phone or laptop
+  filming her, wherever she is), and her phone screen is recorded. In call 2 her screen must show captions only, which
+  proves the Lin card is private to Arjun.
 - **Lines (prompts):**
   - Call 1 ("September"): "我最近加入了复旦的攀岩墙，认识了一个新朋友，叫林。" (I recently joined the Fudan climbing
     wall and made a new friend called Lin.) Then a little small talk in either language.
   - Call 2 ("six weeks later"): "我和林终于去了莫干山！" (Lin and I finally did the Moganshan trip!) Then: "我们爬了一整天。"
     (We climbed all day.)
-  - Reaction when Arjun says he started bouldering: anything natural, in either language.
-  - Next-day take: the same Moganshan line again.
-- **Time:** about 60 minutes (rehearsal 15, call 1 15, call 2 plus retakes 25, next-day take 5). On camera.
+  - About a minute later in the same call, the line again, naturally: "反正，我和林终于去了莫干山。" (Anyway, Lin and I
+    finally did Moganshan.) Both screens stay quiet.
+  - When Arjun says "I actually started bouldering!": "真的吗？" (Really?) or any natural reaction.
+- **Time:** about 60 minutes (rehearsal 15, call 1 15, call 2 with all three beats plus retakes 30). On camera.
 - **Remote:** yes if she has an iPhone with the KIN build installed (TestFlight, see "Remote cast" below). A real
   remote call is the best version of this shot. Shanghai is 13 hours ahead of Austin, so 8-10pm CDT is 9-11am in
   Shanghai.
