@@ -730,6 +730,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--sweep", action="store_true", help="FORGOT 0.20..0.50 P/R table")
     ap.add_argument("--extra", action="append", default=[], help="extra scenario jsonl (validated against Scenario)")
     ap.add_argument("--live", action="store_true", help="also run the naive shared-context baseline (needs MODEL_API_KEY)")
+    ap.add_argument("--pad-months", type=int, default=0, help="prepend N months of filler history (eval/long_history.py)")
     a = ap.parse_args(argv)
     out = Path(a.out).resolve()
     if out == (ROOT / "eval" / "results.md").resolve():
@@ -747,6 +748,9 @@ def main(argv: list[str] | None = None) -> int:
     extra = [sc for path in a.extra for sc in load_scenarios(path)][: a.limit]
     if {s.id for s in base} & {s.id for s in extra}:
         ap.error("scenario ids repeat across the base and extra files")
+    if a.pad_months:
+        from eval.long_history import pad_sets  # lazy: long_history imports this module
+        base, extra = pad_sets(base, extra, a.pad_months)
     naive = run_naive(base + extra) if a.live else None
 
     with tempfile.TemporaryDirectory(prefix="kin-cg-") as tmpd:
