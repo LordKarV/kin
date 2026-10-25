@@ -36,7 +36,7 @@ public struct SetupStep<Content: View, Footer: View>: View {
 public enum Setup {
     public static var name: some View {
         SetupStep(step: 1, title: "What should people call you?",
-                  subtitle: "KIN starts with just you. It learns everyone else from your calls.") {
+                  subtitle: "KIN starts with just you, and gets to know the people in your life from your calls.") {
             VStack(alignment: .leading, spacing: 24) {
                 FieldBox("Your name", value: "Arjun")
                 VStack(alignment: .leading, spacing: 10) {
@@ -91,7 +91,7 @@ public enum Setup {
     }
 
     public static var promise: some View {
-        SetupStep(step: 3, title: "KIN stays quiet", subtitle: "It speaks only when one of you would be lost.") {
+        SetupStep(step: 3, title: "KIN stays quiet", subtitle: "It only speaks up when it would really help.") {
             VStack(alignment: .leading, spacing: 22) {
                 promiseRow("waveform", "Just a call, most of the time",
                            "No feed, no topic lists. A short note appears only when a name, a word or some news would leave you lost.")

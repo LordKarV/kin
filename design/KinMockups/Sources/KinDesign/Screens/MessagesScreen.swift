@@ -24,7 +24,7 @@ public struct MessagesScreen: View {
                     .padding(14).background(K.raised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     VStack(alignment: .trailing, spacing: 6) {
                         bubble("started bouldering at the campus gym", mine: true)
-                        bubble("Got it: you started bouldering.", mine: false)
+                        bubble("Got it, thanks! Noted that you started bouldering.", mine: false)
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }

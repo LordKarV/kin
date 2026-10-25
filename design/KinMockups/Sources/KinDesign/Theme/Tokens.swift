@@ -60,17 +60,18 @@ public enum K {
 /// Type scale. On iOS every style is a Dynamic Type text style (scales with the user's setting); the fixed sizes are
 /// the iOS default sizes, used only when rendering screenshots on macOS where text styles are smaller.
 public enum KinFont {
-    static func s(_ style: Font.TextStyle, _ size: CGFloat, _ weight: Font.Weight) -> Font {
+    static func s(_ style: Font.TextStyle, _ size: CGFloat, _ weight: Font.Weight, _ design: Font.Design = .default) -> Font {
         #if os(iOS)
-        return .system(style, design: .default, weight: weight)
+        return .system(style, design: design, weight: weight)
         #else
-        return .system(size: size, weight: weight)
+        return .system(size: size, weight: weight, design: design)
         #endif
     }
-    public static let largeTitle = s(.largeTitle, 34, .bold)
-    public static let title = s(.title, 28, .bold)
-    public static let title2 = s(.title2, 22, .bold)
-    public static let title3 = s(.title3, 20, .semibold)
+    /// Display styles use SF Pro Rounded: friendlier at large sizes, still crisp. Reading text stays SF Pro.
+    public static let largeTitle = s(.largeTitle, 34, .bold, .rounded)
+    public static let title = s(.title, 28, .bold, .rounded)
+    public static let title2 = s(.title2, 22, .bold, .rounded)
+    public static let title3 = s(.title3, 20, .semibold, .rounded)
     public static let headline = s(.headline, 17, .semibold)
     public static let body = s(.body, 17, .regular)
     public static let callout = s(.callout, 16, .regular)

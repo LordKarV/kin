@@ -13,6 +13,11 @@ import KinDesign
     return cg
 }
 
+if CommandLine.arguments.dropFirst().first == "--brand" {
+    MainActor.assumeIsolated { renderBrand(CommandLine.arguments.dropFirst(2).first ?? "brand") }
+    exit(0)
+}
+
 let out = CommandLine.arguments.dropFirst().first ?? "screens"
 try? FileManager.default.createDirectory(atPath: out, withIntermediateDirectories: true)
 
@@ -38,6 +43,12 @@ MainActor.assumeIsolated {
     call("call-14-first-call", CallStates.firstCall)
     shots.append(("call-15-paatti-view-tamil", AnyView(PhoneChrome(dark: true) { CallScreen(PaattiView.model) }.environment(\.kinStrings, .ta))))
     shots.append(("call-16-audio", AnyView(PhoneChrome(dark: true) { AudioCallScreen(AudioCallScreen.demo) })))
+    shots.append(("call-17-waiting-invite", AnyView(PhoneChrome(dark: true) { WaitingScreen(name: "Mei") })))
+    shots.append(("call-18-mei-view-chinese", AnyView(PhoneChrome(dark: true) { CallScreen(CallStates.meiView) }.environment(\.kinStrings, .zh))))
+    call("call-19-next-day-silence", CallStates.nextDay)
+    call("call-20-two-ravis", CallStates.paattiTwoRavis)
+    call("call-21-paatti-hike-bridge", CallStates.paattiHikeBridge)
+    call("call-22-paused-by-me", CallStates.pausedByMe)
 
     let only = Set(CommandLine.arguments.dropFirst(2))
     var images: [(String, CGImage)] = []

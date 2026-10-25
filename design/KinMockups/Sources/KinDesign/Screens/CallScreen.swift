@@ -85,10 +85,10 @@ public struct CallScreen: View {
 
     private var pausedNote: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "pause.circle.fill").font(.system(size: 22)).foregroundStyle(K.Call.text2)
+            Image(systemName: "cup.and.saucer.fill").font(.system(size: 20)).foregroundStyle(K.Call.text2)
             VStack(alignment: .leading, spacing: 2) {
-                Text("KIN is paused for this call").font(KinFont.headline).foregroundStyle(K.Call.text)
-                Text("No captions or cards, and nothing is transcribed or remembered until someone resumes.")
+                Text("KIN is taking a break").font(KinFont.headline).foregroundStyle(K.Call.text)
+                Text("Nothing is captioned or saved right now. Either of you can resume whenever you like.")
                     .font(KinFont.subhead).foregroundStyle(K.Call.text2).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)

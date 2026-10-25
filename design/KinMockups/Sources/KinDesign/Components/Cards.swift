@@ -222,17 +222,17 @@ public struct BridgeChip: View {
             }
             .buttonStyle(.plain).accessibilityLabel("Dismiss")
         }
-        .padding(.leading, 14).padding(.trailing, 2).padding(.vertical, 6)
+        .padding(.leading, 14).padding(.trailing, 2).padding(.top, 12).padding(.bottom, 6)
         .background(K.Call.mine, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
         .overlay(alignment: .topTrailing) {
             Text(str.onlyYou).font(.system(size: 10, weight: .bold)).foregroundStyle(K.Call.mine)
                 .padding(.horizontal, 7).frame(height: 18).background(Color.white, in: Capsule())
-                .offset(x: -12, y: -9)
+                .offset(x: -12, y: -10)
         }
         .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
         .frame(maxWidth: 300, alignment: .trailing)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Private to you. \(item.title): \(item.body)")
+        .accessibilityLabel("Only you can see this. \(item.title): \(item.body)")
     }
 }
 

@@ -10,6 +10,7 @@ cd design/KinMockups
 swift build
 .build/debug/KinRender ../screens            # every screen + _contact-sheet.png
 .build/debug/KinRender ../screens call-04    # only screens whose name starts with call-04
+.build/debug/KinRender --brand ../brand      # app icon, launch screen assets, film cards
 ```
 
 Works with the Command Line Tools alone (no Xcode needed). Open `Package.swift` in Xcode to see the previews.
