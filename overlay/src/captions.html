@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { display: flex; align-items: flex-end; justify-content: center; height: 100vh; }
+    .panel { margin: 8px; padding: 14px 24px 16px; width: calc(100% - 16px); box-sizing: border-box; }
+    .line { font-size: 22px; font-weight: 500; line-height: 1.35; letter-spacing: -0.01em; }
+    .line.old { font-size: 15px; font-weight: 400; color: var(--muted); margin-bottom: 6px; }
+    .src { font-size: 14px; color: var(--muted); margin-top: 4px; }
+    .who { font-size: 12px; font-weight: 700; color: var(--light-blue); margin-bottom: 2px; }
+    #partial { font-size: 14px; color: var(--muted); font-style: italic; min-height: 18px; }
+  </style>
+</head>
+<body>
+  <div class="panel accent">
+    <div id="lines"></div>
+    <div id="partial"></div>
+  </div>
+  <script type="module" src="captions.js"></script>
+</body>
+</html>

@@ -74,7 +74,9 @@ _INDEX: dict[str, KinTermDef] = {}
 def normalize_term(s: str) -> str:
     """Lowercase, NFC, collapse doubled long vowels (maamaa→mama), drop punctuation."""
     s = unicodedata.normalize("NFC", s).strip().lower()
-    s = re.sub(r"[^\w\s஀-௿]", "", s)
+    # drop punctuation, symbols and zero-width joiners by category. Vowel signs (Mn/Mc) are kept in EVERY script:
+    # a Tamil-only allowance used to strip Devanagari matras, so नानी (nani) and नाना (nana) collided.
+    s = "".join(c for c in s if unicodedata.category(c)[0] not in "PS" and unicodedata.category(c) != "Cf")
     s = re.sub(r"\s+", " ", s)
     if re.search(r"[a-z]", s):
         s = re.sub(r"aa", "a", s)

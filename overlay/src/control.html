@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .panel { margin: 8px; padding: 18px 16px 14px; display: grid; gap: 14px; }
+    header { display: flex; align-items: center; gap: 8px; -webkit-app-region: drag; cursor: grab; }
+    header .lang { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--light-blue); }
+    .view { display: grid; gap: 12px; }
+    .grow { flex: 1; }
+    .row > .narrow { flex: 0 0 84px; }
+    .row > .fixed { flex: 0 0 auto; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--field-hover); }
+    .dot.on { background: var(--ok); box-shadow: 0 0 0 3px rgba(49, 162, 76, 0.25); }
+    footer { display: grid; gap: 4px; }
+  </style>
+</head>
+<body>
+  <div id="panel" class="panel accent">
+    <header>
+      <span id="dot" class="dot" aria-hidden="true"></span>
+      <span class="brand">KIN</span>
+      <span id="lang" class="lang"></span>
+    </header>
+
+    <form id="setup" class="view" hidden novalidate>
+      <div>
+        <h1>Set up your family</h1>
+        <p class="hint">Start with one person. KIN learns the rest of your family from your calls.</p>
+      </div>
+      <label class="field"><span>Language they speak</span><select id="s-lang"></select></label>
+      <div class="row">
+        <label class="field"><span>Your name</span><input id="s-you" autocomplete="given-name" /></label>
+        <label class="field"><span>Who are you calling?</span><input id="s-them" placeholder="Their name" /></label>
+      </div>
+      <label class="field"><span>What do you call them?</span><input id="s-call" placeholder="e.g. Paatti, Nani, Abuela" /></label>
+      <label class="field"><span>How are they related to you?</span><select id="s-rel"></select></label>
+      <div id="s-msg" class="msg" role="alert"></div>
+      <div class="actions">
+        <button type="button" id="s-cancel" hidden>Cancel</button>
+        <button type="submit" id="s-create" class="primary">Create family</button>
+      </div>
+    </form>
+
+    <section id="live" class="view" hidden>
+      <label class="field"><span>Family</span><select id="family"></select></label>
+      <label class="field"><span>Who is on the other end?</span><select id="speaker"></select></label>
+      <div class="row">
+        <label class="field"><span>Their voice comes from</span>
+          <select id="source">
+            <option value="system">Call audio (system)</option>
+            <option value="mic">Microphone</option>
+          </select>
+        </label>
+        <label class="field narrow"><span>Call #</span><input id="call" placeholder="New" inputmode="numeric" /></label>
+      </div>
+      <div class="row">
+        <button id="go" class="primary grow">Start listening</button>
+        <button id="quit" class="fixed">Quit</button>
+      </div>
+      <label class="field"><span>Or type what they said</span><input id="typed" placeholder="Press Enter to translate" /></label>
+    </section>
+
+    <footer>
+      <div id="status" class="status" role="status">Connecting to KIN</div>
+      <div id="hotkey" class="hint" hidden>Cmd/Ctrl+Shift+K hides the overlay</div>
+    </footer>
+  </div>
+  <script type="module" src="control.js"></script>
+</body>
+</html>

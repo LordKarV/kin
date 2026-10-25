@@ -25,3 +25,7 @@ frontend/.vite/
 *.log
 *.db
 backend/media/
+
+# overlay
+overlay/node_modules/
+overlay/native/syscap

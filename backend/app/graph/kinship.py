@@ -99,6 +99,16 @@ class FamilyGraph:
                   for t in session.scalars(select(m.Thing).where(m.Thing.family_id == family_id))]
         return cls(family_id, fam.heritage_lang if fam else "ta", people, edges, things)
 
+    # ---- who's who (any family, any language) --------------------------------
+    def learner_slug(self) -> str:
+        return next((p.slug for p in self.people.values() if p.is_learner), next(iter(self.by_slug), ""))
+
+    def elder_slug(self) -> str:
+        """Oldest living non-learner: the default far-end speaker on a call."""
+        elders = sorted((p for p in self.people.values() if not p.is_learner and not p.is_deceased and p.notes != "Not named yet"),
+                        key=lambda p: p.birth_year or 9999)
+        return elders[0].slug if elders else self.learner_slug()
+
     # ---- primitives ---------------------------------------------------------
     def is_elder(self, a: int, b: int) -> bool | None:
         if (a, b) in self._elder:

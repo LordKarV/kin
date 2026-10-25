@@ -324,8 +324,9 @@ class Linker:
                     spans.append(Span(start, end, source, None, "kin", 0.3, "generic-address", display=mm.term.gloss if mm.term else ""))
                     continue
                 cands = self._kin_candidates(mm, toks, sp, li)
-                if not cands:
-                    continue  # kin term with no referent in this family: leave to the translator
+                if not cands:  # a relative KIN has not met yet: the overlay turns this into a "Who is X?" card
+                    spans.append(Span(start, end, source, None, "kin", 0.0, "unknown-relative", display=mm.term.gloss if mm.term else ""))
+                    continue
                 if len(cands) > 1:
                     pid = self._pick_person(cands, toks, mm.i, mm.j, sp, li, salience, co_mentions, place_things, vocative=True)
                     conf = 0.7

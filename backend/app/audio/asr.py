@@ -68,3 +68,15 @@ def make_asr(language: str, keyterms: list[str]) -> ASRSession:
         bias = [name, "English"] if language != "en" else ["English", heritage]
         return MuseASR(api_key=s.model_api_key, keywords=keyterms, language_bias=list(dict.fromkeys(bias)))
     return MockASR()
+
+
+def make_bilingual_asr(heritage_lang: str, keyterms: list[str]) -> ASRSession:
+    """One stream that hears BOTH people on a merged phone call. That needs code-switching across the heritage
+    language and English, which Muse Voice Transcribe does (25 languages); Deepgram here is one language per stream."""
+    s = get_settings()
+    if s.asr_provider == "mock":
+        return MockASR()
+    from ..graph.kin_tables import MUSE_LANGUAGES
+    from .asr_muse import MuseASR
+    bias = [MUSE_LANGUAGES.get(heritage_lang, heritage_lang), "English"]
+    return MuseASR(api_key=s.model_api_key, keywords=keyterms, language_bias=list(dict.fromkeys(bias)))

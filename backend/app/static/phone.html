@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1c1e21" />
+  <title>KIN live call</title>
+  <style>
+    /* Meta palette: Meta Blue #0064E0, light blue on dark #47A5FA, near-black #1C1E21, Meta status colors */
+    :root { --bg: #18191a; --panel: #242526; --fg: #e4e6eb; --muted: #b0b3b8; --line: #3a3b3c; --blue: #0064e0; --light: #47a5fa; --pass: #f7b928; --ok: #31a24c; --err: #e41e3f;
+            font-family: "Optimistic VF", "Optimistic Text", Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, "Noto Sans", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); padding: max(16px, env(safe-area-inset-top)) 16px 96px; }
+    header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    header b { font-size: 20px; letter-spacing: 0.04em; }
+    #state { margin-left: auto; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+    .empty { color: var(--muted); text-align: center; margin-top: 30vh; line-height: 1.5; }
+    .turn { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px; margin-bottom: 12px; }
+    .turn.me { background: transparent; }
+    .who { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--light); margin-bottom: 4px; }
+    .turn.me .who { color: var(--muted); }
+    .tr { font-size: 20px; line-height: 1.35; }
+    .turn.me .tr { font-size: 17px; }
+    .src { font-size: 14px; color: var(--muted); margin-top: 6px; }
+    mark.pass { background: none; color: var(--pass); border-bottom: 1px dotted var(--pass); }
+    .card { margin-top: 10px; border-radius: 14px; padding: 10px 12px; background: rgba(71, 165, 250, 0.1); }
+    .card .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--light); }
+    .card.what .k { color: var(--pass); }
+    .card .t { font-weight: 600; margin-top: 2px; }
+    .card .m { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <header><b>KIN</b><span id="state"><span id="dot" class="dot"></span><span id="label">Waiting for a call</span></span></header>
+  <div id="feed"><p class="empty">Call your grandparent, tap <b>Add call</b>, dial KIN, then <b>Merge</b>.<br />Captions and cards show up here.</p></div>
+  <script>
+    // Follows the newest merged call (or ?call=N) and shows what KIN hears and says, with who/what cards.
+    const params = new URLSearchParams(location.search)
+    const key = params.get('key') || ''
+    const q = key ? `?key=${encodeURIComponent(key)}` : ''
+    const feed = document.getElementById('feed')
+    const names = {}
+    let lang = ''
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+    const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    function setState(text, on) { document.getElementById('label').textContent = text; document.getElementById('dot').classList.toggle('on', !!on) }
+
+    function translationHtml(t) {
+      const pts = (t.passthrough || []).filter(Boolean)
+      if (!pts.length) return esc(t.translation)
+      const re = new RegExp(`(${pts.map(reEsc).join('|')})`, 'g')
+      return (t.translation || '').split(re).map((p) => pts.includes(p) ? `<mark class="pass">${esc(p)}</mark>` : esc(p)).join('')
+    }
+    function cardsHtml(t) {
+      const who = (t.grounded_spans || []).filter((g) => g.rendered.trim().toLowerCase() !== g.source.trim().toLowerCase())
+        .map((g) => { const kind = g.node_id.startsWith('p_') ? 'who' : 'what'
+          return `<div class="card ${kind}"><div class="k">${kind === 'who' ? 'Who is this' : 'What is this'}</div><div class="t">${esc(g.source)}</div><div class="m">${esc(g.rendered)}</div></div>` })
+      const prag = (t.pragmatics_cards || []).map((c) => `<div class="card"><div class="k">${esc(c.kind)}</div><div class="t">${esc(c.source)}</div><div class="m">${esc(c.meaning)}</div></div>`)
+      return who.concat(prag).join('')
+    }
+    function add(t) {
+      if (feed.querySelector('.empty')) feed.innerHTML = ''
+      const me = t.role === 'grandchild'
+      const el = document.createElement('div')
+      el.className = `turn${me ? ' me' : ''}`
+      el.innerHTML = me
+        ? `<div class="who">You said, KIN told ${esc(names[t.listener] || 'them')} in ${esc(lang)}</div><div class="tr">${esc(t.translation)}</div><div class="src">${esc(t.src_text)}</div>`
+        : `<div class="who">${esc(names[t.speaker] || t.speaker)}</div><div class="tr">${translationHtml(t)}</div><div class="src">${esc(t.src_text)}</div>${cardsHtml(t)}`
+      feed.prepend(el)
+    }
+
+    async function follow() {
+      try {
+        const g = await (await fetch(`/api/family/graph${q}`)).json()
+        g.people.forEach((p) => { names[p.id] = p.name })
+        lang = new Intl.DisplayNames(['en'], { type: 'language' }).of(g.heritage_lang) || g.heritage_lang
+      } catch { /* names are cosmetic */ }
+      let id = Number(params.get('call')) || null
+      while (!id) {
+        try { id = (await (await fetch(`/api/phone/live${q}`)).json()).call_id } catch { /* retry */ }
+        if (!id) await new Promise((r) => setTimeout(r, 2000))
+      }
+      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/watch/${id}${q}`)
+      ws.onopen = () => setState(`Live, call #${id}`, true)
+      ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.type === 'transcript') add(m) }
+      ws.onclose = () => { setState('Call ended, waiting for the next one', false); setTimeout(follow, 2000) }
+    }
+    follow()
+  </script>
+</body>
+</html>

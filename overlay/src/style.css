@@ -1,0 +1,99 @@
+/* Meta dark surfaces (Facebook / Messenger dark mode), Meta Blue for actions, the Meta gradient for the brand mark.
+   Optimistic is Meta's typeface; it is not bundled, so Montserrat / the system UI font stand in. */
+:root {
+  --page: #18191a;
+  --surface: rgba(36, 37, 38, 0.92);
+  --field: #3a3b3c;
+  --field-hover: #4e4f50;
+  --fg: #e4e6eb;
+  --muted: #b0b3b8;
+  --line: rgba(255, 255, 255, 0.08);
+  --blue: #0064e0;
+  --blue-hover: #0143b5;
+  --blue-pressed: #004bb9;
+  --light-blue: #47a5fa;
+  --gradient: linear-gradient(90deg, #0064e0 0%, #0082fb 100%);
+  --ok: #31a24c;
+  --warn: #f7b928;
+  --err: #e41e3f;
+  --pass: #f7b928;
+  --ground: var(--light-blue);
+  --r-panel: 20px;
+  --r-field: 8px;
+  --r-pill: 100px;
+  --shadow: 0 12px 28px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: "Optimistic VF", "Optimistic Text", Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+/* overlay windows are transparent; only the panels paint */
+html, body { margin: 0; background: transparent; overflow: hidden; user-select: none; }
+[hidden] { display: none !important; }
+
+.panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+/* thin Meta-gradient accent along the top edge */
+.panel.accent::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--gradient); }
+
+.brand {
+  font-weight: 800; font-size: 17px; letter-spacing: 0.08em;
+  background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.hint { font-size: 12px; line-height: 1.4; color: var(--muted); margin: 0; }
+h1 { font-size: 18px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+mark.pass { background: none; color: var(--pass); border-bottom: 1px dotted var(--pass); }
+
+/* label wraps its control: the visible text is the accessible name */
+.field { display: grid; gap: 5px; min-width: 0; }
+.field > span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; min-width: 0; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+input, select {
+  font: inherit; font-size: 14px; color: var(--fg);
+  width: 100%; min-width: 0; box-sizing: border-box; text-overflow: ellipsis;
+  background: var(--field); border: 1px solid transparent; border-radius: var(--r-field);
+  padding: 8px 12px; height: 36px;
+}
+input::placeholder { color: var(--muted); opacity: 0.8; }
+input:hover, select:hover { background: var(--field-hover); }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--light-blue); outline-offset: 1px; }
+select option, select optgroup { background: #242526; color: var(--fg); }
+
+button {
+  font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  color: var(--fg); background: var(--field); border: none; border-radius: var(--r-pill);
+  padding: 0 18px; height: 36px; white-space: nowrap;
+  transition: background-color 0.12s ease, transform 0.08s ease;
+}
+button:hover { background: var(--field-hover); }
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.5; cursor: default; transform: none; }
+button.primary { background: var(--blue); color: #fff; }
+button.primary:hover { background: var(--blue-hover); }
+button.primary:active { background: var(--blue-pressed); }
+button.icon { width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; background: transparent; color: var(--muted); }
+button.icon:hover { background: var(--field); color: var(--fg); }
+button.icon svg { width: 14px; height: 14px; }
+
+.msg { font-size: 13px; color: var(--err); }
+.msg:empty { display: none; }
+.status { font-size: 12px; color: var(--muted); min-height: 16px; }
+.status:empty { display: none; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+.status.error { color: var(--err); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

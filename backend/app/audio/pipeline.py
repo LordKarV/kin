@@ -52,7 +52,17 @@ class CallSession:
     on_utterance: Callable | None = None  # Phase 4/6 hook: (utterance dict) -> None
 
     # ---- membership --------------------------------------------------------
-    async def join(self, role: str, person: str, send_json: SendJSON, send_bytes: SendBytes, wants_audio: bool = True) -> Side:
+    watchers: list[SendJSON] = field(default_factory=list)  # read-only viewers (phone captions page)
+    phone_line: bool = False  # a merged phone call (audio/buddy.py) is feeding this session
+
+    def add_watcher(self, send_json: SendJSON) -> None:
+        self.watchers = [*self.watchers, send_json]
+
+    def remove_watcher(self, send_json: SendJSON) -> None:
+        self.watchers = [w for w in self.watchers if w is not send_json]
+
+    async def join(self, role: str, person: str, send_json: SendJSON, send_bytes: SendBytes, wants_audio: bool = True,
+                   start_asr: bool = True) -> Side:
         heritage = self.translator.g.heritage_lang
         lang = heritage if role == "grandparent" else "en"
         side = Side(role, person, lang, send_json, send_bytes, wants_audio=wants_audio)
@@ -62,7 +72,8 @@ class CallSession:
         if old is not None:  # reconnect (Wi-Fi blip, second tab): retire the previous connection's ASR quietly
             await self._stop_asr(old)
         self.sides[role] = side
-        await self._start_asr(side)
+        if start_asr:  # False when one shared ASR feeds both sides (merged phone call)
+            await self._start_asr(side)
         await self._safe_send(side, {"type": "joined", "role": role, "person": person, "call_id": self.call_id, "peer_present": self.peer(role) is not None})
         peer = self.peer(role)
         if peer:
@@ -208,6 +219,11 @@ class CallSession:
                 await s.send_json(msg)
             except Exception as e:  # noqa: BLE001
                 log.debug("send failed to %s: %s", s.role, e)
+        for w in list(self.watchers):
+            try:
+                await w(msg)
+            except Exception as e:  # noqa: BLE001  (a closed captions tab must not break the call)
+                log.debug("send failed to watcher: %s", e)
 
     def _persist(self, side, listener, text, lang_tags, t_start, t_end, res, lat) -> int:
         g = self.translator.g
@@ -260,8 +276,11 @@ class CallRegistry:
 
     def drop_if_empty(self, call_id: int) -> None:
         cs = self._calls.get(call_id)
-        if cs and not cs.sides:
+        if cs and not cs.sides and not cs.watchers:
             self._calls.pop(call_id, None)
+
+    def active(self) -> list[CallSession]:
+        return list(self._calls.values())
 
 
 registry = CallRegistry()

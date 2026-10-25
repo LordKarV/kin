@@ -48,3 +48,17 @@ Latency budget shown live in the UI: ASR final ≤ 400 ms · MT ≤ 700 ms · TT
 
 ## Docs
 [Demo script](docs/DEMO_SCRIPT.md) · [Devpost draft](docs/DEVPOST.md) · [Decisions](docs/DECISIONS.md) · [Eval results](backend/eval/results.md)
+
+## Phone calls (merge KIN into the call)
+
+The grandchild calls the grandparent as usual, taps **Add call**, dials KIN's Twilio number, and taps **Merge**.
+KIN greets both people, then interprets turn by turn into the call (heritage language for the grandparent, English
+for the grandchild). The grandchild's phone shows captions and who/what cards at `https://<host>/phone`.
+
+```bash
+cloudflared tunnel --url http://localhost:8000      # gives https://<random>.trycloudflare.com
+# .env: PUBLIC_WSS_HOST=<random>.trycloudflare.com, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, ELEVENLABS_API_KEY
+# Twilio console: the number's "A call comes in" webhook -> POST https://<host>/twilio/buddy
+```
+
+Desktop video calls (Zoom, Meet, FaceTime, WhatsApp desktop) use the overlay in `overlay/` instead.

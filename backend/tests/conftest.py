@@ -11,6 +11,7 @@ def _clean_env(monkeypatch, tmp_path):
     monkeypatch.setenv("ASR_PROVIDER", "mock")
     monkeypatch.setenv("TTS_PROVIDER", "mock")
     monkeypatch.setenv("MODEL_API_KEY", "test-key")
+    monkeypatch.setenv("SEED_DEMO_FAMILY", "1")  # most tests exercise the Tamil demo family; the app itself starts empty
     from app import config
     from app.db.session import reset_engine
     from app.mt.translate import reset_translator_cache

@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     embeddings_provider: str = "none"
     kin_api_key: str = "change-me"
     demo_family_id: int = 1
+    seed_demo_family: bool = False  # nothing pre-seeded: families are built by the user (setup + cards). Tests/eval opt in.
 
 
 @lru_cache

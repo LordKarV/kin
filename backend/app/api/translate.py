@@ -14,8 +14,8 @@ router = APIRouter(prefix="/api/translate", tags=["translate"])
 
 class CompareIn(BaseModel):
     text: str
-    speaker: str = "p_kamala"
-    listener: str = "p_arjun"
+    speaker: str | None = None   # default: the family's eldest living member
+    listener: str | None = None  # default: the family's learner
     family_id: int | None = None
     target_lang: str = "en"
 
@@ -23,9 +23,10 @@ class CompareIn(BaseModel):
 @router.post("/compare")
 async def compare(body: CompareIn) -> dict:
     tr = get_translator(body.family_id or get_settings().demo_family_id)
+    speaker, listener = body.speaker or tr.g.elder_slug(), body.listener or tr.g.learner_slug()
     generic, grounded = await asyncio.gather(
         asyncio.to_thread(tr.translate_generic, body.text),
-        asyncio.to_thread(tr.translate, body.text, body.speaker, body.listener, (), (), None, body.target_lang),
+        asyncio.to_thread(tr.translate, body.text, speaker, listener, (), (), None, body.target_lang),
     )
     return {"generic": generic.as_dict(), "grounded": grounded.as_dict()}
 
@@ -33,5 +34,6 @@ async def compare(body: CompareIn) -> dict:
 @router.post("/grounded")
 async def grounded(body: CompareIn) -> dict:
     tr = get_translator(body.family_id or get_settings().demo_family_id)
-    res = await asyncio.to_thread(tr.translate, body.text, body.speaker, body.listener, (), (), None, body.target_lang)
+    speaker, listener = body.speaker or tr.g.elder_slug(), body.listener or tr.g.learner_slug()
+    res = await asyncio.to_thread(tr.translate, body.text, speaker, listener, (), (), None, body.target_lang)
     return res.as_dict()

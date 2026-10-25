@@ -102,7 +102,11 @@ class Translator:
                 amb = f" [confidence {s.confidence:.2f}; other candidates: {', '.join(c for c in s.candidates if c != s.node)}]" if s.confidence < 0.8 and len(s.candidates) > 1 else ""
                 note = f" — {s.note}" if s.note else ""
                 lines.append(f"  - '{s.source}' → {s.node}: {s.display}{note}{amb}")
-        generic = [s for s in spans if not s.node and s.type == "kin"]
+        unknown = [s for s in spans if not s.node and s.type == "kin" and s.method == "unknown-relative"]
+        if unknown:
+            lines.append("Kin words for a relative who is not on the family graph yet (translate the relation, do not invent a name): "
+                         + ", ".join(f"'{s.source}' ({s.display})" for s in unknown))
+        generic = [s for s in spans if not s.node and s.type == "kin" and s.method != "unknown-relative"]
         if generic:
             lines.append("Kin words used generically here (NOT a relative): " + ", ".join(f"'{s.source}'" for s in generic))
         if passthrough:
