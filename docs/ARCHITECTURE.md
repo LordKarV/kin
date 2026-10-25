@@ -7,6 +7,22 @@ Base design: "data-first" (one space, one canonical Person per human, Fact as th
 with the live-path mechanics of "realtime-first" and the guards of "privacy-correctness-first" grafted in. Section 0
 lists every contradiction between the three designs and how it was resolved.
 
+## Amendments (2026-10-24, from the user; these override anything below)
+
+1. **One-to-one calls are the product.** Calls with more than two people must keep working (per-listener delivery is
+   already the design), but nothing is optimized, featured or demoed around group calls. Where a section below
+   describes group-call behavior, keep it correct but do not add extra group-specific work.
+2. **Captions by default; translated voice is an optional per-person toggle, off by default.** TTS runs only for a
+   listener who turned voice on. The preference is per call, in memory (no schema change): `POST
+   /api/calls/{call_id}/voice {"on": bool}` with the caller identified by X-KIN-User, stored on the CallSession side
+   (`Side.voice_on`, default False). Ducking of the other person's audio and `audio_start`/`audio_end` only happen for
+   listeners with voice on. The iOS call screen shows a voice toggle next to the captions.
+3. **Bridges use only the listener's own facts.** Example to test: in Arjun's call with Paatti, "You haven't told
+   Paatti: you went hiking with Mei when she visited" is allowed (Arjun's own experience); anything Mei said in her own
+   calls is never suggested to anyone.
+4. **The client is a native iOS app** (SwiftUI + LiveKit Swift 2.17.0) in `ios/`; `mobile/` (web) is frozen. Task
+   specs in the plan already reflect this.
+
 Verified against the code while writing this (no files other than this one were changed):
 
 - `pytest -q` is 197 passed in about 10 s. `python -m eval.run_eval --mock` exits 0 and its linker-only row is

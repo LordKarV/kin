@@ -16,11 +16,14 @@ Help appears briefly, privately, at the edge of attention, and leaves. Silence i
 2. **People:** the people you call, grouped by circle (family, friends, groups). Tapping a person shows their world as
    KIN knows it: people in their life, ongoing storylines, places. It must feel like a shared notebook about your
    friendship, not a dossier. Every item shows where it came from ("Mei, Sept 14 call") and can be corrected or deleted.
-3. **Call screen, 1:1 video:** remote video, self view, controls (mute, camera, flip, speaker, end, pause KIN). A clear
-   but quiet "KIN is on" indicator that both people see.
-4. **Call screen, group (3 people):** tiles, who is speaking, the same help layer.
-5. **Live captions when languages differ:** the speaker's line in the listener's language, the original line smaller,
-   live partial text while they speak. Readable at a glance, large type, never covering faces.
+3. **Call screen, 1:1 video and 1:1 audio (the core screen):** remote video large, self view small, controls (mute,
+   camera, flip, speaker, end, pause KIN). A clear but quiet "KIN is on" indicator that both people see. Calls are
+   designed as one-to-one; if a third person joins it should still work (tiles), but do not spend design effort on it.
+4. **Audio-only call variant:** no video; the help layer and captions become the main surface.
+5. **Live captions when languages differ (the default way translation is shown):** the speaker's line in the
+   listener's language, the original line smaller, live partial text while they speak. Readable at a glance, large
+   type, never covering faces. A small voice toggle next to the captions turns on a translated voice for this person
+   only (off by default).
 6. **"Who's that?" card:** e.g. "Lin: Mei's friend from the Fudan climbing wall. She mentioned her Sept 14." Appears
    mid-sentence, auto-dismisses, never vanishes while touched. Variants: new person, forgotten person (a gentle
    reminder), place, thing.

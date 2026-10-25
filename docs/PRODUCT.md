@@ -26,8 +26,9 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
 
 ## The app
 
-1. **Built-in calls: video and audio, one-to-one and group** (LiveKit). Everyone gets the same app; there is no
-   special grandparent mode and no "family helper" role.
+1. **Built-in calls: video and audio, one-to-one** (LiveKit). One-to-one calls are the product. If more people join
+   a call it still works (each listener still gets their own help), but nothing is designed or demoed around group
+   calls. Everyone gets the same app; there is no special grandparent mode and no "family helper" role.
 2. **Live suggestions during the call** (each listener sees their own; nothing is shown before the call):
    - **"Who's that?" cards (their world, your gap):** "Lin: Mei's friend from the Fudan climbing wall, first
      mentioned Sept 14." Filtered by the common-ground model: never heard of Lin -> card; heard last week -> nothing;
@@ -35,13 +36,17 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
    - **Bridges (your world, their gap):** a private chip, only when the other person's words make your own news
      relevant: Mei talks about climbing -> "You haven't told Mei: you started bouldering." Driven by who has heard what
      about you, learned across all your calls and messages. Rate-limited, visible only to you, never a topic list.
+     Bridges only ever use YOUR OWN facts: in a call with Paatti, "You haven't told Paatti: you went hiking with Mei
+     when she visited" is fine (your experience); anything Mei told you is never suggested to anyone.
    - **Storyline cards:** where an ongoing thread stands ("Mei's job search: applied (Sep) -> second round (Oct)")
      when it comes up and you are behind on it.
    - **"Who is X?" learning cards:** a suggested relationship (kinship or social) plus a name; one tap adds the person
      to the right world and the next mention is grounded.
    - **Translation and cultural meaning** when languages differ: grounded on who people are ("your uncle Ravi", not
      "uncle"), plus cultural/pragmatic meaning ("you've gotten thin" from a grandma is care, not criticism).
-   - **Group calls:** the same sentence produces a different card (or none) and a different language per listener.
+     **Captions by default.** A translated voice is an optional per-person toggle (off by default), for someone who
+     cannot read captions quickly; a voice talking over the real person is distracting, and captions keep the call
+     human.
 3. **Messages for context: one SMS number.** You keep texting it updates about your life ("started bouldering",
    "got the internship"). KIN parses each message into YOUR world and replies with a short acknowledgment. Messages
    are private: never forwarded to anyone; they only let KIN know your news and who has not heard it yet. Optional;
@@ -79,8 +84,9 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
    Chinese, Japanese and Thai. Live on partial transcripts in milliseconds.
 5. **Storylines:** threads with states (applied -> interview -> offer), updated from calls and messages, with
    contradiction detection ("moved to Beijing" vs "still in Shanghai") and unresolved flags.
-6. **Per-listener delivery:** each listener gets their own captions language, their own translated voice track and
-   their own cards (LiveKit private data and tracks per participant).
+6. **Per-listener delivery:** each listener gets their own captions language and their own cards (LiveKit private
+   data per participant), plus their own translated voice track only if they turned voice on. This also makes a call
+   with more than two people work, without being a focus.
 
 ## Privacy and consent (hard rules)
 
@@ -111,14 +117,18 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
 | Many separate call surfaces as products | One app; desktop overlay and phone bridge remain in the repo as "bring KIN into any call" |
 | Pre-seeded families | Everything is learned from use (seed data only in tests/eval) |
 
-## Demo
+## Demo (all calls are one-to-one)
 
-1. Call 1 (September): Mei (Shanghai, Mandarin) mentions Lin. Six weeks pass.
-2. Call 2, a group call (Mei, Arjun, Priya): "I went climbing with Lin." Arjun gets the Lin card; Priya (who already
-   knows Lin) gets nothing. Arjun texted KIN "started bouldering" and told Priya but not Mei, so Arjun gets a bridge
-   chip: "You haven't told Mei you started bouldering."
-3. Same sentence the next day: no cards for anyone. "It only speaks when one of you would be lost."
-4. 30 seconds with Paatti in Tamil: the same engine, plus translation and kinship grounding.
+1. Call 1 (September), Arjun and Mei (Shanghai, speaks Mandarin): she mentions her new climbing friend Lin. Six weeks
+   pass.
+2. Arjun texts KIN "started bouldering", and tells Priya about it on a call. He never tells Mei.
+3. Call 2 (six weeks later), Arjun and Mei: "I went climbing with Lin." Arjun gets the Lin card (he has likely
+   forgotten). Because Mei is talking about climbing and has not heard his news, Arjun also gets a private bridge
+   chip: "You haven't told Mei: you started bouldering."
+4. Same sentence the next day: no card. "It only speaks when you would be lost."
+5. Arjun and Paatti, in Tamil (captions): the two Ravis are named correctly, and when she asks about his friends Arjun
+   gets "You haven't told Paatti: you went hiking with Mei when she visited" (his own experience, never anything Mei
+   told him). When he mentions Mei, Paatti's caption and card explain who Mei is to him, in Tamil.
 
 ## Evaluation
 

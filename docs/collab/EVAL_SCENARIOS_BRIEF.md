@@ -44,23 +44,24 @@ One file per scenario, `eval_scenarios/<id>.json`. Keep it plain data:
   ],
   "probe": {
     "day": 42,
-    "participants": ["mei", "arjun", "priya"],
+    "participants": ["mei", "arjun"],
     "said_by": "mei",
     "text": "我和林终于去了莫干山",
     "lang": "zh"
   },
   "expected": {
     "arjun": {"gap_cards": ["lin"], "bridges": ["arjun-bouldering"]},
-    "priya": {"gap_cards": [], "bridges": []},
     "mei": {"gap_cards": [], "bridges": []}
   },
-  "notes": "Priya heard about Lin yesterday, so no card. Arjun told Priya, not Mei, about bouldering, so Arjun gets the bridge."
+  "notes": "Arjun heard about Lin 42 days ago, so a reminder card. Arjun told Priya, not Mei, about bouldering, so Arjun gets the bridge in his call with Mei."
 }
 ```
 
 Use the people and stories in `docs/collab/STORIES.md`. Aim for 30 to 50 scenarios covering:
 - never heard / heard recently / heard long ago (forgetting) / said it yourself / told by a third person;
-- group calls where listeners differ;
+- mostly one-to-one calls (the product focus); include only a few calls with three people, to check per-listener
+  behavior still holds;
+- a Paatti call where Arjun's own experience with Mei is a valid bridge and anything Mei said is a leak trap;
 - bridges: relevant and unheard (should fire), relevant but already heard (should not), heard by someone else but not
   this person (should fire), facts about someone else (must never fire: leak test), irrelevant topic (should not fire);
 - cross-language and cross-script names (林/Lin/Lynn, Tamil names said in English, mixed sentences);

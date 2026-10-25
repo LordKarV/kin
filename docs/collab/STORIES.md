@@ -32,12 +32,13 @@ cities.
 - **Call 1, mid September.** Mei (in Mandarin and English) mentions she joined the Fudan climbing wall and keeps going
   with a new friend, Lin. Arjun says "nice" and forgets.
 - **Six weeks pass.** Everyone is busy.
-- **Call 2, late October, group call (Mei, Arjun, Priya).** Mei: "我和林终于去了莫干山" / "Lin and I finally did the
+- **Call 2, late October, one-to-one (Arjun and Mei).** Mei: "我和林终于去了莫干山" / "Lin and I finally did the
   Moganshan trip." Mei is speaking Mandarin.
-  - Arjun's screen: "Lin: Mei's friend from the Fudan climbing wall. She mentioned her Sept 14." Plus the line in English.
-  - Priya's screen: nothing. Priya has talked to Mei recently and already knows Lin.
-  - Lin obviously gets nothing; she is not in the call.
-- **The same sentence the next day:** no card for anyone. "It only speaks when one of you would be lost."
+  - Arjun's screen: "Lin: Mei's friend from the Fudan climbing wall. She mentioned her Sept 14." Plus the English
+    caption of her line.
+  - Mei's screen: nothing (it is her own world).
+- **The same sentence the next day:** no card. "It only speaks when you would be lost."
+- All calls in KIN are designed as one-to-one. A call with more people still works, but it is not a focus.
 
 ## Story 2: the bouldering bridge
 
@@ -45,7 +46,8 @@ cities.
   Priya on a call last week. He never told Mei.
 - In Call 2, when Mei talks about climbing, Arjun alone sees a small private chip: "You haven't told Mei: you started
   bouldering." Now he has something of his own to say back.
-- Priya sees nothing (she already heard it). Mei sees nothing (bridges are only for their owner).
+- Mei sees nothing (bridges are only for their owner). Telling Priya counted only for Priya: KIN knows Mei has not
+  heard it.
 
 ## Story 3: Mei's job search (a storyline)
 
@@ -90,19 +92,25 @@ cities.
 - The same engine works on Paatti's screen if she uses the app: "Arjun changed his major in August (he told you
   then)." Her own news: she is teaching Divya her pongal recipe.
 
-## Story 9: cross-world mention
+## Story 9: cross-world mention (and a bridge with Paatti)
 
-- Arjun tells Paatti, in a call, "Mei and I went hiking when she visited." Paatti does not know Mei.
+- In Arjun's call with Paatti, she asks about his friends. Arjun gets a private bridge: "You haven't told Paatti: you
+  went hiking with Mei when she visited." That is Arjun's own experience, so it is allowed. Nothing Mei said in her
+  own calls is ever suggested.
+- Arjun tells Paatti, "Mei and I went hiking when she visited." Paatti does not know Mei.
 - Paatti's card, in Tamil: "Mei: Arjun's friend from high school, now in Shanghai."
 - Privacy rule: across circles KIN shares only Arjun's own facts (who Mei is to him), never what Mei said in her own
   calls.
 
 ## Demo script order (about 2.5 minutes)
 
-1. Setup in 20 seconds: Arjun adds Mei and Priya; nothing pre-seeded.
-2. Story 1 (Lin card for Arjun, nothing for Priya) with Story 2 (bouldering bridge) in the same group call.
-3. Story 3 card for the job search.
+All calls are one-to-one. Translation is shown as captions; a translated voice is an optional per-person toggle.
+
+1. Setup in 20 seconds: Arjun adds Mei; nothing pre-seeded.
+2. Call 1 with Mei (September): she mentions Lin. Arjun texts KIN "started bouldering" and tells Priya on a call.
+3. Call 2 with Mei, six weeks later: Story 1 (Lin card) and Story 2 (bouldering bridge), plus Story 3 if it comes up.
 4. Next day, same sentence: silence.
-5. 30 seconds with Paatti: Story 6 (the two Ravis) and the cultural meaning card.
+5. 30 seconds with Paatti in Tamil: Story 6 (the two Ravis), Story 9 (the hiking-with-Mei bridge and Paatti's card
+   about Mei), and a cultural meaning card.
 6. One proof slide: generic 53% vs KIN 1% entity errors; cards shown only when needed vs a naive shared-context
    baseline (the eval in EVAL_SCENARIOS_BRIEF.md).
