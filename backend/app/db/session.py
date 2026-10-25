@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Iterator
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from ..config import get_settings
@@ -23,6 +23,8 @@ def get_engine():
             @event.listens_for(_engine, "connect")
             def _fk_on(dbapi_conn, _):
                 dbapi_conn.execute("PRAGMA foreign_keys=ON")
+                dbapi_conn.execute("PRAGMA journal_mode=WAL")  # extraction threads write while handlers read
+                dbapi_conn.execute("PRAGMA secure_delete=ON")  # "deleted means gone": zero freed pages
         _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False)
     return _engine
 
@@ -39,6 +41,12 @@ def init_db() -> None:
     from . import models  # noqa: F401  (registers tables)
 
     models.Base.metadata.create_all(get_engine())
+
+
+def checkpoint_truncate(s: Session) -> None:
+    """Call after committing a delete: in WAL mode the deleted rows linger in kin.db-wal until a checkpoint."""
+    if s.get_bind().dialect.name == "sqlite":
+        s.execute(text("PRAGMA wal_checkpoint(TRUNCATE)"))
 
 
 @contextmanager

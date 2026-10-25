@@ -404,8 +404,15 @@ class AliasIndex:
   - Isolating, single-char Han or kana forms (林): accepted only when the left neighbour is in
     `CUE_BEFORE = set("和跟与同叫给找带问对是让") | {"と"}`, or the right neighbour is in
     `CUE_AFTER = set("说她他也都的呢吗们") | {"さん","ちゃん","くん","君","と","が","は","も"}` (multi-char cues matched by
-    prefix), or the neighbour is a boundary (space, punctuation, Latin, start/end of text). No longer form may start at
-    the same position. Single-char Thai forms are never accepted.
+    prefix), or BOTH neighbours are boundaries (space, punctuation, Latin, start/end of text). No longer form may start
+    at the same position. Single-char Thai forms are never accepted. (As built in wave 1: with either-side boundaries,
+    `林檎を食べた` at text start would give 林. Cost, pinned in test_match.py: `我见了林。` and `林去了` give nothing; the
+    translator still grounds them, only the instant card is skipped.)
+  - Hit contract (as built): a skeleton match on the same span as an exact match is reported as a SECOND
+    `Hit(exact=False)` carrying only the ids not already in the exact Hit, so live.py (3.4) receives exact and skeleton
+    ids as separate hits.
+  - Tamil (and other virama scripts): a non-Latin form ending in a virama is also indexed without it, and that stem
+    matches only when the rest of the token is a speaker-table suffix (அர்ஜுன் -> அர்ஜுனுக்கு).
   - Results that are tests: `我和林去攀岩了` gives 林; `林檎を食べた` gives nothing; `ลินไปปีนเขา` gives ลิน when ลิน is a
     form; `Lín`, `Lynn` and `Lin` give the same id; `Maya` gives nothing for alias `May` with `speaker_lang="en"`.
 

@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     demo_family_id: int = 1
     seed_demo_family: bool = False  # nothing pre-seeded: families are built by the user (setup + cards). Tests/eval opt in.
 
+    # World (common-ground engine)
+    third_party_ttl_days: int = 120  # must exceed the 6-week demo gap (ARCHITECTURE D11)
+    clock_offset_days: float = 0  # initial world/clock offset; /api/dev/clock changes it at runtime
+    bridge_rerank: bool = False
+    dev_endpoints: bool = True
+    sms_number: str = ""  # the KIN SMS number shown in the app
+
 
 @lru_cache
 def get_settings() -> Settings:
