@@ -132,7 +132,7 @@ relationship. Any of the 25 Muse Voice Transcribe languages, including Chinese, 
 
 ## Evaluation
 
-- Grounding accuracy (exists: generic 53% vs KIN 1% entity error, eval/).
+- Grounding accuracy (exists: generic 54% vs KIN 1% entity error, eval/).
 - **Gap precision/recall:** planted common-ground scenarios (who knows what, with time gaps); a card should appear
   exactly when the listener lacks the context.
 - Bridge precision (only self-facts, only when relevant, only to people who have not heard).
