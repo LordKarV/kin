@@ -593,3 +593,26 @@ def test_overlap_drop_log_never_carries_fact_text(caplog):
     with caplog.at_level("DEBUG", logger="kin"):
         assert _new_only(upd, upd, 2, None).facts == []
     assert "fact #0 (31 chars)" in caplog.text and "surgery" not in caplog.text and "Mei" not in caplog.text
+
+
+def test_call_end_extraction_stamps_when_said_not_when_finished(world_reply, live):
+    """A dev-clock jump between the line and the extraction job must not make the listener 'hear' it later."""
+    ids, make = live
+    w = make("arjun", "mei")
+    arjun = f"p{ids['arjun']}"
+    with session_scope() as s:
+        slug = s.get(m.Person, ids["arjun"]).slug
+    ent = {"ref": "e1", "name": "Kofi", "native": "", "forms": ["Kofi"], "kind": "person", "existing_id": None}
+    world_reply["update"] = {"entities": [ent], "ties": [], "facts": [_fact(slug, "met Kofi at pottery", [0], ["e1"])]}
+    said = clock.now()
+    w.on_translated(arjun, _utt(ids, "arjun", "I met Kofi at pottery"), "I met Kofi at pottery",
+                    {"zh": "我在陶艺课认识了Kofi"}, [ids["mei"]])
+    clock.set_offset_days(clock.offset_days() + 42)  # the demo jumps six weeks right after call 1
+    res = w._extract(0, 1)
+    assert res is not None and abs((res[4] - said).total_seconds()) < 5  # heard evidence uses this, not job time
+    stamped = []
+    real = w._evidence
+    w._evidence = lambda ev, at: (stamped.append((list(ev), at)), real(ev, at))[1]
+    w._after_extract(res, w._rebuild())
+    heard = [at for ev, at in stamped if any(e[3] == "heard" for e in ev)]
+    assert heard and all(abs((at - said).total_seconds()) < 5 for at in heard)

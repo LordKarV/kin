@@ -121,12 +121,19 @@ def explain(live: LiveWorld, call_id: int, listener_person_id: int, text: str,
         named = _name_like(text, lex) or _kin_term(text, {lang, slang, "en"} - {""})
         if not cards and not seen and named:
             cards = [_ask(v, S, text.strip())]  # a name nobody visible has: same "Who is X?" flow as new_people
-        live._evidence([e for c in cards for e in _asked(L, c)], now)
-        live.sent = live.sent | {(ident, c.key) for c in cards}
-        live.delivered = {**live.delivered, **{(ident, c.key): c for c in cards}}
-        live._log([(L, None, replace(c, kind=VIA)) for c in cards], now)
-        live._flush_async()
-        return [live._payload(ident, lang, c, False) for c in cards]
+        return record(live, L, lang, cards, VIA, now)
+
+
+def record(live: LiveWorld, L: int, lang: str, cards: list[C.Card], via: str, now) -> list[dict]:
+    """Caller holds live._state. Asked evidence, sent/delivered (no push repeat), a card_log row of kind `via`, and
+    the payloads for the caller only."""
+    ident = f"p{L}"
+    live._evidence([e for c in cards for e in _asked(L, c)], now)
+    live.sent = live.sent | {(ident, c.key) for c in cards}
+    live.delivered = {**live.delivered, **{(ident, c.key): c for c in cards}}
+    live._log([(L, None, replace(c, kind=via)) for c in cards], now)
+    live._flush_async()
+    return [live._payload(ident, lang, c, False) for c in cards]
 
 
 def _asked(L: int, c: C.Card) -> list[tuple[int, str, int, str]]:

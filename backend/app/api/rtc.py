@@ -104,8 +104,8 @@ def _world_join(body: WorldJoinIn, token: str | None, s: Session) -> dict:
         s.flush()
     else:
         call = s.get(m.Call, body.call_id)
-        if call is None or call.mode != "world" or call.family_id != me.family_id:
-            raise HTTPException(404, "unknown call")
+        if call is None or call.mode != "world" or call.family_id != me.family_id or call.ended_at is not None:
+            raise HTTPException(404, "unknown call")  # an ended call (declined, cancelled, missed) is not rejoinable
     identity = f"p{me.id}"
     row = s.scalars(select(m.CallParticipant).where(m.CallParticipant.call_id == call.id,
                                                     m.CallParticipant.person_id == me.id)).first()

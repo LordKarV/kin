@@ -1,4 +1,5 @@
-"""Tap a word in the caption (docs/ARCHITECTURE.md Amendment 5). The response goes to the caller only."""
+"""Tap a word in the caption (docs/ARCHITECTURE.md Amendment 5), or a gesture with {"text": null, "recent": true}
+(Amendment 7). The response goes to the caller only."""
 from __future__ import annotations
 
 import asyncio
@@ -16,8 +17,9 @@ router = APIRouter(prefix="/api/calls", tags=["explain"])
 
 
 class ExplainIn(BaseModel):
-    text: str = Field(min_length=1, max_length=200)
+    text: str | None = Field(None, min_length=1, max_length=200)
     utterance_id: int | None = None
+    recent: bool = False  # with text null: "what's this about?" over the last lines the caller heard
 
 
 def _listener(call_id: int, user: m.User = Depends(current_user), s: Session = Depends(get_session)) -> int:
@@ -33,14 +35,20 @@ def _listener(call_id: int, user: m.User = Depends(current_user), s: Session = D
 async def explain(call_id: int, body: ExplainIn, person_id: int = Depends(_listener)) -> dict:
     from ..audio.pipeline import registry
     from ..world.explain import explain as run  # lazy: world.live pulls heavy deps
+    from ..world.explain_recent import explain_recent
 
-    if not body.text.strip():
+    if body.text is None and not body.recent:
+        raise HTTPException(422, "text is required unless recent is true")
+    if body.text is not None and not body.text.strip():
         raise HTTPException(422, "text is empty")
     cs = registry.get(call_id)
     if cs is None or cs.world is None:
         raise HTTPException(404, "call is not live")
     try:
-        items = await asyncio.to_thread(run, cs.world, call_id, person_id, body.text, body.utterance_id)
+        if body.text is None:
+            items = await asyncio.to_thread(explain_recent, cs.world, call_id, person_id)
+        else:
+            items = await asyncio.to_thread(run, cs.world, call_id, person_id, body.text, body.utterance_id)
     except LookupError as e:
         raise HTTPException(404, str(e)) from e
     return {"items": items}

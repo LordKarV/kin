@@ -13,6 +13,17 @@ struct ExplainIn: Encodable, Equatable {
     }
 }
 
+/// The gesture's body, `{"text": null, "recent": true}` (Amendment 7): the server picks from the last lines I heard.
+struct RecentExplainIn: Encodable {
+    enum CodingKeys: String, CodingKey { case text, recent }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeNil(forKey: .text)
+        try c.encode(true, forKey: .recent)
+    }
+}
+
 struct ExplainOut: Decodable, Equatable { let items: [GlanceItem] }
 
 extension KinAPI {
@@ -21,6 +32,12 @@ extension KinAPI {
     func explain(callId: Int, text: String, utteranceId: Int?) async throws -> [GlanceItem] {
         let out: ExplainOut = try await send("POST", "/api/calls/\(callId)/explain",
                                              ExplainIn(text: text, utteranceId: utteranceId))
+        return out.items
+    }
+
+    /// Double-twist "what's this about?" (Amendment 7): same route and reply as a tap; `[]` when nothing is clear.
+    func explainRecent(callId: Int) async throws -> [GlanceItem] {
+        let out: ExplainOut = try await send("POST", "/api/calls/\(callId)/explain", RecentExplainIn())
         return out.items
     }
 

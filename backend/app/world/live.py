@@ -98,6 +98,8 @@ class _Line:
     text: str
     utterance_id: int | None
     audience: tuple[int, ...]
+    translations: dict[str, str] = dataclasses.field(default_factory=dict)  # lang -> what that listener read
+    at: datetime | None = None  # world clock when said: call-end extraction stamps facts and heard evidence with it
 
 
 def _build(space_id: int, members: frozenset[int], now: datetime) -> _Snap:
@@ -338,7 +340,7 @@ class LiveWorld(LiveJobs):
             res = self._extract(start, end)
             if res is not None:
                 with self._state:
-                    self._evidence(res[0].evidence, clock.now())
+                    self._evidence(res[0].evidence, res[4])  # stamped when the lines were said
         with self._state:
             dirty = self._take_dirty()
         self._upsert(dirty)
@@ -606,7 +608,7 @@ class LiveWorld(LiveJobs):
         if snap is None or speaker not in self.parts:
             return {}
         v, (S, slang), now = snap.view, self.parts[speaker], clock.now()
-        self._lines = self._lines + [_Line(S, slang, text, utterance_id, tuple(audience))]
+        self._lines = self._lines + [_Line(S, slang, text, utterance_id, tuple(audience), dict(translations), now)]
         hits = self._final_hits.get(speaker, [])
         mentioned = frozenset(h.ids[0] for h in hits if h.kind == "person")
         kw_hits = snap.kw.scan(text, slang) + [h for lg, tr in translations.items() if tr for h in snap.kw.scan(tr, lg)]
@@ -779,6 +781,11 @@ class LiveWorld(LiveJobs):
         if lang not in self._translators:
             self._translators = {**self._translators, lang: Translator(snap.view.kin, lang=lang)}
         return self._translators[lang]
+
+    @_locked
+    def heard(self, listener: int, n: int) -> list[_Line]:
+        """Amendment 7: the last `n` final lines `listener` heard from someone else (never their own), oldest first."""
+        return [ln for ln in self._lines if ln.speaker != listener and listener in ln.audience][-n:]
 
     @_locked
     def keyterms(self, speaker: str) -> list[str]:

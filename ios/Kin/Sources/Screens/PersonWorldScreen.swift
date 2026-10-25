@@ -14,8 +14,8 @@ struct PersonWorldScreen: View {
 
     var body: some View {
         PersonWorldView(contact: contact, world: world, error: error, joining: model.joining,
-                        actions: .init(video: { Task { await model.startCall() } },
-                                       audio: { Task { await audioCall() } },
+                        actions: .init(video: { model.call(contact, video: true) },
+                                       audio: { model.call(contact, video: false) },
                                        forget: { slug in
                                            let name = world?.people.first { $0.id == slug }?.person.name ?? slug
                                            confirm = ConfirmDelete(title: "Forget \(name)? This deletes what KIN knows about them.",
@@ -43,13 +43,6 @@ struct PersonWorldScreen: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
-    }
-
-    /// The call API has no audio-only join; an audio call is a call with my camera off.
-    private func audioCall() async {
-        CallController.audioOnlyNext = true
-        defer { CallController.audioOnlyNext = false }  // startCall returns after connect, or failed before it
-        await model.startCall()
     }
 
     private func act(_ change: () async throws -> Void) async {

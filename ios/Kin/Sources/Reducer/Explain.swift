@@ -38,6 +38,26 @@ func explainFailed(_ state: WorldState, term: String, message: String) -> WorldS
     return s
 }
 
+/// The double twist's slot in `explaining` (Amendment 7), so a second twist while one is waiting does not send again.
+/// Starts with a control character, so no caption word can collide with it. Start it with `explainStarted`.
+let recentAsk = "\u{1}recent"
+
+/// The server answered a twist. A card takes the slot exactly like a tap; nothing found shows nothing (the phone
+/// plays a soft haptic instead of a hint line, since there is no word to name).
+func recentExplained(_ state: WorldState, items: [GlanceItem], now: Date) -> WorldState {
+    guard items.isEmpty else { return explained(state, term: recentAsk, items: items, now: now) }
+    var s = state
+    s.explaining.remove(recentAsk)
+    return s
+}
+
+func recentFailed(_ state: WorldState, message: String) -> WorldState {
+    var s = state
+    s.explaining.remove(recentAsk)
+    s.error = "Could not tell what this is about: \(message)"
+    return s
+}
+
 /// What the call screen shows: one card about their world (the newest that is not a bridge) and at most one bridge.
 /// A card under a finger keeps its slot; newer cards wait behind it until the touch ends.
 func slots(_ rail: [RailCard]) -> (card: RailCard?, bridge: RailCard?) {

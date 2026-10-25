@@ -1,4 +1,5 @@
 import Foundation
+import os
 import SwiftUI
 
 /// signup | home | call | ended. Same app for everyone (no roles).
@@ -23,6 +24,17 @@ final class AppModel: ObservableObject {
     @Published private(set) var account = 0
     /// The current call's invite code (from its join reply), for the share link.
     private var invite: (callId: Int, code: String)?
+    /// Ringing before a call (Calling/RingState.swift); RootView covers every screen while it is not idle.
+    @Published private(set) var ring: RingState = .idle {
+        didSet {
+            tone.update(ring)
+            syncEvents()
+        }
+    }
+    private lazy var tone = RingTone()
+    private var events: EventSocket?
+    private var sceneActive = false
+    private static let log = Logger(subsystem: "dev.kin.app", category: "ring")
 
     @Published var baseURLString: String {
         didSet { UserDefaults.standard.set(baseURLString, forKey: Self.baseURLDefaultsKey) }
@@ -134,14 +146,18 @@ final class AppModel: ObservableObject {
             if let k = invite.key, k != apiKey, !Keychain.set("apiKey", k) {
                 error = "Could not save the invite's key to the Keychain."
             }
+            restartEvents()  // after the key is saved: a locked server closes a keyless event socket
             Task { await startCall(callId: invite.callId, key: invite.key, code: invite.code) }
         } else {
+            restartEvents()
             screen = .home
         }
     }
 
     func signOut(message: String? = nil) {
         Keychain.set("token", nil)
+        restartEvents()
+        ring = .idle
         screen = .signup
         if let message { error = message }
     }
@@ -206,4 +222,117 @@ final class AppModel: ObservableObject {
     }
 
     func backHome() { screen = .home }
+
+    // MARK: - ringing
+
+    /// The server gives up on a ring at 45 s (RING_TIMEOUT_S); after this the app treats it as missed, in case the
+    /// end never reached it (app suspended, socket dropped, server restarted).
+    static let ringTimeout: Double = 50
+
+    /// Scene phase from RootView: the event socket runs while the app is active (no push without a paid Apple
+    /// account). .inactive (Control Center, an alert) keeps it, so a ring is not lost to a glance away.
+    func scene(active: Bool?) {
+        guard let active, active != sceneActive else { return }
+        sceneActive = active
+        syncEvents()
+    }
+
+    /// Active, or ringing in the background: the ring's audio (UIBackgroundModes audio) keeps the app running, so the
+    /// socket can still hear "cancelled" or "answered" after the side button locks the phone.
+    private var wantsEvents: Bool { sceneActive || RingTone.kind(for: ring) != nil }
+
+    private func syncEvents() {
+        if wantsEvents != (events != nil) { restartEvents() }
+    }
+
+    private func restartEvents() {
+        let old = events
+        events = nil
+        Task { await old?.stop() }
+        guard wantsEvents, Keychain.get("token") != nil else { return }
+        let base = baseURL
+        let socket = EventSocket(makeRequest: {
+            Keychain.get("token").flatMap { EventSocket.request(base: base, token: $0, apiKey: Keychain.get("apiKey")) }
+        }) { [weak self] event in await self?.handle(event) }
+        events = socket
+        Task { await socket.start() }
+    }
+
+    private var busy: Bool {
+        if case .call = screen { return true }
+        return joining
+    }
+
+    func handle(_ event: CallEvent) {
+        if case .incoming(let id, _, _) = event, busy {
+            Task { await perform(.decline(id)) }  // already in a call: the caller hears "declined" now, not in 45 s
+            return
+        }
+        send(.event(event))
+    }
+
+    func send(_ action: RingAction) {
+        let (next, effect) = ring.reduce(action)
+        let started = next.startedRing(from: ring)
+        ring = next
+        if let effect { Task { await perform(effect) } }
+        if let id = started {
+            Task {  // a no-op once the ring is over: the reducer ignores a miss for any other call
+                try? await Task.sleep(for: .seconds(Self.ringTimeout))
+                send(.event(.missed(callId: id)))
+            }
+        }
+    }
+
+    /// Ring a contact (the Video / Audio buttons on a person). The call starts when they answer.
+    func call(_ contact: ContactOut, video: Bool) {
+        guard !busy, case .idle = ring else { return }
+        send(.dial(RingPeer(slug: contact.person, name: contact.name), video: video))
+        let api = self.api
+        Task {
+            do {
+                let out = try await api.ring(to: contact.person, video: video)
+                send(.dialed(callId: out.callId, delivered: out.delivered))
+            } catch {
+                if !signOutIfBadToken(error) {
+                    send(.dialFailed("Could not call \(contact.name): \(error.localizedDescription)"))
+                }
+            }
+        }
+    }
+
+    /// The old flow as a fallback: start a call of my own and share its invite link from the call screen.
+    func shareInviteInstead() {
+        let video: Bool
+        switch ring {
+        case .outgoing(_, _, let v, _), .unanswered(_, let v, _): video = v
+        default: return
+        }
+        send(.cancel)
+        Task { await startCall(camera: video) }
+    }
+
+    private func perform(_ effect: RingEffect) async {
+        let api = self.api
+        switch effect {
+        case .join(let id, let video):
+            await startCall(callId: id, camera: video)
+        case .answer(let id, let video):
+            do {
+                _ = try await api.answer(callId: id)
+            } catch {
+                if !signOutIfBadToken(error) { self.error = "Could not answer: \(error.localizedDescription)" }
+                return
+            }
+            await startCall(callId: id, camera: video)
+        case .decline(let id):
+            do { _ = try await api.decline(callId: id) } catch {
+                Self.log.info("decline \(id) failed: \(error.localizedDescription)")  // the ring is over anyway
+            }
+        case .cancel(let id):
+            do { _ = try await api.cancelRing(callId: id) } catch {
+                Self.log.info("cancel \(id) failed: \(error.localizedDescription)")  // it times out as missed
+            }
+        }
+    }
 }

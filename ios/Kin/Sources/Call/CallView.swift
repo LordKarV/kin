@@ -6,6 +6,10 @@ struct CallView: View {
     @ObservedObject var call: CallController
     let invite: URL?
     @State private var world = WorldState()
+    @Environment(\.scenePhase) private var scenePhase
+
+    /// The double twist listens only in a live call with KIN on and the app in front (Amendment 7).
+    private var gestureArmed: Bool { call.isConnected && !call.isPaused && scenePhase == .active }
 
     var body: some View {
         CallScreen(
@@ -30,6 +34,30 @@ struct CallView: View {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
                 world = expire(world, now: .now)
+            }
+        }
+        .onChange(of: gestureArmed, initial: true) { _, armed in
+            if armed { MotionService.shared.start(onTwist: askRecent) } else { MotionService.shared.stop() }
+        }
+        .onDisappear { MotionService.shared.stop() }
+        #if DEBUG
+        .onReceive(NotificationCenter.default.publisher(for: .kinDebugShake)) { _ in if gestureArmed { askRecent() } }
+        #endif
+    }
+
+    /// Double twist: a light tap, then the card for what the last lines are about lands in the card slot with the
+    /// same "You asked" tag as a caption tap. Nothing clear: a soft haptic and nothing on screen.
+    private func askRecent() {
+        MotionService.tapHaptic()
+        guard let started = explainStarted(world, term: recentAsk) else { return }
+        world = started
+        Task {
+            do {
+                let items = try await call.explainRecent()
+                if items.isEmpty { MotionService.nothingHaptic() }
+                world = recentExplained(world, items: items, now: .now)
+            } catch {
+                world = recentFailed(world, message: error.localizedDescription)
             }
         }
     }
@@ -381,6 +409,9 @@ enum CallDemo {
     static let raviLine = #"{"type":"transcript","call_id":14,"utterance_id":201,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"ரவி நேத்து அடையாறுலேர்ந்து போன் பண்ணான்","src_lang":"ta","target_lang":"en","translation":"Ravi mama called yesterday from Adyar."}"#
     static let thinLine = #"{"type":"transcript","call_id":14,"utterance_id":202,"speaker":"p_paatti_2","speaker_identity":"p2","src_text":"ரொம்ப இளைச்சுட்ட, சரியா சாப்பிடுறியா?","src_lang":"ta","target_lang":"en","translation":"You've gotten so thin. Are you eating properly?"}"#
     static let thinMeaning = #"{"type":"enrich","utterance_id":202,"pragmatics_cards":[{"kind":"cultural","source":"ரொம்ப இளைச்சுட்ட","literal":"You've gotten so thin","meaning":"She's worried you aren't eating well. It's care, not criticism."}]}"#
+    static let tripLine = #"{"type":"transcript","call_id":12,"utterance_id":97,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"那次旅行太疯狂了，她差点从岩壁上掉下来","src_lang":"zh","target_lang":"en","translation":"That trip was insane. She almost fell off the wall."}"#
+    /// What POST /api/calls/12/explain {"text": null, "recent": true} returns after the trip line: Lin, gap null.
+    static let linRecent = #"{"items":[{"key":"who:p_lin_17","kind":"who","title":"Lin","native":"林","body":"Mei's friend from the Fudan climbing wall, first mentioned Sep 14","category":"person","node_id":"p_lin_17"}]}"#
     static let xiaoWangLine = #"{"type":"transcript","call_id":12,"utterance_id":96,"speaker":"p_mei_5","speaker_identity":"p5","src_text":"小王也跟我们一起去了","src_lang":"zh","target_lang":"en","translation":"Xiao Wang came with us too."}"#
     /// What POST /api/calls/12/explain returns for "Xiao Wang", a name KIN has never heard: one ask item.
     static let xiaoWangAsk = #"{"items":[{"key":"ask:xiao wang","kind":"ask","title":"Xiao Wang","term":"Xiao Wang","guess":"Xiao Wang","suggestions":[{"owner":"p_mei_5","relation":"friend","label":"Mei's friend"},{"owner":"p_mei_5","relation":"classmate","label":"Mei's classmate"}]}]}"#
@@ -392,6 +423,7 @@ enum CallDemo {
         case "meaning": return [paattiJoined, raviLine, thinLine, thinMeaning]
         case "paused": return [joined, hello]
         case "explain": return [joined, linLine, linCard, xiaoWangLine]
+        case "gesture": return [joined, linLine, tripLine]
         default: return [joined, hello, linLine, linCard, bridge]
         }
     }
@@ -401,6 +433,10 @@ enum CallDemo {
         if name == "explain", let started = explainStarted(s, term: "Xiao Wang"),
            let out = try? JSONDecoder().decode(ExplainOut.self, from: Data(xiaoWangAsk.utf8)) {
             s = explained(started, term: "Xiao Wang", items: out.items, now: now)
+        }
+        if name == "gesture", let started = explainStarted(s, term: recentAsk),
+           let out = try? JSONDecoder().decode(ExplainOut.self, from: Data(linRecent.utf8)) {
+            s = recentExplained(started, items: out.items, now: now)
         }
         return s
     }

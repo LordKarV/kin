@@ -26,7 +26,8 @@ struct PeopleScreen: View {
 
     var body: some View {
         PeopleList(contacts: contacts, error: error, myLang: myLang, joining: model.joining,
-                   onCall: { Task { await model.startCall() } }, onSignOut: { model.signOut() },
+                   onCall: { Task { await model.startCall() } }, onRing: { model.call($0, video: true) },
+                   onSignOut: { model.signOut() },
                    onDeleteAccount: {
                        confirm = ConfirmDelete(title: "Delete your account and everything KIN holds about you?",
                                                button: "Delete my account") { Task { await model.deleteAccount() } }
@@ -56,7 +57,8 @@ struct PeopleList<Destination: View>: View {
     let error: String?
     let myLang: String?
     let joining: Bool
-    let onCall: () -> Void
+    let onCall: () -> Void  // a new call with an invite to share
+    var onRing: (ContactOut) -> Void = { _ in }  // ring this person
     var onSignOut: () -> Void = {}
     var onDeleteAccount: () -> Void = {}
     let retry: () -> Void
@@ -76,7 +78,7 @@ struct PeopleList<Destination: View>: View {
                             ForEach(Array(rows.enumerated()), id: \.element.person) { i, c in
                                 if i > 0 { Hairline(inset: 74) }
                                 NavigationLink { destination(c) } label: {
-                                    PersonRow(contact: c, showLanguage: myLang.map { c.lang != $0 } ?? true, onCall: onCall)
+                                    PersonRow(contact: c, showLanguage: myLang.map { c.lang != $0 } ?? true, onCall: { onRing(c) })
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -141,7 +143,7 @@ struct PersonRow: View {
             Spacer(minLength: 4)
             Button(action: onCall) { CircleIcon(symbol: "video.fill", tint: K.link, fill: K.raised, size: 40) }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Start a call")
+                .accessibilityLabel("Call \(contact.name)")
         }
         .padding(.leading, 14).padding(.trailing, 4).padding(.vertical, 6)
         .contentShape(Rectangle())

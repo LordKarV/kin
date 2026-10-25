@@ -166,6 +166,9 @@ final class CallController: ObservableObject {
         try await api.explain(callId: callId, text: text, utteranceId: utteranceId)
     }
 
+    /// Double twist: the card for whatever the last lines I heard are about, private to me (Amendment 7).
+    func explainRecent() async throws -> [GlanceItem] { try await api.explainRecent(callId: callId) }
+
     func hangUp() async {
         await room.disconnect()
         finish()

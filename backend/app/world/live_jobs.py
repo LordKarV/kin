@@ -227,21 +227,23 @@ class LiveJobs:
             return None
         speaker_of = {n: ln.speaker for n, ln in enumerate(lines)}
         line_aud = {n: list(ln.audience) for n, ln in enumerate(lines)}
+        # Stamp with when the lines were said, not when this job finishes: the dev clock may have jumped meanwhile.
+        said = max((ln.at for ln in lines if ln.at is not None), default=None) or clock.now()
         ctx = ApplyCtx(self.space_id, self.call_id, None, speaker_of, line_aud,
-                       {n: ln.utterance_id for n, ln in enumerate(lines) if ln.utterance_id}, clock.now())
+                       {n: ln.utterance_id for n, ln in enumerate(lines) if ln.utterance_id}, said)
         try:
             with session_scope() as s:
                 res = apply_update(s, clean, ctx)
         except SQLAlchemyError:
             log.exception("applying extraction failed for call %s", self.call_id)
             return None
-        return res, clean, speaker_of, line_aud
+        return res, clean, speaker_of, line_aud, said
 
     @_locked
-    def _after_extract(self, res: tuple[ApplyResult, WorldUpdateOut, dict[int, int], dict[int, list[int]]],
+    def _after_extract(self, res: tuple[ApplyResult, WorldUpdateOut, dict[int, int], dict[int, list[int]], datetime],
                        snap: _Snap) -> None:
         """On the loop: swap in the new view, apply evidence, send late who/ask cards (2.5 trigger 3) via emit."""
-        result, clean, speaker_of, line_aud = res
+        result, clean, speaker_of, line_aud, said = res
         now = clock.now()
         self._swap(snap)
         v = snap.view
@@ -264,7 +266,7 @@ class LiveJobs:
                     self._send_later(ident, self._glance(sp_ident, ident, lang, cards, False))
         # Section 4 ordering: the late-card decisions above read the state before these lines; shown before heard.
         self._evidence([ev for L, _t, c in shown for ev in self._card_evidence(L, c)], now)
-        self._evidence(result.evidence, now)
+        self._evidence(result.evidence, said)  # heard when said, not when extraction finished
         self._log(shown, now)
         self._flush_async()
 

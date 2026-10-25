@@ -17,6 +17,7 @@ struct KinApp: App {
 
 struct RootView: View {
     @ObservedObject var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
 
     /// The redesigned People/Messages screens follow the system light/dark setting; sign-up and the ended screen
     /// still use the dark-only App/Theme tokens, and the call screen is always dark.
@@ -34,6 +35,13 @@ struct RootView: View {
             #endif
         }
         .preferredColorScheme(isTabs || demoFollowsSystem ? nil : .dark)
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            model.scene(active: phase == .active ? true : phase == .background ? false : nil)
+        }
+        // Ringing covers any screen (calling someone, or someone calling me); Calling/RingViews.swift.
+        .fullScreenCover(isPresented: Binding(get: { model.ring != .idle }, set: { if !$0 { model.send(.dismiss) } })) {
+            RingScreen(model: model)
+        }
         .alert("KIN", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
