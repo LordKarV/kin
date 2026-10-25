@@ -7,6 +7,7 @@ that speaker. The validator drops anything it cannot tie to the right speaker's 
 from __future__ import annotations
 
 import logging
+import re
 import unicodedata
 from dataclasses import dataclass, field
 from typing import Iterable
@@ -101,7 +102,26 @@ facts: one claim each. subject: a person (entity ref, "speaker" for the person w
   contradicts: id of one of THIS speaker's own facts that this one contradicts, else null.
   storyline: for an ongoing thread (job search, a move, an illness), else null. existing_id from the speaker's own
   storylines, title, state_label ("applied", "second round", "offer accepted"), resolved when the thread is over.
+Facts are about people's lives: news, people and relationships, places, events, plans, ongoing storylines, lasting
+  preferences. Never a fact: remarks about this call, the app or the connection, greetings, small talk, filler,
+  reactions, passing opinions about the conversation. Skip "the UI is fire", "this call is lagging", "haha nice",
+  "can you hear me". Keep "I started bouldering", "my sister moved to Austin", "I have an interview at Meta next week".
 Only state what the lines say. Leave out anything you are unsure about. Use "" / null / [] for none."""
+
+# Backstop for the rule above, on text_en (always English, whatever language was spoken). Narrow on purpose: a missed
+# remark costs one stray fact, a dropped piece of news is lost. ponytail: phrase list, not a classifier; widen it when
+# the eval shows other meta remarks getting through.
+_META_RE = re.compile(r"\b(?:this (?:call|app|ui)|the ui|the (?:app|call|connection) (?:is|was|looks|seems|sounds|keeps)"
+                      r"|can you hear|hear me|breaking up|cutting out|lagging|laggy|on mute|(?:bad|weak) connection)\b",
+                      re.I)
+_FILLER = frozenset("haha hahaha lol lmao nice cool ok okay wow yeah yes yep no nope hi hello hey bye thanks thank you "
+                    "great awesome sure hmm um uh oh right good morning night see ya oops omg said says".split())
+
+
+def is_smalltalk(text_en: str) -> bool:
+    """A remark about the call or the app, or a line made only of greetings and reactions ("haha nice")."""
+    words = re.findall(r"[a-z']+", text_en.lower())
+    return bool(_META_RE.search(text_en)) or (bool(words) and all(w in _FILLER for w in words))
 
 
 def build_prompt(window_lines: list[Line], participants: list[Participant], own_facts_by_speaker: dict[int, Own],
@@ -263,6 +283,8 @@ def _check_fact(f: FactOut, refs: dict[str, EntityOut], ctx: ValidateCtx,
         # the documented fallback (6.4 title match) handles a forgotten or wrong id; this is not a guess
         st = st.model_copy(update={"existing_id": None})
         f = f.model_copy(update={"storyline": st})
+    if is_smalltalk(f.text_en):
+        return "small talk or a remark about the call, not a fact", f
     for kind, ref in touched:
         if kind.startswith("new:"):
             introducer.setdefault(ref, speaker)
