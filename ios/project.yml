@@ -1,0 +1,66 @@
+# Source of truth for the Xcode project: `cd ios && xcodegen generate` (XcodeGen 2.46). Never hand-edit Kin.xcodeproj.
+name: Kin
+options:
+  bundleIdPrefix: dev.kin
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+packages:
+  LiveKit:
+    url: https://github.com/livekit/client-sdk-swift
+    exactVersion: 2.17.0
+targets:
+  Kin:
+    type: application
+    platform: iOS
+    sources:
+      - path: Kin/Sources
+      - path: Kin/Resources
+    dependencies:
+      - package: LiveKit
+        product: LiveKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kin.app
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: Kin/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: KIN
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [audio]
+        NSMicrophoneUsageDescription: KIN uses the microphone so the people you call can hear you.
+        NSCameraUsageDescription: KIN uses the camera so the people you call can see you.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.kin.join
+            CFBundleURLSchemes: [kin]
+  KinTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [KinTests]
+    dependencies:
+      - target: Kin
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: dev.kin.tests
+schemes:
+  Kin:
+    build:
+      targets:
+        Kin: all
+        KinTests: [test]
+    test:
+      targets: [KinTests]

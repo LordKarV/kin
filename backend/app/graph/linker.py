@@ -103,10 +103,11 @@ def _prefix_match(tok_norm: str, alias_norm: str, exact_only: bool = False, tabl
 
 
 class Linker:
-    def __init__(self, graph: FamilyGraph):
+    def __init__(self, graph: FamilyGraph, lang: str | None = None):
+        """lang: the speaker's language table (world calls); default the family heritage language, as before."""
         self.g = graph
         try:
-            self.table = load_table(graph.heritage_lang)
+            self.table = load_table(lang or graph.heritage_lang)
         except (KeyError, FileNotFoundError):
             self.table = load_table("ta")
         t = self.table
@@ -147,7 +148,7 @@ class Linker:
         """Latin-script names/dishes/places to bias the ASR (Deepgram keyterm / Muse keywords)."""
         out: list[str] = []
         for p in self.g.people.values():
-            out += [a for a, _l, k in p.aliases if not NON_LATIN.search(a)]
+            out += [a for a in [p.name, *(a for a, _l, _k in p.aliases)] if a and not NON_LATIN.search(a)]
         for t in self.g.things:
             out += [a for a in [t.name, *t.aliases] if a and not NON_LATIN.search(a)]
         seen, uniq = set(), []
