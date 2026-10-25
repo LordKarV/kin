@@ -6,16 +6,18 @@ from __future__ import annotations
 
 import logging
 import secrets
+import sqlite3
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import security
 from ..config import get_settings
 from ..db import models as m
-from ..db.session import get_session
+from ..db.session import get_engine, get_session, session_scope
 from ..world import clock
 from ..world.apply import ApplyCtx, apply_update
 from ..world.contracts import AppliedEntity, ClockIn, ClockOut, DevApplyIn, DevApplyOut, DevSmsIn, DevSmsOut, FactBrief
@@ -129,3 +131,55 @@ def dev_signin(body: DevSigninIn, request: Request, s: Session = Depends(get_ses
     s.commit()
     log.warning("dev/signin rotated the token of %s", person.slug)
     return DevSigninOut(person=person.slug, token=token)
+
+
+class DevResetIn(BaseModel):
+    part: int = Field(ge=1, le=2)  # 1: the friends call, 2: the grandmother call (docs/DEMO_SCRIPT.md)
+
+
+class DevResetOut(BaseModel):
+    part: int
+    name: str
+    lang: str
+
+
+# Who user 2 (phone B) is in each part of the demo; the seeded world carries both parts' context.
+DEMO_PARTS = {1: ("Nithin", "en"), 2: ("Grandma", "ta")}
+
+
+@router.post("/reset", response_model=DevResetOut)
+def dev_reset(body: DevResetIn) -> DevResetOut:
+    """Put the demo back to the snapshot saved after seeding (scripts/demo_snapshot.py save), as part 1 or 2.
+    Every card shown changes what KIN thinks people know, so a demo only works the first time. The snapshot keeps the
+    phones' sign-ins. The restored database reuses call ids, so in-memory state keyed by call id is dropped too, and
+    a reset during a call is refused."""
+    from ..audio.pipeline import registry
+    from ..rtc.agent import agents
+    from . import calls
+
+    url = get_settings().database_url
+    if not url.startswith("sqlite:///"):
+        raise HTTPException(422, "reset needs the SQLite demo database")
+    snapshot = Path(url.removeprefix("sqlite:///")).with_name("kin.demo-snapshot.db")
+    if not snapshot.exists():
+        raise HTTPException(404, f"no snapshot at {snapshot}: run scripts/demo_snapshot.py save after seeding")
+    if registry.active() or any(agents.running(cid) for cid in list(agents._agents)) or calls._rings:
+        raise HTTPException(409, "hang up first: a call is still live")
+    src, raw = sqlite3.connect(snapshot), get_engine().raw_connection()
+    try:
+        src.backup(raw.driver_connection)
+    finally:
+        src.close()
+        raw.close()
+    agents._agents.clear()
+    calls._done.clear()
+    clock.set_offset_days(0)
+    name, lang = DEMO_PARTS[body.part]
+    with session_scope() as s:
+        user = s.get(m.User, 2)
+        if user is None:
+            raise HTTPException(404, "no second user: seed with scripts/seed_demo.py")
+        user.lang = lang
+        s.get(m.Person, user.person_id).display_name = name
+    log.warning("dev/reset restored %s as part %d", snapshot.name, body.part)
+    return DevResetOut(part=body.part, name=name, lang=lang)

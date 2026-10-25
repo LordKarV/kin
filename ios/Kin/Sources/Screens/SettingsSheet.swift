@@ -15,6 +15,8 @@ struct SettingsSheet: View {
     @State private var savingName = false
     @State private var nameSaved = false
     @State private var nameError: String?
+    @State private var resetting = false
+    @State private var resetNote: String?
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -26,6 +28,9 @@ struct SettingsSheet: View {
                         nameEditor
                     }
                     KinSection(title: "Language you speak", footer: "Takes effect on your next call.") { language }
+                    #if DEBUG
+                    KinSection(title: "Demo", footer: "Puts the planted history back. Hang up first.") { demoReset }
+                    #endif
                     KinSection {
                         Button("Sign out", role: .destructive) { model.signOut() }
                             .font(KinFont.body).frame(maxWidth: .infinity, alignment: .leading).padding(14)
@@ -57,6 +62,34 @@ struct SettingsSheet: View {
             }
         }
         .padding(14)
+    }
+
+    private var demoReset: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CapsuleButton(title: "Reset to 1: friends call", symbol: "arrow.counterclockwise", busy: resetting) {
+                Task { await reset(1) }
+            }.disabled(resetting)
+            CapsuleButton(title: "Reset to 2: grandmother call", symbol: "arrow.counterclockwise", busy: resetting) {
+                Task { await reset(2) }
+            }.disabled(resetting)
+            if let resetNote {
+                Text(resetNote).font(KinFont.subhead).foregroundStyle(K.text2)
+            }
+        }
+        .padding(14)
+    }
+
+    private func reset(_ part: Int) async {
+        resetting = true
+        defer { resetting = false }
+        do {
+            let out = try await model.api.resetDemo(part: part)
+            resetNote = "Reset to \(part). Second phone is now \(out.name) (\(out.lang))."
+            await load()
+            onSaved()
+        } catch {
+            resetNote = "Could not reset: \(error.localizedDescription)"
+        }
     }
 
     private var language: some View {

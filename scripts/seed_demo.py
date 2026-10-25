@@ -1,10 +1,10 @@
 """Seed the demo world: Karthik (CMU) and Nithin (UT Turing Scholar), high school friends, both in English.
 
 Only context is planted, never the demo itself (docs/DEMO_SCRIPT.md says what to talk about). Two parts share it:
-- Part 1, friends: Nithin's world (climbing friend Rohan, the Jane Street application) heard by Karthik ~7 weeks ago,
+- Part 1, friends: Nithin's world (climbing friend Rohan, the Meta application) heard by Karthik ~7 weeks ago,
   Karthik's (project partner Priya) heard by Nithin, and news each has not told the other (Karthik's bouldering and
   HackTX trip).
-- Part 2, grandmother: midway Nithin renames himself Paatti and switches to Tamil in Settings. The same account then
+- Part 2, grandmother: midway Nithin renames himself Grandma and switches to Tamil in Settings. The same account then
   carries her side: Karthik's two uncles named Ravi, her sister Saroja and cousin Meena's engagement (heard by
   Karthik), Karthik's roommate Mei (heard by her ~8 weeks ago), his hiking trip with Mei and her bhajan group (untold).
 Part 2 names and topics stay out of Part 1 (mentioning Mei to Nithin would refresh what "Paatti" knows), and the Part 2
@@ -75,16 +75,16 @@ async def plant(d: Demo) -> None:
                                           "ties": [_tie("priya", "his robotics project partner at CMU")], "facts": [
         _fact("speaker", "tie", "Priya is Karthik's robotics project partner at CMU", ["priya"], [])]})
 
-    # ~7 weeks ago: Nithin's climbing friend Rohan and his Jane Street application (Part 1: Karthik's reminders),
+    # ~7 weeks ago: Nithin's climbing friend Rohan and his Meta application (Part 1: Karthik's reminders),
     # and the two Ravis (Part 2: placed by kin path relative to Karthik, by the speaker, so Karthik only heard them).
     await d.clock(-50)
     await d.apply("Nithin", ["Karthik"], {"entities": [_person("rohan", "Rohan", "ரோஹன்")],
                                           "ties": [_tie("rohan", "from the climbing gym at UT")], "facts": [
         _fact("speaker", "tie", "Rohan is Nithin's friend from the climbing gym at UT", ["rohan"], [])]})
     await d.apply("Nithin", ["Karthik"], {"entities": [], "ties": [], "facts": [_story(_fact(
-        "speaker", "did", "applied for the Jane Street internship", [],
-        [["jane street", "jane"], ["internship", "intern", "interview", "superday", "offer"]]),
-        "Jane Street internship", "applied")]})
+        "speaker", "did", "applied for the Meta internship", [],
+        [["meta", "facebook"], ["internship", "intern", "interview", "superday", "offer"]]),
+        "Meta internship", "applied")]})
     ravis = [("ravi_mama", "Ravi mama", "ரவி மாமா", "Ravi mama is Karthik's mom's younger brother; he lives in Chennai",
               "mother.younger_brother"),
              ("ravi_periyappa", "Ravi periyappa", "ரவி பெரியப்பா",
@@ -101,7 +101,7 @@ async def plant(d: Demo) -> None:
     await d.clock(-45)
     await d.apply("Nithin", ["Karthik"], {
         "entities": [_person("saroja", "Saroja", "சரோஜா"), _person("meena", "Meena", "மீனா")], "ties": [], "facts": [
-            _fact("saroja", "relation", "Saroja is Paatti's younger sister; she lives in Coimbatore", [], []),
+            _fact("saroja", "relation", "Saroja is Grandma's younger sister; she lives in Coimbatore", [], []),
             _story(_fact("meena", "did", "Meena, Ravi mama's daughter, got engaged", [],
                          [["wedding", "marriage", "கல்யாணம்"], ["engaged", "engagement", "நிச்சயம்"]]),
                    "Meena's wedding", "engaged")]})
@@ -131,8 +131,8 @@ async def rehearse(d: Demo) -> None:
         await d.say(cid, legs, "Nithin", "Rohan and I hit the climbing gym again last weekend.",
                     {"Karthik": "Rohan reminder, bouldering bridge"})
         await d.say(cid, legs, "Karthik", "No way, I started bouldering at the CMU wall!", {"Karthik": "retract"})
-        await d.say(cid, legs, "Nithin", "Oh, and I finally heard back from Jane Street.",
-                    {"Karthik": "Jane Street storyline card"})
+        await d.say(cid, legs, "Nithin", "Oh, and I finally heard back from Meta.",
+                    {"Karthik": "Meta storyline card"})
         await d.say(cid, legs, "Karthik", "Priya and I are entering our rover in a competition.",
                     {"Nithin": "Priya reminder"})
         await d.clock(0.01)  # past the 90 s gap between bridges
@@ -140,7 +140,7 @@ async def rehearse(d: Demo) -> None:
         await d.say(cid, legs, "Nithin", "Rohan and I hit the climbing gym again last weekend.", {"Karthik": "nothing"})
     finally:
         await d.hang_up(legs)
-    await d.http.patch("/api/me", json={"name": "Paatti", "lang": "ta"}, headers={"X-KIN-User": d.token["Nithin"]})
+    await d.http.patch("/api/me", json={"name": "Grandma", "lang": "ta"}, headers={"X-KIN-User": d.token["Nithin"]})
     await d.clock(0.02)
     cid, legs = await d.call("Karthik", "Nithin")
     try:
